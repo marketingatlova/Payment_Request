@@ -47,12 +47,10 @@
     .input-box:focus { border-color: var(--navy); background: var(--surface); }
     .input-box[readonly] { background: var(--border-soft); color: var(--text-2); cursor: not-allowed; border-color: var(--border-soft); font-weight: 700;}
     
-    /* Custom File Input Styling */
     input[type="file"] { padding: 12px 10px; font-size: 12px; font-weight: 500; cursor: pointer;}
     input[type="file"]::file-selector-button { background: var(--border); border: none; padding: 6px 12px; border-radius: 4px; font-family: inherit; font-size: 11px; font-weight: 700; cursor: pointer; margin-right: 12px; color: var(--text); transition: 0.2s;}
     input[type="file"]::file-selector-button:hover { background: var(--border-soft); }
 
-    /* Custom Checkbox */
     .urgent-wrapper { display: flex; align-items: center; gap: 10px; padding: 5px 0 20px; }
     .urgent-wrapper label { margin: 0; color: var(--red); font-weight: 800; font-size: 13px; cursor: pointer; letter-spacing: 0.5px;}
     .custom-checkbox { appearance: none; -webkit-appearance: none; width: 20px; height: 20px; border: 2px solid var(--red-border); border-radius: 4px; background-color: white; cursor: pointer; position: relative; transition: all 0.2s ease; margin: 0; }
@@ -60,18 +58,28 @@
     .custom-checkbox:checked { background-color: var(--red); border-color: var(--red); }
     .custom-checkbox:checked::after { content: ''; position: absolute; left: 5px; top: 1px; width: 5px; height: 10px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg); }
     
-    /* Buttons */
     .btn-primary { background: var(--navy); color: #fff; width: 100%; height: 50px; border: none; border-radius: 9px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.5px; cursor: pointer; transition: 0.15s; text-transform: uppercase; }
     .btn-primary:hover { background: var(--navy2); }
     .btn-primary:active { transform: scale(0.98); }
     .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none;}
 
-    /* Status Messages */
     #loginStatus { margin-top: 16px; font-size: 12px; font-weight: 600; color: var(--red); min-height: 16px;}
     #submitStatus { margin-top: 20px; font-size: 13px; font-weight: 600; text-align: center; padding: 12px; border-radius: 8px; display: none; border: 1px solid transparent;}
     .status-loading { background: var(--border-soft); color: var(--text-2); border-color: var(--border); }
     .status-success { background: var(--s-green-bg); color: var(--s-green); border-color: var(--s-green-border); }
     .status-error { background: var(--red-soft); color: var(--red); border-color: var(--red-border); }
+
+    /* ==================== SESSION HISTORY UI ==================== */
+    .session-history-wrapper { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-soft); }
+    .btn-history-toggle { background: transparent; border: none; color: var(--text-3); font-family: inherit; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; display: flex; align-items: center; gap: 6px; margin: 0 auto; transition: 0.2s; }
+    .btn-history-toggle:hover { color: var(--navy); }
+    .btn-history-toggle .icon { font-size: 14px; font-weight: 500; width: 12px; text-align: center;}
+    #historyList { display: none; margin-top: 16px; }
+    .history-item { background: var(--canvas); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; animation: fadeInDown 0.3s ease; }
+    @keyframes fadeInDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    .history-id { font-family: monospace; font-weight: 700; color: var(--navy); font-size: 12px; margin-bottom: 4px;}
+    .history-title { font-weight: 600; color: var(--text); font-size: 11px; }
+    .history-amount { font-weight: 700; color: var(--text-2); font-size: 12px;}
     
   </style>
 </head>
@@ -169,22 +177,30 @@
         </form>
         
         <div id="submitStatus"></div>
+
+        <div class="session-history-wrapper">
+          <button type="button" class="btn-history-toggle" onclick="toggleHistory()">
+            <span class="icon" id="historyIcon">+</span> Session History (<span id="historyCount">0</span>)
+          </button>
+          <div id="historyList">
+            </div>
+        </div>
         
       </div>
     </div>
   </div>
 
   <script>
-    // DEPLOYED WEB APP URL
+    // DEPLOYED WEB APP URL (Make sure this matches your script!)
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbyEUJYIu9_O6E50KzKzdEY4EG2VLo4y0Yj8igGRZVMI_zEapqn5w758gdt_nG5tluEdHA/exec';
     
     let sessionPincode = ""; 
+    let sessionHistory = []; // Array to track successful submissions
 
     // ==========================================
     // UI HELPER LOGIC
     // ==========================================
     
-    // Shows the custom text box if "Other" is selected
     function checkCustomDocType() {
       const val = document.getElementById('documentType').value;
       const customInput = document.getElementById('documentTypeCustom');
@@ -198,17 +214,52 @@
       }
     }
 
-    // Formats the Amount field with commas and 2 decimal places
     const amountInput = document.getElementById('amount');
     amountInput.addEventListener('blur', function(e) {
-      let val = e.target.value.replace(/,/g, ''); // strip existing commas
+      let val = e.target.value.replace(/,/g, ''); 
       if (!isNaN(val) && val !== '') {
         e.target.value = parseFloat(val).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
       }
     });
     amountInput.addEventListener('focus', function(e) {
-      e.target.value = e.target.value.replace(/,/g, ''); // remove commas so user can edit easily
+      e.target.value = e.target.value.replace(/,/g, ''); 
     });
+
+    // ==========================================
+    // SESSION HISTORY LOGIC
+    // ==========================================
+    function toggleHistory() {
+      const list = document.getElementById('historyList');
+      const icon = document.getElementById('historyIcon');
+      if (list.style.display === 'none' || list.style.display === '') {
+        list.style.display = 'block';
+        icon.innerText = '−';
+      } else {
+        list.style.display = 'none';
+        icon.innerText = '+';
+      }
+    }
+
+    function addHistoryItem(id, title, amount) {
+      sessionHistory.push({ id, title, amount });
+      document.getElementById('historyCount').innerText = sessionHistory.length;
+
+      const list = document.getElementById('historyList');
+      const div = document.createElement('div');
+      div.className = 'history-item';
+      
+      // Formats the item safely and cleanly
+      div.innerHTML = `
+        <div>
+          <div class="history-id">${id}</div>
+          <div class="history-title">${title}</div>
+        </div>
+        <div class="history-amount">${amount} THB</div>
+      `;
+      
+      // Puts the newest submission at the top of the list
+      list.insertBefore(div, list.firstChild);
+    }
 
     // ==========================================
     // SECURE LOGIN LOGIC
@@ -267,10 +318,17 @@
       document.getElementById('appContainer').style.display = 'none';
       document.getElementById('loginScreen').style.display = 'flex';
       document.getElementById('financeForm').reset();
-      document.getElementById('documentTypeCustom').style.display = 'none'; // hide custom input on logout
+      document.getElementById('documentTypeCustom').style.display = 'none'; 
       document.getElementById('submitStatus').style.display = 'none';
       document.getElementById('loginStatus').innerText = '';
+      
+      // Wipe the memory of the session history completely
       sessionPincode = ""; 
+      sessionHistory = [];
+      document.getElementById('historyCount').innerText = '0';
+      document.getElementById('historyList').innerHTML = '';
+      document.getElementById('historyList').style.display = 'none';
+      document.getElementById('historyIcon').innerText = '+';
     }
 
     // ==========================================
@@ -296,10 +354,11 @@
       reader.onload = async function() {
         const base64Data = reader.result.split(',')[1]; 
 
-        // Strip commas out of the amount before sending to Google Sheets so it stays a pure number
+        // Grab values before we clear them out
+        const titleForHistory = document.getElementById('requestTitle').value;
         const rawAmount = document.getElementById('amount').value.replace(/,/g, '');
+        const amountForHistory = document.getElementById('amount').value; // Keep commas for history UI
 
-        // Check if "Other" was selected for document type
         let finalDocType = document.getElementById('documentType').value;
         if (finalDocType === 'Other') {
           finalDocType = document.getElementById('documentTypeCustom').value;
@@ -309,7 +368,7 @@
           action: 'submitRequest', 
           userName: document.getElementById('userName').value,
           email: document.getElementById('email').value,
-          requestTitle: document.getElementById('requestTitle').value,
+          requestTitle: titleForHistory,
           brand: document.getElementById('brand').value,
           amount: rawAmount,             
           documentType: finalDocType, 
@@ -333,7 +392,10 @@
             statusDiv.innerHTML = `SUCCESS: Document routed properly.<br>Generated ID: <span style="font-family:monospace; color:var(--text);">${result.id}</span>`;
             statusDiv.className = "status-success";
             
-            // Reset editable fields
+            // Add the transaction to the Session History log!
+            addHistoryItem(result.id, titleForHistory, amountForHistory);
+            
+            // Reset editable fields so they can quickly enter the next one
             document.getElementById('requestTitle').value = '';
             document.getElementById('amount').value = '';
             document.getElementById('documentType').selectedIndex = 0;
