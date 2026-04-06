@@ -67,7 +67,7 @@
     .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none;}
 
     /* Status Messages */
-    #loginStatus { margin-top: 16px; font-size: 12px; font-weight: 600; color: var(--red); height: 16px;}
+    #loginStatus { margin-top: 16px; font-size: 12px; font-weight: 600; color: var(--red); min-height: 16px;}
     #submitStatus { margin-top: 20px; font-size: 13px; font-weight: 600; text-align: center; padding: 12px; border-radius: 8px; display: none; border: 1px solid transparent;}
     .status-loading { background: var(--border-soft); color: var(--text-2); border-color: var(--border); }
     .status-success { background: var(--s-green-bg); color: var(--s-green); border-color: var(--s-green-border); }
@@ -191,19 +191,21 @@
           document.getElementById('appContainer').style.display = 'block';
           
           // Pre-fill fields
-          document.getElementById('userName').value = res.name;
-          document.getElementById('email').value = res.email;
-          document.getElementById('navUser').innerText = res.name;
+          document.getElementById('userName').value = res.name || "Unknown User";
+          document.getElementById('email').value = res.email || "No email linked";
+          document.getElementById('navUser').innerText = res.name || "Staff Member";
           
           // Reset login styling
           loginBtn.innerText = "Authenticate";
           document.getElementById('hqPinInput').value = '';
         } else {
-          statusEl.innerText = "Invalid PIN. Access Denied.";
+          // ⚠️ NEW: Displays the EXACT error from Google Apps Script
+          statusEl.innerText = "Error: " + (res.message || "Unknown error from server.");
           loginBtn.innerText = "Authenticate";
         }
       } catch(e) {
-        statusEl.innerText = "Network Error. Please try again.";
+        // ⚠️ NEW: Displays the EXACT network error
+        statusEl.innerText = "Network/CORS Error: " + e.message;
         loginBtn.innerText = "Authenticate";
       } finally {
         loginBtn.disabled = false;
@@ -281,7 +283,7 @@
             statusDiv.className = "status-error";
           }
         } catch (error) {
-          statusDiv.innerText = "Network error. Document was not sent.";
+          statusDiv.innerText = "Network error. Document was not sent. " + error.message;
           statusDiv.className = "status-error";
         } finally {
           submitBtn.disabled = false;
