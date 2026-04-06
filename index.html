@@ -129,6 +129,28 @@
                 <option value="LOV">Office / Lova</option>
               </select>
             </div>
+
+            <div>
+              <span class="input-label">Amount (THB)</span>
+              <input type="number" id="amount" class="input-box" step="0.01" placeholder="0.00" required>
+            </div>
+
+            <div>
+              <span class="input-label">Document Type</span>
+              <select id="documentType" class="input-box" required>
+                <option value="Invoice">Invoice</option>
+                <option value="Receipt">Receipt</option>
+                <option value="Quotation">Quotation</option>
+                <option value="Tax Invoice">Tax Invoice</option>
+                <option value="Clear Advance">Clear Advance</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div style="grid-column: 1 / -1;">
+              <span class="input-label">Payment Due Date</span>
+              <input type="date" id="dueDate" class="input-box" required>
+            </div>
             
             <div style="grid-column: 1 / -1;">
               <span class="input-label">Attach Document (PDF/Image)</span>
@@ -186,25 +208,20 @@
         if (res.status === 'success') {
           sessionPincode = pin;
           
-          // Switch Screens
           document.getElementById('loginScreen').style.display = 'none';
           document.getElementById('appContainer').style.display = 'block';
           
-          // Pre-fill fields
           document.getElementById('userName').value = res.name || "Unknown User";
           document.getElementById('email').value = res.email || "No email linked";
           document.getElementById('navUser').innerText = res.name || "Staff Member";
           
-          // Reset login styling
           loginBtn.innerText = "Authenticate";
           document.getElementById('hqPinInput').value = '';
         } else {
-          // ⚠️ NEW: Displays the EXACT error from Google Apps Script
           statusEl.innerText = "Error: " + (res.message || "Unknown error from server.");
           loginBtn.innerText = "Authenticate";
         }
       } catch(e) {
-        // ⚠️ NEW: Displays the EXACT network error
         statusEl.innerText = "Network/CORS Error: " + e.message;
         loginBtn.innerText = "Authenticate";
       } finally {
@@ -253,6 +270,9 @@
           email: document.getElementById('email').value,
           requestTitle: document.getElementById('requestTitle').value,
           brand: document.getElementById('brand').value,
+          amount: document.getElementById('amount').value,             // NEW: Amount
+          documentType: document.getElementById('documentType').value, // NEW: Document Type
+          dueDate: document.getElementById('dueDate').value,           // NEW: Due Date
           pincode: sessionPincode, 
           isUrgent: document.getElementById('isUrgent').checked,
           fileName: fileInput.name,
@@ -269,11 +289,14 @@
           const result = await response.json();
           
           if (result.status === 'success') {
-            statusDiv.innerHTML = `SUCCESS: Invoice routed properly.<br>Generated ID: <span style="font-family:monospace; color:var(--text);">${result.id}</span>`;
+            statusDiv.innerHTML = `SUCCESS: Document routed properly.<br>Generated ID: <span style="font-family:monospace; color:var(--text);">${result.id}</span>`;
             statusDiv.className = "status-success";
             
             // Reset editable fields
             document.getElementById('requestTitle').value = '';
+            document.getElementById('amount').value = '';
+            document.getElementById('documentType').selectedIndex = 0;
+            document.getElementById('dueDate').value = '';
             document.getElementById('file').value = '';
             document.getElementById('isUrgent').checked = false;
             document.getElementById('brand').selectedIndex = 0;
