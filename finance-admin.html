@@ -27,7 +27,7 @@
     .nav-item { padding: 14px 32px; font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.5); cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 12px; }
     .nav-item:hover { color: #fff; background: rgba(255,255,255,0.05); }
     .nav-item.active { color: #fff; background: rgba(255,255,255,0.1); border-right: 4px solid var(--accent); }
-    .nav-logout { margin-top: 10px; color: rgba(255,255,255,0.3); border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px; }
+    .nav-logout { margin-top: 10px; color: rgba(255,255,255,0.3); border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px; font-size: 12px; }
     .nav-logout:hover { color: #ff7675; }
 
     /* ==================== MAIN AREA ==================== */
@@ -48,7 +48,7 @@
     .search-input { flex: 1; padding: 12px 16px; border-radius: 10px; border: 1px solid var(--border); font-size: 13px;}
 
     /* ==================== DATA CARDS ==================== */
-    .data-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 30px; margin-bottom: 16px; display: flex; align-items: flex-start; justify-content: space-between; transition: 0.3s; }
+    .data-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 32px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; transition: 0.3s; }
     .data-card:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(0,0,0,0.05); }
     
     .brand-tag { font-size: 10px; font-weight: 800; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; margin-bottom: 12px; display: inline-block; letter-spacing: 0.5px; }
@@ -57,28 +57,25 @@
     .tag-holybelly { background: #fef3c7; color: #92400e; }
     .tag-lova { background: #f3f4f6; color: #374151; }
 
-    .inv-name { font-size: 20px; font-weight: 800; color: var(--navy); margin-bottom: 8px; }
+    .inv-name { font-size: 22px; font-weight: 800; color: var(--navy); margin-bottom: 8px; }
+    .inv-note { font-size: 14px; color: var(--text-dim); background: #f8fafc; padding: 12px 16px; border-radius: 10px; border-left: 3px solid var(--border); margin: 12px 0; font-style: italic; }
     .inv-meta { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
-    .inv-meta strong { color: var(--navy); }
+    .inv-meta strong { color: var(--navy); font-weight: 700; }
     
-    /* ==================== ACTION ZONE (VERIFICATION BLOCK) ==================== */
-    .action-container { text-align: right; min-width: 320px; border-left: 1px solid #f1f3f4; padding-left: 30px;}
-    .inv-amount { font-size: 36px; font-weight: 900; color: var(--green); margin-bottom: 8px; letter-spacing: -1px; }
-    
-    .verify-block { background: #f8fafc; border-radius: 10px; padding: 12px; margin-bottom: 16px; text-align: left; border: 1px solid #edf2f7;}
-    .verify-label { font-size: 9px; font-weight: 800; color: #a0aec0; text-transform: uppercase; margin-bottom: 2px;}
-    .verify-data { font-size: 12px; font-weight: 700; color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;}
+    /* ==================== ACTION ZONE ==================== */
+    .action-container { text-align: right; min-width: 340px; }
+    .inv-amount { font-size: 38px; font-weight: 900; color: var(--green); margin-bottom: 20px; letter-spacing: -1px; }
 
     .custom-upload { position: relative; display: inline-flex; align-items: center; margin-right: 12px; }
-    .btn-file-proxy { background: #f1f3f4; color: var(--text-dim); padding: 12px 16px; border-radius: 10px; font-weight: 700; font-size: 12px; cursor: pointer; border: 1px solid var(--border); transition: 0.2s; white-space: nowrap; max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
+    .btn-file-proxy { background: #f1f3f4; color: var(--text-dim); padding: 14px 20px; border-radius: 12px; font-weight: 700; font-size: 12px; cursor: pointer; border: 1px solid var(--border); transition: 0.2s; white-space: nowrap; max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
     .btn-file-proxy:hover { background: #e8eaed; }
     .btn-file-proxy.selected { background: var(--green-bg); color: var(--green); border-color: var(--green); }
     .real-file-input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 
-    .btn-process { background: var(--navy); color: #fff; padding: 14px 28px; border-radius: 12px; font-weight: 700; border: none; cursor: pointer; font-size: 14px; transition: 0.2s; box-shadow: 0 4px 10px rgba(15,19,31,0.2); }
+    .btn-process { background: var(--navy); color: #fff; padding: 14px 32px; border-radius: 12px; font-weight: 700; border: none; cursor: pointer; font-size: 14px; transition: 0.2s; box-shadow: 0 4px 10px rgba(15,19,31,0.2); }
     .btn-process:hover { background: var(--navy-light); transform: scale(1.02); }
     
-    .btn-view-slip { background: var(--green-bg); color: var(--green); text-decoration: none; padding: 14px 24px; border-radius: 12px; font-weight: 800; font-size: 14px; display: inline-block; transition: 0.2s; }
+    .btn-view-slip { background: var(--green-bg); color: var(--green); text-decoration: none; padding: 14px 28px; border-radius: 12px; font-weight: 800; font-size: 14px; display: inline-block; transition: 0.2s; }
 
     .hidden { display: none !important; }
   </style>
@@ -97,7 +94,7 @@
 
   <aside class="sidebar">
     <div class="sidebar-brand">
-      <h1 style="font-family:'Playfair Display'; font-size:24px;">LOVA</h1>
+      <h1 style="font-family:'Playfair Display'; font-size:24px; letter-spacing:1px;">LOVA</h1>
       <p style="font-size:10px; opacity:0.5; letter-spacing:2px; margin-top:4px;">FINANCE HUB</p>
     </div>
     <div class="nav-item active" onclick="switchView('pipeline')" id="nav-pipeline">Payment Pending POP</div>
@@ -112,7 +109,7 @@
   <main class="main-area">
     <header class="top-header">
       <h2 id="viewTitle" style="font-size: 22px; font-weight:800;">Payment Pending POP</h2>
-      <div style="font-size:12px; font-weight:700; color:var(--text-dim);">Mode: <span style="color:var(--green);">Manager Authorized</span></div>
+      <div style="font-size:12px; font-weight:700; color:var(--text-dim);">Authorized Account: <span style="color:var(--green);">Manager</span></div>
     </header>
 
     <div class="view-content">
@@ -246,34 +243,27 @@
 
       container.innerHTML = filtered.map((item, idx) => `
         <div class="data-card">
-          <div>
+          <div style="flex:1; padding-right:40px;">
             <span class="brand-tag tag-${item.sheetName.split(' ')[0].toLowerCase()}">${item.sheetName}</span>
             <div class="inv-name">${item.supplier}</div>
             <div class="inv-meta">
-              ID: <strong>${item.id}</strong><br>
-              Request Date: <strong>${item.date}</strong> • Origin: <strong>${item.requester}</strong>
+              ID: <strong>${item.id}</strong> • Requester: <strong>${item.requester}</strong><br>
+              Submission Date: <strong>${item.date}</strong>
             </div>
+            ${item.note ? `<div class="inv-note">Note: ${item.note}</div>` : ''}
           </div>
           <div class="action-container">
-            <div class="inv-amount">${parseFloat(item.amount).toLocaleString('en-US', {minimumFractionDigits: 2})} THB</div>
-            
-            ${currentView === 'pipeline' ? `
-              <div class="verify-block">
-                <div class="verify-label">Confirm Payee</div>
-                <div class="verify-data">${item.supplier}</div>
-                <div class="verify-label" style="margin-top:8px;">Authorized Requester</div>
-                <div class="verify-data">${item.requester}</div>
-              </div>
-              <div>
-                <div class="custom-upload">
+            <div class="inv-amount">${parseFloat(item.amount).toLocaleString('en-US', {minimumFractionDigits: 2})} <span style="font-size:16px; vertical-align:middle; opacity:0.6;">THB</span></div>
+            <div>
+              ${currentView === 'pipeline' ? 
+                `<div class="custom-upload">
                   <div class="btn-file-proxy" id="proxy-${idx}">Attach Slip</div>
                   <input type="file" class="real-file-input" id="file-${idx}" onchange="updateLabel(${idx})" accept="image/*,application/pdf">
                 </div>
-                <button class="btn-process" id="btn-${idx}" onclick="processPayment(${idx})">Process POP</button>
-              </div>
-            ` : `
-              <a href="${item.popUrl}" target="_blank" class="btn-view-slip">View Proof of Payment</a>
-            `}
+                <button class="btn-process" id="btn-${idx}" onclick="processPayment(${idx})">Process POP</button>` :
+                `<a href="${item.popUrl}" target="_blank" class="btn-view-slip">View Proof of Payment</a>`
+              }
+            </div>
           </div>
         </div>
       `).join('');
