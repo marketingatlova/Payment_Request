@@ -124,8 +124,13 @@
             </div>
             
             <div style="grid-column: 1 / -1;">
-              <span class="input-label">Supplier / Request Title</span>
-              <input type="text" id="requestTitle" class="input-box" placeholder="e.g. Produce Delivery Invoice" required>
+              <span class="input-label">Supplier</span>
+              <input type="text" id="requestTitle" class="input-box" placeholder="e.g. ABC Company" required>
+            </div>
+
+            <div style="grid-column: 1 / -1;">
+              <span class="input-label">Payment Details / Note (Optional)</span>
+              <input type="text" id="note" class="input-box" placeholder="e.g. Payment for April produce delivery">
             </div>
             
             <div style="grid-column: 1 / -1;">
@@ -159,11 +164,6 @@
             <div style="grid-column: 1 / -1;">
               <span class="input-label">Payment Due Date</span>
               <input type="date" id="dueDate" class="input-box" required>
-            </div>
-
-            <div style="grid-column: 1 / -1;">
-              <span class="input-label">Additional Note (Optional)</span>
-              <input type="text" id="note" class="input-box" placeholder="e.g. Please process before noon">
             </div>
             
             <div style="grid-column: 1 / -1;">
@@ -374,7 +374,7 @@
           amount: rawAmount,             
           documentType: finalDocType, 
           dueDate: document.getElementById('dueDate').value,
-          note: document.getElementById('note').value, // NEWLY ADDED!           
+          note: document.getElementById('note').value,          
           pincode: sessionPincode, 
           isUrgent: document.getElementById('isUrgent').checked,
           fileName: fileInput.name,
@@ -401,7 +401,7 @@
             document.getElementById('documentType').selectedIndex = 0;
             document.getElementById('documentTypeCustom').style.display = 'none';
             document.getElementById('dueDate').value = '';
-            document.getElementById('note').value = ''; // Clear note!
+            document.getElementById('note').value = ''; 
             document.getElementById('file').value = '';
             document.getElementById('isUrgent').checked = false;
             document.getElementById('brand').selectedIndex = 0;
