@@ -220,12 +220,19 @@
     }
 
     const amountInput = document.getElementById('amount');
+    
+    // NEW: Instantly delete any letters or symbols as they type
+    amountInput.addEventListener('input', function(e) {
+      this.value = this.value.replace(/[^0-9.,]/g, '');
+    });
+
     amountInput.addEventListener('blur', function(e) {
       let val = e.target.value.replace(/,/g, ''); 
       if (!isNaN(val) && val !== '') {
         e.target.value = parseFloat(val).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
       }
     });
+    
     amountInput.addEventListener('focus', function(e) {
       e.target.value = e.target.value.replace(/,/g, ''); 
     });
