@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LOVA — Finance Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy: #1a1f2e; --navy2: #2d3447; --canvas: #f0f2f5; --surface: #ffffff;
+      --border: #e4e1db; --text: #1a1f2e; --text-2: #5a5750;
+      --s-green: #166534; --s-green-bg: #dcfce7;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--navy); color: var(--surface); min-height: 100vh; padding-bottom: 60px;}
+    
+    .top-nav { background: #0f131f; padding: 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1);}
+    .nav-left { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; letter-spacing: 1px; }
+    .nav-tag { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 2px;}
+    
+    .login-container { display: flex; justify-content: center; margin-top: 100px; }
+    .login-box { background: var(--surface); padding: 40px; border-radius: 12px; text-align: center; max-width: 400px; width: 100%; color: var(--text);}
+    .pin-input { width: 100%; height: 50px; text-align: center; font-size: 24px; letter-spacing: 8px; margin-bottom: 20px; border-radius: 8px; border: 1px solid var(--border); font-weight: 700;}
+    
+    .btn-primary { background: var(--navy); color: #fff; width: 100%; padding: 16px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; text-transform: uppercase; transition: 0.2s;}
+    .btn-primary:hover { background: #0f131f; }
+    .btn-primary:disabled { opacity: 0.5; cursor: wait; }
+    
+    #appContainer { display: none; max-width: 800px; margin: 40px auto; padding: 0 20px;}
+    .header-flex { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px;}
+    .page-title { font-size: 24px; font-weight: 700; }
+    .btn-refresh { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px;}
+    
+    .invoice-card { background: var(--surface); color: var(--text); padding: 20px; border-radius: 12px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 16px;}
+    .invoice-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid var(--border); padding-bottom: 12px;}
+    .inv-id { font-family: monospace; font-size: 14px; font-weight: 700; color: var(--navy); }
+    .inv-supplier { font-size: 18px; font-weight: 700; margin-top: 4px; }
+    .inv-amount { font-size: 20px; font-weight: 800; color: var(--s-green); text-align: right;}
+    
+    .inv-details { font-size: 13px; color: var(--text-2); display: flex; gap: 20px;}
+    .detail-item strong { color: var(--text); font-weight: 700;}
+    
+    .upload-zone { background: var(--canvas); padding: 16px; border-radius: 8px; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: space-between;}
+    input[type="file"] { font-size: 12px; cursor: pointer;}
+    .btn-process { background: var(--s-green); color: #fff; padding: 10px 20px; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; transition: 0.2s;}
+    .btn-process:hover { background: #14532d; }
+    .btn-process:disabled { opacity: 0.5; cursor: wait; }
+    
+    .empty-state { text-align: center; color: rgba(255,255,255,0.5); padding: 60px 20px; font-size: 16px;}
+  </style>
+</head>
+<body>
+
+  <nav class="top-nav">
+    <div>
+      <span class="nav-left">LOVA</span> <span class="nav-tag">Admin Dashboard</span>
+    </div>
+  </nav>
+
+  <div class="login-container" id="loginScreen">
+    <div class="login-box">
+      <h3 style="margin-bottom: 20px; font-size:14px; letter-spacing:1px;">AUTHORIZE FINANCE LOGIN</h3>
+      <input type="password" id="adminPin" class="pin-input" placeholder="PIN" onkeydown="if(event.key==='Enter') loginAdmin()">
+      <button class="btn-primary" id="btnAdminLogin" onclick="loginAdmin()">Access Dashboard</button>
+      <div id="loginError" style="color:red; margin-top:12px; font-size:12px; font-weight:600;"></div>
+    </div>
+  </div>
+
+  <div id="appContainer">
+    <div class="header-flex">
+      <div class="page-title">Pending Payments</div>
+      <button class="btn-refresh" onclick="fetchPendingInvoices()">↻ Refresh Feed</button>
+    </div>
+    <div id="loadingMsg" style="text-align:center; padding:40px; color:#aaa;">Loading pipeline...</div>
+    <div id="invoiceList"></div>
+  </div>
+
+  <script>
+    // PRE-FILLED WITH YOUR EXACT GAS URL
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbyEUJYIu9_O6E50KzKzdEY4EG2VLo4y0Yj8igGRZVMI_zEapqn5w758gdt_nG5tluEdHA/exec';
+    
+    let adminSessionPin = '';
+    let pendingData = [];
+
+    async function loginAdmin() {
+      const pin = document.getElementById('adminPin').value.trim();
+      const loginBtn = document.getElementById('btnAdminLogin');
+      const errorDiv = document.getElementById('loginError');
+
+      if (!pin) {
+        errorDiv.innerText = "Please enter your Admin PIN.";
+        return;
+      }
+
+      loginBtn.disabled = true;
+      loginBtn.innerText = 'VERIFYING...';
+      errorDiv.innerText = "";
+
+      try {
+        const response = await fetch(GAS_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'verifyAdminLogin', pincode: pin }),
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        
+        const res = await response.json();
+        
+        if (res.status === 'success') {
+          adminSessionPin = pin;
+          document.getElementById('loginScreen').style.display = 'none';
+          document.getElementById('appContainer').style.display = 'block';
+          fetchPendingInvoices();
+        } else {
+          errorDiv.innerText = res.message;
+          loginBtn.disabled = false;
+          loginBtn.innerText = "Access Dashboard";
+        }
+      } catch(e) {
+        errorDiv.innerText = "Network Error: " + e.message;
+        loginBtn.disabled = false;
+        loginBtn.innerText = "Access Dashboard";
+      }
+    }
+
+    async function fetchPendingInvoices() {
+      const listDiv = document.getElementById('invoiceList');
+      const loadDiv = document.getElementById('loadingMsg');
+      
+      listDiv.innerHTML = '';
+      loadDiv.style.display = 'block';
+      loadDiv.innerText = 'Syncing securely with Google Sheets...';
+
+      try {
+        const response = await fetch(GAS_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'getPendingInvoices', pincode: adminSessionPin }),
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        const result = await response.json();
+        
+        loadDiv.style.display = 'none';
+        
+        if (result.status === 'success') {
+          pendingData = result.data;
+          renderInvoices();
+        } else {
+          loadDiv.style.display = 'block';
+          loadDiv.innerText = 'Error: ' + result.message;
+        }
+      } catch (e) {
+        loadDiv.style.display = 'block';
+        loadDiv.innerText = 'Connection Error: ' + e.message;
+      }
+    }
+
+    function renderInvoices() {
+      const listDiv = document.getElementById('invoiceList');
+      if (pendingData.length === 0) {
+        listDiv.innerHTML = '<div class="empty-state">✅ Pipeline Clear! No pending payments found.</div>';
+        return;
+      }
+
+      pendingData.forEach((inv, index) => {
+        const card = document.createElement('div');
+        card.className = 'invoice-card';
+        card.id = `card-${index}`;
+        
+        const displayAmount = parseFloat(inv.amount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+        card.innerHTML = `
+          <div class="invoice-header">
+            <div>
+              <div class="inv-id">${inv.id}</div>
+              <div class="inv-supplier">${inv.supplier}</div>
+            </div>
+            <div class="inv-amount">${displayAmount} THB</div>
+          </div>
+          <div class="inv-details">
+            <div class="detail-item"><strong>Brand:</strong> ${inv.sheetName}</div>
+            <div class="detail-item"><strong>Requested By:</strong> ${inv.requester}</div>
+          </div>
+          <div class="upload-zone">
+            <input type="file" id="file-${index}" accept="image/*,application/pdf">
+            <button class="btn-process" id="btn-${index}" onclick="processPayment(${index})">Process & Email POP</button>
+          </div>
+          <div id="status-${index}" style="font-size:12px; font-weight:600; text-align:right; margin-top:-8px; display:none;"></div>
+        `;
+        listDiv.appendChild(card);
+      });
+    }
+
+    async function processPayment(index) {
+      const fileInput = document.getElementById(`file-${index}`);
+      const btn = document.getElementById(`btn-${index}`);
+      const statusDiv = document.getElementById(`status-${index}`);
+      const invData = pendingData[index];
+
+      if (!fileInput.files[0]) return alert("Please select a Proof of Payment file first.");
+
+      btn.disabled = true;
+      btn.innerText = "Encrypting & Sending...";
+      statusDiv.style.display = "block";
+      statusDiv.style.color = "var(--text-2)";
+      statusDiv.innerText = "Uploading to Drive & Notifying Staff...";
+
+      const reader = new FileReader();
+      reader.onload = async function() {
+        const payload = {
+          action: 'submitPOP',
+          pincode: adminSessionPin,
+          invoice: invData,
+          fileName: fileInput.files[0].name,
+          fileBase64: reader.result.split(',')[1]
+        };
+
+        try {
+          const response = await fetch(GAS_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+          });
+          const result = await response.json();
+          
+          if (result.status === 'success') {
+            statusDiv.style.color = "var(--s-green)";
+            statusDiv.innerText = "✅ Successfully Paid & Emailed!";
+            btn.style.display = "none";
+            fileInput.style.display = "none";
+            document.getElementById(`card-${index}`).style.opacity = "0.6";
+          } else {
+            statusDiv.style.color = "var(--red)";
+            statusDiv.innerText = "Error: " + result.message;
+            btn.disabled = false;
+            btn.innerText = "Process & Email POP";
+          }
+        } catch (e) {
+          statusDiv.style.color = "var(--red)";
+          statusDiv.innerText = "Network Error: " + e.message;
+          btn.disabled = false;
+          btn.innerText = "Process & Email POP";
+        }
+      };
+      reader.readAsDataURL(fileInput.files[0]);
+    }
+  </script>
+</body>
+</html>
