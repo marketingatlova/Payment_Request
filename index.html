@@ -160,6 +160,11 @@
               <span class="input-label">Payment Due Date</span>
               <input type="date" id="dueDate" class="input-box" required>
             </div>
+
+            <div style="grid-column: 1 / -1;">
+              <span class="input-label">Additional Note (Optional)</span>
+              <input type="text" id="note" class="input-box" placeholder="e.g. Please process before noon">
+            </div>
             
             <div style="grid-column: 1 / -1;">
               <span class="input-label">Attach Document (PDF/Image)</span>
@@ -195,7 +200,7 @@
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbyEUJYIu9_O6E50KzKzdEY4EG2VLo4y0Yj8igGRZVMI_zEapqn5w758gdt_nG5tluEdHA/exec';
     
     let sessionPincode = ""; 
-    let sessionHistory = []; // Array to track successful submissions
+    let sessionHistory = []; 
 
     // ==========================================
     // UI HELPER LOGIC
@@ -248,7 +253,6 @@
       const div = document.createElement('div');
       div.className = 'history-item';
       
-      // Formats the item safely and cleanly
       div.innerHTML = `
         <div>
           <div class="history-id">${id}</div>
@@ -257,7 +261,6 @@
         <div class="history-amount">${amount} THB</div>
       `;
       
-      // Puts the newest submission at the top of the list
       list.insertBefore(div, list.firstChild);
     }
 
@@ -322,7 +325,6 @@
       document.getElementById('submitStatus').style.display = 'none';
       document.getElementById('loginStatus').innerText = '';
       
-      // Wipe the memory of the session history completely
       sessionPincode = ""; 
       sessionHistory = [];
       document.getElementById('historyCount').innerText = '0';
@@ -354,10 +356,9 @@
       reader.onload = async function() {
         const base64Data = reader.result.split(',')[1]; 
 
-        // Grab values before we clear them out
         const titleForHistory = document.getElementById('requestTitle').value;
         const rawAmount = document.getElementById('amount').value.replace(/,/g, '');
-        const amountForHistory = document.getElementById('amount').value; // Keep commas for history UI
+        const amountForHistory = document.getElementById('amount').value; 
 
         let finalDocType = document.getElementById('documentType').value;
         if (finalDocType === 'Other') {
@@ -372,7 +373,8 @@
           brand: document.getElementById('brand').value,
           amount: rawAmount,             
           documentType: finalDocType, 
-          dueDate: document.getElementById('dueDate').value,           
+          dueDate: document.getElementById('dueDate').value,
+          note: document.getElementById('note').value, // NEWLY ADDED!           
           pincode: sessionPincode, 
           isUrgent: document.getElementById('isUrgent').checked,
           fileName: fileInput.name,
@@ -392,15 +394,14 @@
             statusDiv.innerHTML = `SUCCESS: Document routed properly.<br>Generated ID: <span style="font-family:monospace; color:var(--text);">${result.id}</span>`;
             statusDiv.className = "status-success";
             
-            // Add the transaction to the Session History log!
             addHistoryItem(result.id, titleForHistory, amountForHistory);
             
-            // Reset editable fields so they can quickly enter the next one
             document.getElementById('requestTitle').value = '';
             document.getElementById('amount').value = '';
             document.getElementById('documentType').selectedIndex = 0;
             document.getElementById('documentTypeCustom').style.display = 'none';
             document.getElementById('dueDate').value = '';
+            document.getElementById('note').value = ''; // Clear note!
             document.getElementById('file').value = '';
             document.getElementById('isUrgent').checked = false;
             document.getElementById('brand').selectedIndex = 0;
