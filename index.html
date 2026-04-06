@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>LOVA — Finance Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy: #1a1f2e; --navy2: #2d3447; --red: #c0392b; --red-soft: #fdf0ef; --red-border: #f5c6c2;
+      --canvas: #f7f5f0; --surface: #ffffff; --border: #e4e1db; --border-soft: #ede9e3;
+      --text: #1a1f2e; --text-2: #5a5750; --text-3: #9a9690;
+      --s-green: #166534; --s-green-bg: #dcfce7; --s-green-border: #86efac;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Plus Jakarta Sans', 'Sarabun', sans-serif; background: var(--canvas); min-height: 100vh; padding-bottom: 60px; }
+    
+    /* ==================== LOGIN SCREEN ==================== */
+    .login-card { background: var(--surface); padding: 40px 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin: 60px auto; max-width: 380px; width: 100%; border: 1px solid var(--border); text-align: center; }
+    .login-title { font-size: 13px; color: var(--text-3); font-weight: 800; letter-spacing: 1px; margin-bottom: 20px; text-transform: uppercase; }
+    
+    .pin-input { width: 100%; height: 55px; border-radius: 8px; border: 1px solid var(--border); background: var(--canvas); text-align: center; letter-spacing: 8px; font-size: 24px; font-weight: 800; color: var(--text); margin-bottom: 20px; outline: none; transition: 0.2s; -webkit-appearance: none; font-family: 'Plus Jakarta Sans', sans-serif;}
+    .pin-input:focus { border-color: var(--navy); background: var(--surface); }
+    .pin-input::placeholder { letter-spacing: 2px; font-size: 14px; font-weight: 600; color: var(--text-3); }
+
+    /* ==================== NAVIGATION ==================== */
+    .top-nav { background: var(--navy); padding: 13px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .nav-left { display: flex; align-items: baseline; gap: 10px; }
+    .nav-wordmark { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: #fff; letter-spacing: 1px; }
+    .nav-tag { font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.4); letter-spacing: 1.5px; text-transform: uppercase; }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .nav-user { font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.55); }
+    .btn-logout { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.55); border: 1px solid rgba(255,255,255,0.12); padding: 6px 12px; border-radius: 6px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; font-weight: 500; cursor: pointer; transition: background 0.15s; }
+    .btn-logout:hover { background: rgba(255,255,255,0.15); color: #fff; }
+    
+    /* ==================== MAIN CONTENT ==================== */
+    .content { padding: 24px 16px; max-width: 600px; margin: 0 auto; }
+    
+    .admin-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(26,31,46,0.04); }
+    .section-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-soft); padding-bottom: 10px; }
+    
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+    
+    .input-label { font-size: 10px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block; }
+    .input-box { width: 100%; height: 48px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--canvas); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; font-weight: 600; outline: none; transition: 0.15s; -webkit-appearance: none; box-sizing: border-box; }
+    .input-box:focus { border-color: var(--navy); background: var(--surface); }
+    .input-box[readonly] { background: var(--border-soft); color: var(--text-2); cursor: not-allowed; border-color: var(--border-soft); font-weight: 700;}
+    
+    /* Custom File Input Styling */
+    input[type="file"] { padding: 12px 10px; font-size: 12px; font-weight: 500; cursor: pointer;}
+    input[type="file"]::file-selector-button { background: var(--border); border: none; padding: 6px 12px; border-radius: 4px; font-family: inherit; font-size: 11px; font-weight: 700; cursor: pointer; margin-right: 12px; color: var(--text); transition: 0.2s;}
+    input[type="file"]::file-selector-button:hover { background: var(--border-soft); }
+
+    /* Custom Checkbox */
+    .urgent-wrapper { display: flex; align-items: center; gap: 10px; padding: 5px 0 20px; }
+    .urgent-wrapper label { margin: 0; color: var(--red); font-weight: 800; font-size: 13px; cursor: pointer; letter-spacing: 0.5px;}
+    .custom-checkbox { appearance: none; -webkit-appearance: none; width: 20px; height: 20px; border: 2px solid var(--red-border); border-radius: 4px; background-color: white; cursor: pointer; position: relative; transition: all 0.2s ease; margin: 0; }
+    .custom-checkbox:hover { border-color: var(--red); }
+    .custom-checkbox:checked { background-color: var(--red); border-color: var(--red); }
+    .custom-checkbox:checked::after { content: ''; position: absolute; left: 5px; top: 1px; width: 5px; height: 10px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+    
+    /* Buttons */
+    .btn-primary { background: var(--navy); color: #fff; width: 100%; height: 50px; border: none; border-radius: 9px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.5px; cursor: pointer; transition: 0.15s; text-transform: uppercase; }
+    .btn-primary:hover { background: var(--navy2); }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none;}
+
+    /* Status Messages */
+    #loginStatus { margin-top: 16px; font-size: 12px; font-weight: 600; color: var(--red); height: 16px;}
+    #submitStatus { margin-top: 20px; font-size: 13px; font-weight: 600; text-align: center; padding: 12px; border-radius: 8px; display: none; border: 1px solid transparent;}
+    .status-loading { background: var(--border-soft); color: var(--text-2); border-color: var(--border); }
+    .status-success { background: var(--s-green-bg); color: var(--s-green); border-color: var(--s-green-border); }
+    .status-error { background: var(--red-soft); color: var(--red); border-color: var(--red-border); }
+    
+  </style>
+</head>
+<body>
+
+  <div id="loginScreen" style="padding: 15px; display:flex;">
+    <div class="login-card">
+      <div class="login-title">SECURE FINANCE ACCESS</div>
+      <input type="password" id="hqPinInput" class="pin-input" placeholder="STAFF PIN" inputmode="numeric" pattern="[0-9]*" onkeydown="if(event.key==='Enter') loginStaff()">
+      <button class="btn-primary" id="btnLogin" onclick="loginStaff()">Authenticate</button>
+      <div id="loginStatus"></div>
+    </div>
+  </div>
+
+  <div id="appContainer" style="display:none;">
+    
+    <nav class="top-nav">
+      <div class="nav-left">
+        <div class="nav-wordmark">LOVA</div>
+        <div class="nav-tag">Finance Center</div>
+      </div>
+      <div class="nav-right">
+        <div class="nav-user" id="navUser">Staff Member</div>
+        <button class="btn-logout" onclick="logout()">Lock System</button>
+      </div>
+    </nav>
+
+    <div class="content">
+      <div class="admin-card">
+        <div class="section-title">Submit Payment Request</div>
+        
+        <form id="financeForm">
+          <div class="form-grid">
+            
+            <div>
+              <span class="input-label">Requested By</span>
+              <input type="text" id="userName" class="input-box" readonly>
+            </div>
+            <div>
+              <span class="input-label">Registered Email</span>
+              <input type="email" id="email" class="input-box" readonly>
+            </div>
+            
+            <div style="grid-column: 1 / -1;">
+              <span class="input-label">Supplier / Request Title</span>
+              <input type="text" id="requestTitle" class="input-box" placeholder="e.g. Produce Delivery Invoice" required>
+            </div>
+            
+            <div style="grid-column: 1 / -1;">
+              <span class="input-label">Assigned Brand</span>
+              <select id="brand" class="input-box" required>
+                <option value="LAV">LAVA</option>
+                <option value="BIA">Bianca</option>
+                <option value="HOL">Holy Belly</option>
+                <option value="LOV">Office / Lova</option>
+              </select>
+            </div>
+            
+            <div style="grid-column: 1 / -1;">
+              <span class="input-label">Attach Document (PDF/Image)</span>
+              <input type="file" id="file" class="input-box" required>
+            </div>
+            
+          </div>
+          
+          <div class="urgent-wrapper">
+            <input type="checkbox" id="isUrgent" class="custom-checkbox">
+            <label for="isUrgent">FLAG AS URGENT</label>
+          </div>
+          
+          <button type="submit" class="btn-primary" id="submitBtn">Push to Finance Pipeline</button>
+        </form>
+        
+        <div id="submitStatus"></div>
+        
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // DEPLOYED WEB APP URL
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbyEUJYIu9_O6E50KzKzdEY4EG2VLo4y0Yj8igGRZVMI_zEapqn5w758gdt_nG5tluEdHA/exec';
+    
+    let sessionPincode = ""; 
+
+    // ==========================================
+    // SECURE LOGIN LOGIC
+    // ==========================================
+    async function loginStaff() {
+      const pin = document.getElementById('hqPinInput').value.trim();
+      const statusEl = document.getElementById('loginStatus');
+      const loginBtn = document.getElementById('btnLogin');
+      
+      if (!pin) {
+        statusEl.innerText = "Please enter your PIN code.";
+        return;
+      }
+      
+      loginBtn.disabled = true;
+      loginBtn.innerText = 'VERIFYING...';
+      statusEl.innerText = "";
+      
+      try {
+        const response = await fetch(GAS_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'verifyLogin', pincode: pin }),
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        
+        const res = await response.json();
+        
+        if (res.status === 'success') {
+          sessionPincode = pin;
+          
+          // Switch Screens
+          document.getElementById('loginScreen').style.display = 'none';
+          document.getElementById('appContainer').style.display = 'block';
+          
+          // Pre-fill fields
+          document.getElementById('userName').value = res.name;
+          document.getElementById('email').value = res.email;
+          document.getElementById('navUser').innerText = res.name;
+          
+          // Reset login styling
+          loginBtn.innerText = "Authenticate";
+          document.getElementById('hqPinInput').value = '';
+        } else {
+          statusEl.innerText = "Invalid PIN. Access Denied.";
+          loginBtn.innerText = "Authenticate";
+        }
+      } catch(e) {
+        statusEl.innerText = "Network Error. Please try again.";
+        loginBtn.innerText = "Authenticate";
+      } finally {
+        loginBtn.disabled = false;
+      }
+    }
+
+    // ==========================================
+    // LOGOUT LOGIC
+    // ==========================================
+    function logout() {
+      document.getElementById('appContainer').style.display = 'none';
+      document.getElementById('loginScreen').style.display = 'flex';
+      document.getElementById('financeForm').reset();
+      document.getElementById('submitStatus').style.display = 'none';
+      document.getElementById('loginStatus').innerText = '';
+      sessionPincode = ""; 
+    }
+
+    // ==========================================
+    // FORM SUBMISSION LOGIC
+    // ==========================================
+    document.getElementById('financeForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const fileInput = document.getElementById('file').files[0];
+      const statusDiv = document.getElementById('submitStatus');
+      const submitBtn = document.getElementById('submitBtn');
+
+      if (!fileInput) return alert("Please upload a file.");
+
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'Encrypting & Routing...';
+      
+      statusDiv.style.display = "block";
+      statusDiv.innerHTML = "Processing request securely...";
+      statusDiv.className = "status-loading";
+
+      const reader = new FileReader();
+      reader.onload = async function() {
+        const base64Data = reader.result.split(',')[1]; 
+
+        const payload = {
+          action: 'submitRequest', 
+          userName: document.getElementById('userName').value,
+          email: document.getElementById('email').value,
+          requestTitle: document.getElementById('requestTitle').value,
+          brand: document.getElementById('brand').value,
+          pincode: sessionPincode, 
+          isUrgent: document.getElementById('isUrgent').checked,
+          fileName: fileInput.name,
+          fileBase64: base64Data
+        };
+
+        try {
+          const response = await fetch(GAS_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+          });
+          
+          const result = await response.json();
+          
+          if (result.status === 'success') {
+            statusDiv.innerHTML = `SUCCESS: Invoice routed properly.<br>Generated ID: <span style="font-family:monospace; color:var(--text);">${result.id}</span>`;
+            statusDiv.className = "status-success";
+            
+            // Reset editable fields
+            document.getElementById('requestTitle').value = '';
+            document.getElementById('file').value = '';
+            document.getElementById('isUrgent').checked = false;
+            document.getElementById('brand').selectedIndex = 0;
+            
+          } else {
+            statusDiv.innerText = `ERROR: ${result.message}`;
+            statusDiv.className = "status-error";
+          }
+        } catch (error) {
+          statusDiv.innerText = "Network error. Document was not sent.";
+          statusDiv.className = "status-error";
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.innerText = "Push to Finance Pipeline";
+        }
+      };
+      reader.readAsDataURL(fileInput);
+    });
+  </script>
+</body>
+</html>
