@@ -9,67 +9,101 @@
     :root {
       --navy: #0f131f; --navy-light: #1a1f2e; --accent: #c0392b; --canvas: #f7f5f0; 
       --surface: #ffffff; --border: #e4e1db; --text: #1a1f2e; --text-dim: #5a5750;
-      --green: #166534; --green-bg: #dcfce7; --blue-soft: #eff6ff;
+      --green: #166534; --green-bg: #dcfce7;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--canvas); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+    
+    /* PREVENT MAIN PAGE SCROLL, BUT ALLOW CONTENT FLEX */
+    html, body { height: 100vh; overflow: hidden; font-family: 'Plus Jakarta Sans', sans-serif; background: var(--canvas); color: var(--text); }
+    body { display: flex; }
 
     /* ==================== PREMIUM LOGIN ==================== */
     .login-overlay { position: fixed; inset: 0; background: var(--navy); z-index: 1000; display: flex; align-items: center; justify-content: center; }
-    .login-card { background: var(--surface); padding: 48px; border-radius: 24px; text-align: center; width: 100%; max-width: 380px; box-shadow: 0 40px 80px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1); }
-    .login-logo { font-family: 'Playfair Display', serif; font-size: 38px; margin-bottom: 4px; color: var(--navy); letter-spacing: 1px; }
-    .pin-input { width: 100%; height: 55px; text-align: center; font-size: 26px; letter-spacing: 12px; margin: 24px 0; border: 2px solid var(--border); border-radius: 12px; outline: none; transition: 0.3s; background: #fcfcfc; }
+    .login-card { background: var(--surface); padding: 40px; border-radius: 28px; text-align: center; width: 100%; max-width: 380px; box-shadow: 0 40px 80px rgba(0,0,0,0.6); }
+    .login-logo { font-family: 'Playfair Display', serif; font-size: 38px; color: var(--navy); margin-bottom: 5px; }
+    .pin-input { width: 100%; height: 55px; text-align: center; font-size: 26px; letter-spacing: 12px; margin: 20px 0; border: 2px solid var(--border); border-radius: 14px; outline: none; transition: 0.3s; }
     .pin-input:focus { border-color: var(--navy); box-shadow: 0 0 0 4px rgba(15,19,31,0.05); }
 
     /* ==================== SIDEBAR ==================== */
-    .sidebar { width: 260px; background: var(--navy); color: #fff; display: flex; flex-direction: column; padding: 30px 0; border-right: 1px solid rgba(255,255,255,0.05);}
+    .sidebar { width: 250px; background: var(--navy); color: #fff; display: flex; flex-direction: column; padding: 30px 0; flex-shrink: 0; }
     .sidebar-brand { padding: 0 30px 30px; }
     .nav-item { padding: 12px 30px; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.4); cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px; }
-    .nav-item:hover { color: #fff; background: rgba(255,255,255,0.05); }
     .nav-item.active { color: #fff; background: rgba(255,255,255,0.08); border-right: 4px solid var(--accent); }
     
-    /* SIDEBAR BATCH INFO */
-    .sidebar-batch { margin: 20px 20px 0; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
+    .sidebar-batch { margin: 15px 15px 0; padding: 18px; background: rgba(255,255,255,0.03); border-radius: 14px; border: 1px solid rgba(255,255,255,0.05); }
     .batch-label { font-size: 9px; font-weight: 800; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
-    .batch-date { font-size: 12px; font-weight: 700; color: #60a5fa; }
+    .batch-date { font-size: 13px; font-weight: 700; color: #60a5fa; }
+    .nav-logout { margin-top: auto; padding: 20px 30px; font-size: 11px; color: rgba(255,255,255,0.2); cursor: pointer; border-top: 1px solid rgba(255,255,255,0.05); }
 
-    .nav-logout { margin-top: 10px; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px; font-size: 11px; cursor: pointer; padding-left: 30px;}
-
-    /* ==================== MAIN AREA (HIGH DENSITY) ==================== */
-    .main-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-    .top-header { background: var(--surface); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
-    .view-content { flex: 1; padding: 15px 40px; overflow-y: auto; }
+    /* ==================== SMART-ADAPTIVE VIEWPORT ==================== */
+    .main-area { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    .top-header { background: var(--surface); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); flex-shrink: 0; }
     
-    #tabForm { max-width: 800px; margin: 0 auto; }
-    .form-section { background: var(--surface); border-radius: 12px; border: 1px solid var(--border); padding: 18px 24px; margin-bottom: 12px; }
-    .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; border-bottom: 1px solid #f8fafc; padding-bottom: 8px; }
-    .step-num { width: 20px; height: 20px; background: var(--navy); color: #fff; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 800; }
-    .section-title { font-size: 11px; font-weight: 800; color: var(--navy); text-transform: uppercase; letter-spacing: 1px; }
+    /* THE CONTENT AREA: Allows scroll but hides the bar */
+    .view-content { 
+      flex: 1; 
+      padding: 1.5vh 40px; 
+      overflow-y: auto; 
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none;  /* IE/Edge */
+    }
+    .view-content::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+    
+    #tabForm { width: 100%; max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; height: auto; }
+    
+    .form-section { 
+      background: var(--surface); 
+      border-radius: 16px; 
+      border: 1px solid var(--border); 
+      padding: 2vh 28px; 
+      margin-bottom: 1.2vh; 
+    }
+    .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 1.5vh; border-bottom: 1px solid #f8fafc; padding-bottom: 8px; }
+    .step-num { width: 22px; height: 22px; background: var(--navy); color: #fff; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; }
+    .section-title { font-size: 12px; font-weight: 800; color: var(--navy); text-transform: uppercase; letter-spacing: 1.5px; }
 
-    .grid-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-    .input-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+    .grid-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .input-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 1.2vh; }
     .label { font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; }
-    .input { background: #fcfdfd; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px; font-size: 14px; font-family: inherit; transition: 0.2s; outline: none; height: 44px; }
+    
+    .input { 
+      background: #fcfdfd; 
+      border: 1px solid var(--border); 
+      padding: 0 16px; 
+      border-radius: 10px; 
+      font-size: 15px; 
+      font-family: inherit; 
+      outline: none; 
+      height: 44px; /* Precision Height */
+    }
     .input:focus { border-color: var(--navy); background: #fff; }
 
-    .brand-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-    .brand-btn { padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer; background: #fff; transition: 0.2s; text-align: center; color: var(--text-dim);}
-    .brand-btn.active { background: var(--navy); color: #fff; border-color: var(--navy); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    .brand-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .brand-btn { padding: 12px; border: 1.5px solid var(--border); border-radius: 12px; font-size: 12px; font-weight: 800; cursor: pointer; background: #fff; text-align: center; color: var(--text-dim); transition: 0.2s;}
+    .brand-btn.active { background: var(--navy); color: #fff; border-color: var(--navy); transform: translateY(-2px); }
 
-    .urgent-row { display: flex; align-items: center; justify-content: space-between; background: #fff5f5; padding: 0 15px; border-radius: 8px; border: 1px solid #fed7d7; cursor: pointer; height: 44px; margin-top: auto; }
-    .checkbox { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
+    .urgent-row { display: flex; align-items: center; justify-content: space-between; background: #fff5f5; padding: 0 20px; border-radius: 10px; border: 1px solid #fed7d7; cursor: pointer; height: 44px; margin-top: auto; }
+    .checkbox { width: 20px; height: 20px; accent-color: var(--accent); cursor: pointer; }
 
-    .upload-zone { border: 2px dashed var(--border); border-radius: 10px; padding: 20px; text-align: center; position: relative; transition: 0.3s; background: #fafafa; cursor: pointer; }
-    .upload-zone:hover { border-color: var(--navy); }
+    .upload-zone { border: 2px dashed var(--border); border-radius: 14px; padding: 20px; text-align: center; background: #fafafa; cursor: pointer; }
     .upload-zone.active { border-color: var(--green); background: var(--green-bg); }
 
-    .btn-submit-main { background: var(--navy); color: #fff; padding: 16px; border-radius: 12px; font-weight: 800; font-size: 15px; border: none; cursor: pointer; width: 100%; transition: 0.3s; margin-bottom: 30px; box-shadow: 0 8px 20px rgba(15,19,31,0.15); }
-    .btn-submit-main:hover { background: var(--navy-light); transform: translateY(-2px); }
-
-    .history-card { background: #fff; border-radius: 10px; padding: 12px 15px; border: 1px solid var(--border); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-    .status-badge { font-size: 9px; font-weight: 800; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; }
-    .status-paid { background: var(--green-bg); color: var(--green); }
-    .status-pending { background: #f3f4f6; color: #6b7280; }
+    .btn-submit-main { 
+      background: var(--navy); 
+      color: #fff; 
+      padding: 18px; 
+      border-radius: 16px; 
+      font-weight: 800; 
+      font-size: 16px; 
+      border: none; 
+      cursor: pointer; 
+      width: 100%; 
+      transition: 0.3s; 
+      box-shadow: 0 10px 20px rgba(15,19,31,0.15); 
+      margin-top: 5px; 
+      margin-bottom: 25px; /* Bottom Buffer */
+    }
+    .btn-submit-main:hover { transform: translateY(-3px); background: var(--navy-light); }
 
     .hidden { display: none !important; }
   </style>
@@ -79,46 +113,38 @@
   <div class="login-overlay" id="loginScreen">
     <div class="login-card">
       <div class="login-logo">LOVA</div>
-      <p style="font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 2px; font-weight: 800;">Staff Entry Terminal</p>
-      <input type="password" id="staffPin" class="pin-input" placeholder="0000" maxlength="6" onkeydown="if(event.key==='Enter') login()">
-      <button class="btn-submit-main" style="margin-bottom:0" onclick="login()" id="loginBtn">Authorize Access</button>
-      <div id="loginError" style="color:var(--accent); margin-top:15px; font-size:11px; font-weight:800;"></div>
+      <p style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 2px; font-weight: 800;">Staff Command Terminal</p>
+      <input type="password" id="staffPin" class="pin-input" placeholder="PIN" onkeydown="if(event.key==='Enter') login()">
+      <button class="btn-submit-main" style="margin:0" onclick="login()" id="loginBtn">Authorize Access</button>
+      <div id="loginError" style="color:var(--accent); margin-top:20px; font-size:12px; font-weight:800;"></div>
     </div>
   </div>
 
   <aside class="sidebar">
-    <div class="sidebar-brand">
-      <h1 style="font-family:'Playfair Display'; font-size:26px;">LOVA</h1>
-      <p style="font-size:9px; opacity:0.4; letter-spacing:3px; margin-top:4px; font-weight:800;">HOSPITALITY</p>
-    </div>
+    <div class="sidebar-brand"><h1 style="font-family:'Playfair Display'; font-size:28px; letter-spacing:1px;">LOVA</h1></div>
+    <div class="nav-item active" id="navForm" onclick="showTab('form')">New Payment Request</div>
+    <div class="nav-item" id="navHistory" onclick="showTab('history')">My Activity Log</div>
     
-    <div class="nav-item active" id="navForm" onclick="showTab('form')">New Request</div>
-    <div class="nav-item" id="navHistory" onclick="showTab('history')">My Activity</div>
-
     <div class="sidebar-batch">
       <div class="batch-label">Next Payment Batch</div>
       <div class="batch-date" id="payFriday">...</div>
     </div>
     
-    <div style="margin-top:auto; padding-bottom:30px;">
-      <div id="userNameBadge" style="font-size:11px; font-weight:800; color:#fff; margin-bottom:10px; padding-left:30px;">Staff Member</div>
-      <div class="nav-logout" onclick="location.reload()">Logout Portal</div>
-    </div>
+    <div class="nav-logout" onclick="location.reload()">Logout Portal</div>
   </aside>
 
   <main class="main-area">
     <header class="top-header">
-      <h2 id="pageTitle" style="font-size: 18px; font-weight:800;">New Payment Request</h2>
-      <div style="font-size:10px; font-weight:800; color:var(--text-dim); text-transform:uppercase;">Status: <span style="color:var(--green);">Secure Link</span></div>
+      <h2 id="pageTitle" style="font-size: 20px; font-weight: 800;">New Payment Request</h2>
+      <div id="userNameBadge" style="font-size:11px; font-weight:800; color:var(--text-dim); text-transform: uppercase; letter-spacing: 1px;">Authorized Staff</div>
     </header>
 
     <div class="view-content">
-      
       <div id="tabForm">
         <form id="paymentForm" onsubmit="event.preventDefault(); submitRequest();">
           
           <div class="form-section">
-            <div class="section-header"><div class="step-num">01</div><div class="section-title">Brand Selection</div></div>
+            <div class="section-header"><div class="step-num">01</div><div class="section-title">Entity Selection</div></div>
             <div class="brand-grid">
               <div class="brand-btn" onclick="setBrand('LAV', this)">LAVA</div>
               <div class="brand-btn" onclick="setBrand('BIA', this)">BIANCA</div>
@@ -135,46 +161,34 @@
               <input type="text" id="supplier" class="input" placeholder="Supplier name..." required>
             </div>
             <div class="grid-pair">
-              <div class="input-group">
-                <div class="label">Amount (THB)</div>
-                <input type="number" step="0.01" id="amount" class="input" placeholder="0.00" required>
-              </div>
+              <div class="input-group"><div class="label">Amount (THB)</div><input type="number" step="0.01" id="amount" class="input" placeholder="0.00" required></div>
               <div class="input-group">
                 <div class="label">Doc Type</div>
-                <select id="docType" class="input" required>
+                <select id="docType" class="input" required style="height:44px;">
                   <option value="Invoice">Invoice</option>
                   <option value="Receipt">Receipt</option>
                   <option value="Quotation">Quotation</option>
                 </select>
               </div>
             </div>
-            <div class="input-group" style="margin-bottom:0">
-              <div class="label">Payment Note</div>
-              <input type="text" id="notes" class="input" placeholder="What is this for?">
-            </div>
           </div>
 
           <div class="form-section">
             <div class="section-header"><div class="step-num">03</div><div class="section-title">Schedule & Priority</div></div>
             <div class="grid-pair">
-              <div class="input-group">
-                <div class="label">Due Date</div>
-                <input type="date" id="dueDate" class="input" required>
-              </div>
+              <div class="input-group"><div class="label">Due Date</div><input type="date" id="dueDate" class="input" required></div>
               <div class="input-group">
                 <div class="label">Urgency</div>
-                <label class="urgent-row" for="urgent">
-                  <span style="font-size:10px; font-weight:800; color:var(--accent);">FLAG AS URGENT</span>
-                  <input type="checkbox" id="urgent" class="checkbox">
-                </label>
+                <label class="urgent-row" for="urgent"><span style="font-size:11px; font-weight:800; color:var(--accent);">FLAG URGENT</span><input type="checkbox" id="urgent" class="checkbox"></label>
               </div>
             </div>
+            <div class="input-group" style="margin:0"><div class="label">Payment Note</div><input type="text" id="notes" class="input" placeholder="What is this paying for?"></div>
           </div>
 
           <div class="form-section">
-            <div class="section-header"><div class="step-num">04</div><div class="section-title">Attachment</div></div>
+            <div class="section-header"><div class="step-num">04</div><div class="section-title">Documentation</div></div>
             <div class="upload-zone" id="dropZone" onclick="document.getElementById('invoiceFile').click()">
-              <div id="fileNameDisp" style="font-size:12px; font-weight:700; color:var(--text-dim);">Tap to Upload Invoice</div>
+              <div id="fileNameDisp" style="font-size:13px; font-weight:700; color:var(--text-dim);">Tap to Upload Invoice Document</div>
               <input type="file" id="invoiceFile" class="hidden" onchange="handleFile(this)" accept="image/*,application/pdf" required>
             </div>
           </div>
@@ -184,24 +198,22 @@
       </div>
 
       <div id="tabHistory" class="hidden">
-        <div id="histLoading" style="text-align:center; padding:30px; color:#aaa; font-size:12px;">Syncing activity...</div>
+        <div id="histLoading" style="text-align:center; padding:40px; color:#aaa; font-size:13px;">Syncing activity log...</div>
         <div id="histList"></div>
       </div>
 
-      <div id="successMsg" class="hidden" style="text-align:center; padding:40px; background:#fff; border-radius:15px; border:1px solid var(--border); max-width:500px; margin:0 auto;">
-        <div style="font-size:40px;">✅</div>
-        <h2 style="font-size:20px; font-weight:800; margin-top:10px;">Transmission Complete</h2>
-        <p id="refIdDisp" style="font-family:monospace; font-size:18px; font-weight:800; color:var(--navy); margin: 15px 0;"></p>
-        <button class="btn-submit-main" onclick="location.reload()" style="width:auto; padding:10px 25px; font-size:13px;">Done</button>
+      <div id="successMsg" class="hidden" style="text-align:center; padding:50px; background:#fff; border-radius:24px; border:1px solid var(--border); max-width:500px; margin:0 auto;">
+        <div style="font-size:50px;">✨</div>
+        <h2 style="font-size:24px; font-weight:800; margin-top:15px;">Transmitted</h2>
+        <p id="refIdDisp" style="font-family:monospace; font-size:20px; font-weight:800; color:var(--navy); margin: 20px 0;"></p>
+        <button class="btn-submit-main" onclick="location.reload()" style="width:auto; padding:12px 40px; font-size:14px;">Done</button>
       </div>
-
     </div>
   </main>
 
   <script>
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbyEUJYIu9_O6E50KzKzdEY4EG2VLo4y0Yj8igGRZVMI_zEapqn5w758gdt_nG5tluEdHA/exec';
     let user = null; let pin = '';
-
     function init() {
       const d = new Date(); const day = d.getDay();
       const diff = d.getDate() + (day <= 5 ? (5 - day) : (5 - day + 7));
@@ -209,7 +221,6 @@
       document.getElementById('payFriday').innerText = friday.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
     }
     init();
-
     async function login() {
       const input = document.getElementById('staffPin'); const btn = document.getElementById('loginBtn');
       if (!input.value) return;
@@ -217,71 +228,41 @@
       try {
         const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'verifyLogin', pincode: input.value }) });
         const data = await res.json();
-        if (data.status === 'success') {
-          user = data; pin = input.value;
-          document.getElementById('userNameBadge').innerText = data.name;
-          document.getElementById('loginScreen').style.display = 'none';
-        } else {
-          document.getElementById('loginError').innerText = data.message;
-          btn.disabled = false; btn.innerText = 'Authorize Session';
-        }
+        if (data.status === 'success') { user = data; pin = input.value; document.getElementById('userNameBadge').innerText = data.name; document.getElementById('loginScreen').style.display = 'none'; }
+        else { document.getElementById('loginError').innerText = data.message; btn.disabled = false; btn.innerText = 'Authorize Session'; }
       } catch (e) { btn.disabled = false; }
     }
-
     function showTab(tab) {
       document.getElementById('tabForm').classList.toggle('hidden', tab !== 'form');
       document.getElementById('tabHistory').classList.toggle('hidden', tab !== 'history');
       document.getElementById('navForm').classList.toggle('active', tab === 'form');
       document.getElementById('navHistory').classList.toggle('active', tab === 'history');
-      document.getElementById('pageTitle').innerText = tab === 'form' ? 'New Payment Request' : 'My Activity Log';
       if (tab === 'history') fetchHistory();
     }
-
     async function fetchHistory() {
-      const list = document.getElementById('histList');
-      list.innerHTML = ''; document.getElementById('histLoading').classList.remove('hidden');
+      const list = document.getElementById('histList'); list.innerHTML = ''; document.getElementById('histLoading').classList.remove('hidden');
       try {
         const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'getDashboardData', pincode: pin }) });
         const data = await res.json();
         document.getElementById('histLoading').classList.add('hidden');
         const mine = [...data.pending, ...data.history].filter(i => i.requester.toLowerCase().trim() === user.name.toLowerCase().trim());
-        if (!mine.length) { list.innerHTML = '<center style="padding:30px; color:#aaa;">No history.</center>'; return; }
-        list.innerHTML = mine.map(item => `
-          <div class="history-card">
-            <div><div style="font-weight:700; font-size:13px;">${item.supplier}</div><div style="font-size:10px; color:#888;">${item.id}</div></div>
-            <div style="text-align:right"><div style="font-weight:800; font-size:13px; color:var(--green);">${parseFloat(item.amount).toLocaleString()}</div>
-            <span class="status-badge ${item.popUrl ? 'status-paid' : 'status-pending'}">${item.popUrl ? 'Paid' : 'Queue'}</span></div>
-          </div>`).join('');
-      } catch (e) { list.innerHTML = 'Error loading history.'; }
+        list.innerHTML = mine.length ? mine.map(item => `<div class="history-card"><div><strong>${item.supplier}</strong><br><small style="color:#888;">ID: ${item.id} • ${item.date}</small></div><div style="text-align:right"><strong>${parseFloat(item.amount).toLocaleString()}</strong><br><span class="status-badge ${item.popUrl ? 'status-paid' : 'status-pending'}">${item.popUrl ? 'Paid' : 'Queue'}</span></div></div>`).join('') : '<center style="padding:40px; color:#aaa;">No history found.</center>';
+      } catch (e) { list.innerHTML = 'Error loading log.'; }
     }
-
-    function setBrand(code, el) {
-      document.querySelectorAll('.brand-btn').forEach(b => b.classList.remove('active'));
-      el.classList.add('active'); document.getElementById('brand').value = code;
-    }
-
-    function handleFile(input) {
-      if (input.files.length) { 
-        document.getElementById('fileNameDisp').innerText = "📎 Locked: " + input.files[0].name; 
-        document.getElementById('dropZone').classList.add('active'); 
-      }
-    }
-
+    function setBrand(code, el) { document.querySelectorAll('.brand-btn').forEach(b => b.classList.remove('active')); el.classList.add('active'); document.getElementById('brand').value = code; }
+    function handleFile(input) { if (input.files.length) { document.getElementById('fileNameDisp').innerText = "📎 Locked: " + input.files[0].name; document.getElementById('dropZone').classList.add('active'); } }
     async function submitRequest() {
       const btn = document.getElementById('submitBtn'); const file = document.getElementById('invoiceFile').files[0];
       const brand = document.getElementById('brand').value;
-      if (!brand || !file) return alert("Select brand & attach file.");
-      btn.disabled = true; btn.innerText = "Transmitting...";
+      if (!brand || !file) return alert("Select brand & attach document.");
+      btn.disabled = true; btn.innerText = "Transmitting Request...";
       const reader = new FileReader();
       reader.onload = async function() {
         const payload = { brand, requestTitle: document.getElementById('supplier').value, amount: document.getElementById('amount').value, documentType: document.getElementById('docType').value, dueDate: document.getElementById('dueDate').value, isUrgent: document.getElementById('urgent').checked, note: document.getElementById('notes').value, fileName: file.name, fileBase64: reader.result.split(',')[1], userName: user.name, email: user.email, pincode: pin };
         const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
         const result = await res.json();
-        if (result.status === 'success') {
-          document.getElementById('tabForm').classList.add('hidden');
-          document.getElementById('successMsg').classList.remove('hidden');
-          document.getElementById('refIdDisp').innerText = result.id;
-        } else { alert(result.message); btn.disabled = false; }
+        if (result.status === 'success') { document.getElementById('tabForm').classList.add('hidden'); document.getElementById('successMsg').classList.remove('hidden'); document.getElementById('refIdDisp').innerText = "REF: " + result.id; }
+        else { alert(result.message); btn.disabled = false; }
       };
       reader.readAsDataURL(file);
     }
