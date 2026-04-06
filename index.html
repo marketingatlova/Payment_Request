@@ -132,12 +132,12 @@
 
             <div>
               <span class="input-label">Amount (THB)</span>
-              <input type="number" id="amount" class="input-box" step="0.01" placeholder="0.00" required>
+              <input type="text" id="amount" class="input-box" inputmode="decimal" placeholder="0.00" required>
             </div>
 
             <div>
               <span class="input-label">Document Type</span>
-              <select id="documentType" class="input-box" required>
+              <select id="documentType" class="input-box" required onchange="checkCustomDocType()">
                 <option value="Invoice">Invoice</option>
                 <option value="Receipt">Receipt</option>
                 <option value="Quotation">Quotation</option>
@@ -145,6 +145,7 @@
                 <option value="Clear Advance">Clear Advance</option>
                 <option value="Other">Other</option>
               </select>
+              <input type="text" id="documentTypeCustom" class="input-box" placeholder="Please specify..." style="display:none; margin-top:8px;">
             </div>
 
             <div style="grid-column: 1 / -1;">
@@ -178,6 +179,36 @@
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbyEUJYIu9_O6E50KzKzdEY4EG2VLo4y0Yj8igGRZVMI_zEapqn5w758gdt_nG5tluEdHA/exec';
     
     let sessionPincode = ""; 
+
+    // ==========================================
+    // UI HELPER LOGIC
+    // ==========================================
+    
+    // Shows the custom text box if "Other" is selected
+    function checkCustomDocType() {
+      const val = document.getElementById('documentType').value;
+      const customInput = document.getElementById('documentTypeCustom');
+      if (val === 'Other') {
+        customInput.style.display = 'block';
+        customInput.required = true;
+      } else {
+        customInput.style.display = 'none';
+        customInput.required = false;
+        customInput.value = '';
+      }
+    }
+
+    // Formats the Amount field with commas and 2 decimal places
+    const amountInput = document.getElementById('amount');
+    amountInput.addEventListener('blur', function(e) {
+      let val = e.target.value.replace(/,/g, ''); // strip existing commas
+      if (!isNaN(val) && val !== '') {
+        e.target.value = parseFloat(val).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+      }
+    });
+    amountInput.addEventListener('focus', function(e) {
+      e.target.value = e.target.value.replace(/,/g, ''); // remove commas so user can edit easily
+    });
 
     // ==========================================
     // SECURE LOGIN LOGIC
@@ -236,6 +267,7 @@
       document.getElementById('appContainer').style.display = 'none';
       document.getElementById('loginScreen').style.display = 'flex';
       document.getElementById('financeForm').reset();
+      document.getElementById('documentTypeCustom').style.display = 'none'; // hide custom input on logout
       document.getElementById('submitStatus').style.display = 'none';
       document.getElementById('loginStatus').innerText = '';
       sessionPincode = ""; 
@@ -264,15 +296,24 @@
       reader.onload = async function() {
         const base64Data = reader.result.split(',')[1]; 
 
+        // Strip commas out of the amount before sending to Google Sheets so it stays a pure number
+        const rawAmount = document.getElementById('amount').value.replace(/,/g, '');
+
+        // Check if "Other" was selected for document type
+        let finalDocType = document.getElementById('documentType').value;
+        if (finalDocType === 'Other') {
+          finalDocType = document.getElementById('documentTypeCustom').value;
+        }
+
         const payload = {
           action: 'submitRequest', 
           userName: document.getElementById('userName').value,
           email: document.getElementById('email').value,
           requestTitle: document.getElementById('requestTitle').value,
           brand: document.getElementById('brand').value,
-          amount: document.getElementById('amount').value,             // NEW: Amount
-          documentType: document.getElementById('documentType').value, // NEW: Document Type
-          dueDate: document.getElementById('dueDate').value,           // NEW: Due Date
+          amount: rawAmount,             
+          documentType: finalDocType, 
+          dueDate: document.getElementById('dueDate').value,           
           pincode: sessionPincode, 
           isUrgent: document.getElementById('isUrgent').checked,
           fileName: fileInput.name,
@@ -296,6 +337,7 @@
             document.getElementById('requestTitle').value = '';
             document.getElementById('amount').value = '';
             document.getElementById('documentType').selectedIndex = 0;
+            document.getElementById('documentTypeCustom').style.display = 'none';
             document.getElementById('dueDate').value = '';
             document.getElementById('file').value = '';
             document.getElementById('isUrgent').checked = false;
