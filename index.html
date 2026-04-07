@@ -6,17 +6,12 @@
   <title>LOVA — Staff Portal</title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --navy: #0f131f; --navy-light: #1a1f2e; --accent: #c0392b; --canvas: #f7f5f0; 
-      --surface: #ffffff; --border: #e4e1db; --text: #1a1f2e; --text-dim: #5a5750;
-      --green: #166534; --green-bg: #dcfce7;
-    }
+    :root { --navy: #0f131f; --navy-light: #1a1f2e; --accent: #c0392b; --canvas: #f7f5f0; --surface: #ffffff; --border: #e4e1db; --text: #1a1f2e; --text-dim: #5a5750; --green: #166534; --green-bg: #dcfce7; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    
     html, body { height: 100vh; overflow: hidden; font-family: 'Plus Jakarta Sans', sans-serif; background: var(--canvas); color: var(--text); }
     body { display: flex; }
 
-    .login-overlay { position: fixed; inset: 0; background: var(--navy); z-index: 1000; display: flex; align-items: center; justify-content: center; }
+    .login-overlay { position: fixed; inset: 0; background: var(--navy); z-index: 3000; display: flex; align-items: center; justify-content: center; }
     .login-card { background: var(--surface); padding: 50px; border-radius: 28px; text-align: center; width: 100%; max-width: 400px; box-shadow: 0 40px 80px rgba(0,0,0,0.6); }
     .login-logo { font-family: 'Playfair Display', serif; font-size: 38px; color: var(--navy); margin-bottom: 5px; }
     .pin-input { width: 100%; height: 55px; text-align: center; font-size: 26px; letter-spacing: 12px; margin: 25px 0; border: 2px solid var(--border); border-radius: 14px; outline: none; transition: 0.3s; }
@@ -26,10 +21,7 @@
     .sidebar-brand { padding: 0 30px 35px; }
     .nav-item { padding: 14px 30px; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.4); cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px; }
     .nav-item.active { color: #fff; background: rgba(255,255,255,0.08); border-right: 4px solid var(--accent); }
-    
     .sidebar-batch { margin: 20px 20px 0; padding: 18px; background: rgba(255,255,255,0.03); border-radius: 14px; border: 1px solid rgba(255,255,255,0.05); }
-    .batch-label { font-size: 9px; font-weight: 800; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
-    .batch-date { font-size: 13px; font-weight: 700; color: #60a5fa; }
     .nav-logout { margin-top: auto; padding: 20px 30px; font-size: 11px; color: rgba(255,255,255,0.2); cursor: pointer; border-top: 1px solid rgba(255,255,255,0.05); }
 
     .main-area { flex: 1; display: flex; flex-direction: column; height: 100vh; }
@@ -51,6 +43,7 @@
     .brand-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
     .brand-btn { padding: 14px; border: 1.5px solid var(--border); border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; background: #fff; text-align: center; transition: 0.2s; color: var(--text-dim);}
     .brand-btn.active { background: var(--navy); color: #fff; border-color: var(--navy); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+    .brand-btn.disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
 
     .urgent-row { display: flex; align-items: center; justify-content: space-between; background: #fff5f5; padding: 0 20px; border-radius: 10px; border: 1px solid #fed7d7; cursor: pointer; height: 48px; margin-top: auto; }
     .checkbox { width: 22px; height: 22px; accent-color: var(--accent); cursor: pointer; }
@@ -59,17 +52,34 @@
     .upload-zone.active { border-color: var(--green); background: var(--green-bg); }
 
     .email-confirmation { background: #f8fafc; border: 1px solid var(--border); border-radius: 12px; padding: 12px 20px; margin-top: 5px; display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--text-dim); }
-    .email-confirmation strong { color: var(--navy); font-weight: 800; }
-
     .btn-submit-main { background: var(--navy); color: #fff; padding: 20px; border-radius: 16px; font-weight: 800; font-size: 17px; border: none; cursor: pointer; width: 100%; transition: 0.3s; box-shadow: 0 10px 20px rgba(15,19,31,0.15); margin-top: 15px; margin-bottom: 20px;}
     .btn-submit-main:hover { transform: translateY(-3px); background: var(--navy-light); }
 
-    .history-card { background: #fff; border-radius: 12px; padding: 15px 20px; border: 1px solid var(--border); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+    /* HISTORY */
+    #tabHistory { width: 100%; max-width: 850px; margin: 0 auto; overflow-y: auto; padding-bottom: 50px; }
+    .history-card { background: #fff; border-radius: 16px; padding: 24px; border: 1px solid var(--border); margin-bottom: 16px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
+    .hist-brand-tag { font-size: 9px; font-weight: 800; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; background: #f1f3f4; color: var(--navy); margin-bottom: 8px; display: inline-block; letter-spacing: 0.5px; }
+    .btn-edit { background: #f8fafc; border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 800; color: var(--navy); cursor: pointer; transition: 0.2s; margin-left: 10px;}
+    .btn-edit:hover { background: var(--border); }
+    .audit-tag { font-size: 10px; font-style: italic; color: #b45309; background: #fef3c7; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 8px; }
 
     .hidden { display: none !important; }
   </style>
 </head>
 <body>
+
+  <div id="deleteModal" class="login-overlay hidden" style="z-index: 4000; background: rgba(15,19,31,0.8);">
+    <div class="login-card" style="border: 2px solid var(--accent); padding: 40px;">
+      <h2 style="color: var(--accent); margin-bottom: 10px; font-size: 24px;">⚠️ Overwrite Evidence</h2>
+      <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 25px; line-height: 1.5;">You attached a new document. The original invoice file will be permanently deleted from the vault. Please verify your identity.</p>
+      <input type="password" id="delPin" class="pin-input" placeholder="Enter PIN" style="height: 48px; font-size: 20px; letter-spacing: 8px; margin-top:0;">
+      <input type="text" id="delConfirm" class="pin-input" placeholder='Type "Delete this file"' style="height: 48px; font-size: 14px; letter-spacing: 0px;">
+      <div style="display:flex; gap:12px; margin-top:10px;">
+        <button class="btn-submit-main" style="margin:0; background: #e4e1db; color: var(--navy); box-shadow:none;" onclick="closeDeleteModal()">Cancel</button>
+        <button class="btn-submit-main" style="margin:0; background: var(--accent); box-shadow:none;" onclick="confirmDeleteAndSubmit()">Confirm Wipe & Save</button>
+      </div>
+    </div>
+  </div>
 
   <div class="login-overlay" id="loginScreen">
     <div class="login-card">
@@ -83,14 +93,9 @@
 
   <aside class="sidebar">
     <div class="sidebar-brand"><h1 style="font-family:'Playfair Display'; font-size:28px; letter-spacing:1px;">LOVA</h1></div>
-    <div class="nav-item active" id="navForm" onclick="showTab('form')">New Payment Request</div>
+    <div class="nav-item active" id="navForm" onclick="resetToNew()">New Payment Request</div>
     <div class="nav-item" id="navHistory" onclick="showTab('history')">My Activity Log</div>
-    
-    <div class="sidebar-batch">
-      <div class="batch-label">Next Payment Batch</div>
-      <div class="batch-date" id="payFriday">...</div>
-    </div>
-    
+    <div class="sidebar-batch"><div class="batch-label">Next Payment Batch</div><div class="batch-date" id="payFriday">...</div></div>
     <div class="nav-logout" onclick="location.reload()">Logout Portal</div>
   </aside>
 
@@ -102,15 +107,15 @@
 
     <div class="view-content">
       <div id="tabForm">
-        <form id="paymentForm" onsubmit="event.preventDefault(); submitRequest();" style="display:flex; flex-direction:column; height:100%;">
+        <form id="paymentForm" onsubmit="event.preventDefault(); initiateSubmit();" style="display:flex; flex-direction:column; height:100%;">
           
           <div class="form-section">
             <div class="section-header"><div class="step-num">01</div><div class="section-title">Entity Selection</div></div>
             <div class="brand-grid">
-              <div class="brand-btn" onclick="setBrand('LAV', this)">LAVA</div>
-              <div class="brand-btn" onclick="setBrand('BIA', this)">BIANCA</div>
-              <div class="brand-btn" onclick="setBrand('HOL', this)">HOLYBELLY</div>
-              <div class="brand-btn" onclick="setBrand('LOV', this)">LOVA</div>
+              <div class="brand-btn" id="btn-LAV" onclick="setBrand('LAV', this)">LAVA</div>
+              <div class="brand-btn" id="btn-BIA" onclick="setBrand('BIA', this)">BIANCA</div>
+              <div class="brand-btn" id="btn-HOL" onclick="setBrand('HOL', this)">HOLYBELLY</div>
+              <div class="brand-btn" id="btn-LOV" onclick="setBrand('LOV', this)">LOVA</div>
             </div>
             <input type="hidden" id="brand" required>
           </div>
@@ -126,9 +131,7 @@
               <div class="input-group">
                 <div class="label">Doc Type</div>
                 <select id="docType" class="input" required style="height:48px;">
-                  <option value="Invoice">Invoice</option>
-                  <option value="Receipt">Receipt</option>
-                  <option value="Quotation">Quotation</option>
+                  <option value="Invoice">Invoice</option><option value="Receipt">Receipt</option><option value="Quotation">Quotation</option><option value="Clear Advance">Clear Advance</option>
                 </select>
               </div>
             </div>
@@ -138,10 +141,7 @@
             <div class="section-header"><div class="step-num">03</div><div class="section-title">Schedule & Priority</div></div>
             <div class="grid-pair">
               <div class="input-group"><div class="label">Due Date</div><input type="date" id="dueDate" class="input" required></div>
-              <div class="input-group">
-                <div class="label">Urgency</div>
-                <label class="urgent-row" for="urgent"><span style="font-size:11px; font-weight:800; color:var(--accent);">FLAG URGENT</span><input type="checkbox" id="urgent" class="checkbox"></label>
-              </div>
+              <div class="input-group"><div class="label">Urgency</div><label class="urgent-row" for="urgent"><span style="font-size:11px; font-weight:800; color:var(--accent);">FLAG URGENT</span><input type="checkbox" id="urgent" class="checkbox"></label></div>
             </div>
             <div class="input-group" style="margin:0"><div class="label">Payment Note</div><input type="text" id="notes" class="input" placeholder="What is this paying for?"></div>
           </div>
@@ -150,15 +150,11 @@
             <div class="section-header"><div class="step-num">04</div><div class="section-title">Documentation</div></div>
             <div class="upload-zone" id="dropZone" onclick="document.getElementById('invoiceFile').click()">
               <div id="fileNameDisp" style="font-size:13px; font-weight:700; color:var(--text-dim);">Tap to Upload Invoice Document</div>
-              <input type="file" id="invoiceFile" class="hidden" onchange="handleFile(this)" accept="image/*,application/pdf" required>
+              <input type="file" id="invoiceFile" class="hidden" onchange="handleFile(this)" accept="image/*,application/pdf">
             </div>
           </div>
 
-          <div class="email-confirmation">
-            <span style="font-size:16px;">✉️</span>
-            <span>Proof of Payment receipt will be sent to: <strong id="userEmailDisp">...</strong></span>
-          </div>
-
+          <div class="email-confirmation"><span style="font-size:16px;">✉️</span><span>Proof of Payment receipt will be sent to: <strong id="userEmailDisp">...</strong></span></div>
           <button type="submit" class="btn-submit-main" id="submitBtn">Transmit Payment Request</button>
         </form>
       </div>
@@ -170,7 +166,7 @@
 
       <div id="successMsg" class="hidden" style="text-align:center; padding:50px; background:#fff; border-radius:24px; border:1px solid var(--border); max-width:500px; margin:0 auto;">
         <div style="font-size:50px;">✨</div>
-        <h2 style="font-size:24px; font-weight:800; margin-top:15px;">Transmitted</h2>
+        <h2 style="font-size:24px; font-weight:800; margin-top:15px;">Transmission Complete</h2>
         <p id="refIdDisp" style="font-family:monospace; font-size:20px; font-weight:800; color:var(--navy); margin: 20px 0;"></p>
         <button class="btn-submit-main" onclick="location.reload()" style="width:auto; padding:12px 40px; font-size:14px;">Done</button>
       </div>
@@ -179,13 +175,13 @@
 
   <script>
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbyEUJYIu9_O6E50KzKzdEY4EG2VLo4y0Yj8igGRZVMI_zEapqn5w758gdt_nG5tluEdHA/exec';
-    let user = null; let pin = '';
-    
+    let user = null, pin = '', myData = [];
+    let editingId = null;
+
     function init() {
       const d = new Date(); const day = d.getDay();
       const diff = d.getDate() + (day <= 5 ? (5 - day) : (5 - day + 7));
-      const friday = new Date(d.setDate(diff));
-      document.getElementById('payFriday').innerText = friday.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      document.getElementById('payFriday').innerText = new Date(d.setDate(diff)).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
     }
     init();
 
@@ -197,8 +193,7 @@
         const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'verifyLogin', pincode: input.value }) });
         const data = await res.json();
         if (data.status === 'success') { 
-          user = data; 
-          pin = input.value; 
+          user = data; pin = input.value; 
           document.getElementById('userNameBadge').innerText = data.name; 
           document.getElementById('userEmailDisp').innerText = data.email;
           document.getElementById('loginScreen').style.display = 'none'; 
@@ -212,69 +207,143 @@
       document.getElementById('tabHistory').classList.toggle('hidden', tab !== 'history');
       document.getElementById('navForm').classList.toggle('active', tab === 'form');
       document.getElementById('navHistory').classList.toggle('active', tab === 'history');
-      document.getElementById('pageTitle').innerText = tab === 'form' ? 'New Payment Request' : 'My Activity Log';
       if (tab === 'history') fetchHistory();
     }
 
+    function resetToNew() {
+      editingId = null;
+      document.getElementById('pageTitle').innerText = 'New Payment Request';
+      document.getElementById('paymentForm').reset();
+      document.getElementById('brand').value = '';
+      document.querySelectorAll('.brand-btn').forEach(b => { b.classList.remove('active'); b.classList.remove('disabled'); });
+      document.getElementById('fileNameDisp').innerText = "Tap to Upload Invoice Document";
+      document.getElementById('dropZone').classList.remove('active');
+      document.getElementById('invoiceFile').required = true;
+      document.getElementById('submitBtn').innerText = "Transmit Payment Request";
+      showTab('form');
+    }
+
+    function canEdit(origDateRaw) {
+      const d = new Date(origDateRaw);
+      const day = d.getDay();
+      const diff = d.getDate() + (day <= 5 ? (5 - day) : (5 - day + 7));
+      const targetFriday = new Date(d.setDate(diff));
+      const cutoff = new Date(targetFriday);
+      cutoff.setDate(targetFriday.getDate() - 1);
+      cutoff.setHours(23, 59, 59, 999);
+      return new Date() <= cutoff;
+    }
+
     async function fetchHistory() {
-      const list = document.getElementById('histList'); 
-      list.innerHTML = ''; 
-      document.getElementById('histLoading').classList.remove('hidden');
-      
+      const list = document.getElementById('histList'); list.innerHTML = ''; document.getElementById('histLoading').classList.remove('hidden');
       try {
         const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'getDashboardData', pincode: pin }) });
         const data = await res.json();
-        
-        if (data.status !== 'success') throw new Error('Auth Denied');
-        
         document.getElementById('histLoading').classList.add('hidden');
-        const mine = [...data.pending, ...data.history].filter(i => i.requester.toLowerCase().trim() === user.name.toLowerCase().trim());
+        myData = [...data.pending, ...data.history].filter(i => i.requester.toLowerCase().trim() === user.name.toLowerCase().trim());
         
-        if (mine.length === 0) {
-            list.innerHTML = '<center style="padding:40px; color:#aaa;">No history found.</center>';
-            return;
-        }
+        if (myData.length === 0) return list.innerHTML = '<center style="padding:40px; color:#aaa; font-weight:600;">No history found.</center>';
         
-        list.innerHTML = mine.map(item => `
+        list.innerHTML = myData.map((item, idx) => `
           <div class="history-card">
-            <div>
-                <strong>${item.supplier}</strong><br>
-                <small style="color:#888;">ID: ${item.id} • ${item.date}</small>
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div>
+                <span class="hist-brand-tag">${item.sheetName}</span>
+                <div style="font-size: 18px; font-weight: 800; color: var(--navy);">${item.supplier}</div>
+                <div style="font-size: 12px; color: var(--text-dim); margin-top:4px;">ID: <strong>${item.id}</strong> • Submitted: <strong>${item.date}</strong></div>
+                ${item.auditLog ? `<div class="audit-tag">⚠️ ${item.auditLog}</div>` : ''}
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size: 20px; font-weight: 800; color: var(--green);">${parseFloat(item.amount).toLocaleString('en-US', {minimumFractionDigits: 2})} <span style="font-size:12px; opacity:0.6;">THB</span></div>
+                <div style="margin-top: 8px; display:flex; align-items:center; justify-content:flex-end;">
+                  <span style="font-size: 9px; font-weight: 800; padding: 4px 8px; border-radius: 20px; text-transform: uppercase; background: ${item.popUrl ? 'var(--green-bg)' : '#f3f4f6'}; color: ${item.popUrl ? 'var(--green)' : '#6b7280'};">${item.popUrl ? 'Paid' : 'In Queue'}</span>
+                  ${(!item.popUrl && canEdit(item.origDateRaw)) ? `<button class="btn-edit" onclick="startEdit(${idx})">✏️ Edit</button>` : ''}
+                </div>
+              </div>
             </div>
-            <div style="text-align:right">
-                <strong>${parseFloat(item.amount).toLocaleString()}</strong><br>
-                <span style="font-size: 9px; font-weight: 800; padding: 4px 8px; border-radius: 20px; text-transform: uppercase; background: ${item.popUrl ? 'var(--green-bg)' : '#f3f4f6'}; color: ${item.popUrl ? 'var(--green)' : '#6b7280'};">${item.popUrl ? 'Paid' : 'Queue'}</span>
-            </div>
+            ${item.note ? `<div style="background: var(--canvas); padding: 12px; border-radius: 8px; font-size: 13px; color: var(--text-dim); border-left: 3px solid var(--border); font-style: italic;">Note: ${item.note}</div>` : ''}
+            ${item.popUrl ? `<div style="padding-top: 16px; border-top: 1px solid var(--border);"><a href="${item.popUrl}" target="_blank" style="font-size: 12px; font-weight: 800; color: var(--green); text-decoration: none;">📄 View Official Proof of Payment</a></div>` : ''}
           </div>`).join('');
-      } catch (e) { 
-        document.getElementById('histLoading').classList.add('hidden');
-        list.innerHTML = '<center style="padding:30px; color:#c0392b; font-weight:800;">Error syncing history. Try logging out.</center>'; 
-      }
+      } catch (e) { document.getElementById('histLoading').classList.add('hidden'); list.innerHTML = '<center style="padding:30px; color:#c0392b; font-weight:800;">Error syncing.</center>'; }
     }
 
-    function setBrand(code, el) { document.querySelectorAll('.brand-btn').forEach(b => b.classList.remove('active')); el.classList.add('active'); document.getElementById('brand').value = code; }
+    function setBrand(code, el) { if(editingId) return; document.querySelectorAll('.brand-btn').forEach(b => b.classList.remove('active')); el.classList.add('active'); document.getElementById('brand').value = code; }
     
-    function handleFile(input) { 
-      if (input.files.length) { 
-        document.getElementById('fileNameDisp').innerText = "📎 Locked: " + input.files[0].name; 
-        document.getElementById('dropZone').classList.add('active'); 
-      } 
+    function startEdit(idx) {
+      const item = myData[idx];
+      editingId = item.id;
+      document.getElementById('pageTitle').innerText = "Editing Request: " + item.id;
+      
+      const brandCodeMap = { 'LAVA': 'LAV', 'Bianca Holdings': 'BIA', 'HolyBelly': 'HOL', 'Lova': 'LOV' };
+      const bCode = brandCodeMap[item.sheetName];
+      document.getElementById('brand').value = bCode;
+      document.querySelectorAll('.brand-btn').forEach(b => { b.classList.remove('active'); b.classList.add('disabled'); });
+      document.getElementById('btn-' + bCode).classList.add('active');
+
+      document.getElementById('supplier').value = item.supplier;
+      document.getElementById('amount').value = item.amount;
+      document.getElementById('docType').value = item.docType || 'Invoice';
+      document.getElementById('dueDate').value = item.dueDateRaw;
+      document.getElementById('urgent').checked = (item.urgent === 'Urgent');
+      document.getElementById('notes').value = item.note || '';
+
+      document.getElementById('fileNameDisp').innerText = "📎 Current File Saved. Tap to Replace.";
+      document.getElementById('dropZone').classList.remove('active');
+      document.getElementById('invoiceFile').required = false; 
+      document.getElementById('submitBtn').innerText = "Save & Update Vault";
+      
+      showTab('form');
     }
 
-    async function submitRequest() {
+    function handleFile(input) { 
+      if (input.files.length) { document.getElementById('fileNameDisp').innerText = "📎 Locked: " + input.files[0].name; document.getElementById('dropZone').classList.add('active'); } 
+    }
+
+    function initiateSubmit() {
+      if (editingId && document.getElementById('invoiceFile').files.length > 0) {
+        document.getElementById('deleteModal').classList.remove('hidden');
+      } else { executeBackendCall(); }
+    }
+
+    function closeDeleteModal() {
+      document.getElementById('deleteModal').classList.add('hidden');
+      document.getElementById('delPin').value = '';
+      document.getElementById('delConfirm').value = '';
+    }
+
+    function confirmDeleteAndSubmit() {
+      if (document.getElementById('delPin').value !== pin) return alert("Incorrect PIN");
+      if (document.getElementById('delConfirm').value !== "Delete this file") return alert("Please type the exact confirmation phrase.");
+      closeDeleteModal();
+      executeBackendCall();
+    }
+
+    function executeBackendCall() {
       const btn = document.getElementById('submitBtn'); const file = document.getElementById('invoiceFile').files[0];
       const brand = document.getElementById('brand').value;
-      if (!brand || !file) return alert("Select brand & attach document.");
-      btn.disabled = true; btn.innerText = "Transmitting Request...";
-      const reader = new FileReader();
-      reader.onload = async function() {
-        const payload = { brand, requestTitle: document.getElementById('supplier').value, amount: document.getElementById('amount').value, documentType: document.getElementById('docType').value, dueDate: document.getElementById('dueDate').value, isUrgent: document.getElementById('urgent').checked, note: document.getElementById('notes').value, fileName: file.name, fileBase64: reader.result.split(',')[1], userName: user.name, email: user.email, pincode: pin };
+      btn.disabled = true; btn.innerText = "Transmitting to Vault...";
+      
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = async function() { sendPayload(brand, file.name, reader.result.split(',')[1], btn); };
+        reader.readAsDataURL(file);
+      } else { sendPayload(brand, null, null, btn); }
+    }
+
+    async function sendPayload(brand, fName, fBase64, btn) {
+      const payload = { 
+        action: editingId ? 'editRequest' : 'submitRequest', id: editingId, brand, 
+        requestTitle: document.getElementById('supplier').value, amount: document.getElementById('amount').value, 
+        documentType: document.getElementById('docType').value, dueDate: document.getElementById('dueDate').value, 
+        isUrgent: document.getElementById('urgent').checked, note: document.getElementById('notes').value, 
+        fileName: fName, fileBase64: fBase64, userName: user.name, email: user.email, pincode: pin 
+      };
+      try {
         const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
         const result = await res.json();
         if (result.status === 'success') { document.getElementById('tabForm').classList.add('hidden'); document.getElementById('successMsg').classList.remove('hidden'); document.getElementById('refIdDisp').innerText = "REF: " + result.id; }
-        else { alert(result.message); btn.disabled = false; }
-      };
-      reader.readAsDataURL(file);
+        else { alert(result.message); btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request"; }
+      } catch (e) { alert("Network Error."); btn.disabled = false; }
     }
   </script>
 </body>
