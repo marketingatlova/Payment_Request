@@ -131,7 +131,6 @@
         </div>
 
         <form id="paymentForm" style="display:flex; flex-direction:column; height:100%;">
-          
           <div class="form-section">
             <div class="section-header"><div class="step-num">01</div><div class="section-title">Entity Selection</div></div>
             <div class="brand-grid">
@@ -200,6 +199,7 @@
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbyEUJYIu9_O6E50KzKzdEY4EG2VLo4y0Yj8igGRZVMI_zEapqn5w758gdt_nG5tluEdHA/exec';
     let user = null, pin = '', myData = [];
     let editingId = null;
+    let isSubmitting = false; // THE CRITICAL RACE-CONDITION LOCK
 
     function init() {
       const d = new Date(); const day = d.getDay();
@@ -241,8 +241,10 @@
 
     function resetToNew() {
       editingId = null;
+      isSubmitting = false; // Unlock form
       document.getElementById('pageTitle').innerText = 'New Payment Request';
       
+      // CLEAR BRAND THEME
       document.getElementById('formWrapper').style.backgroundColor = "transparent";
       document.getElementById('formWrapper').style.padding = "0";
       document.getElementById('formWrapper').style.border = "none";
@@ -254,7 +256,10 @@
       document.getElementById('fileNameDisp').innerText = "Tap to Upload Invoice Document";
       document.getElementById('dropZone').classList.remove('active');
       document.getElementById('invoiceFile').required = true;
-      document.getElementById('submitBtn').innerText = "Transmit Payment Request";
+      
+      const btn = document.getElementById('submitBtn');
+      btn.innerText = "Transmit Payment Request";
+      btn.disabled = false;
       
       showTab('form');
     }
@@ -318,12 +323,14 @@
     function startEdit(idx) {
       const item = myData[idx];
       editingId = item.id;
+      isSubmitting = false; // Ensure unlocked when starting edit
       document.getElementById('pageTitle').innerText = "Refine Payment Request";
       
       const brandCodeMap = { 'LAVA': 'LAV', 'Bianca Holdings': 'BIA', 'HolyBelly': 'HOL', 'Lova': 'LOV' };
       const bCode = brandCodeMap[item.sheetName];
       document.getElementById('brand').value = bCode;
       
+      // BRAND THEME LOGIC
       const themes = {
         'LAV': { bg: '#fff5f5', color: '#991b1b', border: '#fecaca', text: 'LAVA' },
         'BIA': { bg: '#eef2ff', color: '#3730a3', border: '#c7d2fe', text: 'BIANCA' },
@@ -357,13 +364,16 @@
       document.getElementById('fileNameDisp').innerText = "📎 Current File Saved. Tap to Replace.";
       document.getElementById('dropZone').classList.remove('active');
       document.getElementById('invoiceFile').required = false; 
-      document.getElementById('submitBtn').innerText = "Save & Update Vault";
+      
+      const btn = document.getElementById('submitBtn');
+      btn.innerText = "Save & Update Vault";
+      btn.disabled = false;
       
       showTab('form');
     }
 
     function handleFile(input) { 
-      const MAX_SIZE = 3 * 1024 * 1024; // 3MB Safety Limit to prevent Google Server Crash
+      const MAX_SIZE = 3 * 1024 * 1024; // 3MB Limit
       if (input.files.length) { 
         if(input.files[0].size > MAX_SIZE) {
           alert("Error: File is too large! Please upload a PDF or image under 3MB.");
@@ -375,24 +385,38 @@
       } 
     }
 
-    // THE ONLY EVENT LISTENER FOR FORM SUBMISSION
+    // PURE JAVASCRIPT SUBMIT HANDLER (NO ONSUBMIT IN HTML)
     document.getElementById('paymentForm').addEventListener('submit', function(e) {
       e.preventDefault();
+      
+      if (isSubmitting) { return; } // The Lock
+      isSubmitting = true;
+      
       if (editingId && document.getElementById('invoiceFile').files.length > 0) {
         document.getElementById('deleteModal').classList.remove('hidden');
-      } else { executeBackendCall(); }
+      } else { 
+        executeBackendCall(); 
+      }
     });
 
     function closeDeleteModal() {
+      isSubmitting = false; // Unlock
       document.getElementById('deleteModal').classList.add('hidden');
       document.getElementById('delPin').value = '';
       document.getElementById('delConfirm').value = '';
     }
 
     function confirmDeleteAndSubmit() {
-      if (document.getElementById('delPin').value !== pin) return alert("Incorrect PIN");
-      if (document.getElementById('delConfirm').value !== "Delete this file") return alert("Please copy and paste the exact confirmation phrase.");
+      if (document.getElementById('delPin').value !== pin) {
+        isSubmitting = false; 
+        return alert("Incorrect PIN");
+      }
+      if (document.getElementById('delConfirm').value !== "Delete this file") {
+        isSubmitting = false; 
+        return alert("Please copy and paste the exact confirmation phrase.");
+      }
       closeDeleteModal();
+      isSubmitting = true; // Re-lock while sending
       executeBackendCall();
     }
 
@@ -407,7 +431,15 @@
       
       if (file) {
         const reader = new FileReader();
-        reader.onload = async function() { sendPayload(brand, file.name, reader.result.split(',')[1], btn); };
+        reader.onload = async function() { 
+          await sendPayload(brand, file.name, reader.result.split(',')[1], btn); 
+        };
+        reader.onerror = function() {
+          isSubmitting = false;
+          btn.disabled = false;
+          btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request";
+          alert("Browser could not read the file. Please try again.");
+        };
         reader.readAsDataURL(file);
       } else { 
         sendPayload(brand, null, null, btn); 
@@ -430,19 +462,23 @@
         try {
           const result = JSON.parse(textResponse);
           if (result.status === 'success') { 
+            isSubmitting = false; // Unlock
             document.getElementById('formWrapper').classList.add('hidden'); 
             document.getElementById('successMsg').classList.remove('hidden'); 
             document.getElementById('refIdDisp').innerText = "REF: " + result.id; 
           } else { 
+            isSubmitting = false; // Unlock
             alert("Server Rejected: " + result.message); 
             btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request"; 
           }
         } catch (e) {
-          alert("A server error occurred. Ensure your Google Sheet 'LAVA' tab has been expanded to Column N. \nError detail: " + textResponse.substring(0, 100));
+          isSubmitting = false; // Unlock
+          alert("Server Output Error. Your data may have saved, check the log.\nError detail: " + textResponse.substring(0, 100));
           btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request";
         }
       } catch (e) { 
-        alert("CRITICAL: Network Error. Ensure you deployed code.gs as a NEW VERSION in Apps Script."); 
+        isSubmitting = false; // Unlock
+        alert("CRITICAL: Network Error. Ensure you deployed code.gs as a NEW VERSION in Apps Script. Error: " + e.message); 
         btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request"; 
       }
     }
