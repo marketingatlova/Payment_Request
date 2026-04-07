@@ -84,8 +84,9 @@
       <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 20px; line-height: 1.5;">You are attaching a new document. The original invoice will be permanently removed.</p>
       
       <div style="background: rgba(15,19,31,0.05); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid rgba(15,19,31,0.1);">
-        <p style="font-size: 11px; color: var(--text-dim); margin-bottom: 8px; text-transform: uppercase; font-weight:800;">Copy & Paste this exact phrase:</p>
-        <div style="font-family: monospace; font-size: 18px; color: var(--navy); font-weight: 800; user-select: all; cursor: copy; background: #fff; padding: 10px; border-radius: 8px; border: 1px dashed var(--border);">Delete this file</div>
+        <p style="font-size: 11px; color: var(--text-dim); margin-bottom: 8px; text-transform: uppercase; font-weight:800;">Tap to copy this exact phrase:</p>
+        
+        <input type="text" value="Delete this file" readonly style="width: 100%; text-align: center; font-size: 18px; color: var(--navy); font-weight: 800; cursor: copy; background: #fff; padding: 10px; border-radius: 8px; border: 1px dashed var(--border); outline: none;" onclick="this.select(); document.execCommand('copy');">
       </div>
 
       <input type="password" id="delPin" class="pin-input" placeholder="Enter PIN" style="height: 48px; font-size: 20px; letter-spacing: 8px; margin-top:0;">
@@ -103,7 +104,7 @@
       <div class="login-logo">LOVA</div>
       <p style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 2px; font-weight: 800;">Staff Entry Portal</p>
       <input type="password" id="staffPin" class="pin-input" placeholder="PIN" onkeydown="if(event.key==='Enter') login()">
-      <button type="button" class="btn-submit-main" style="margin:0" onclick="login()" id="loginBtn">Authorize Session</button>
+      <button class="btn-submit-main" style="margin:0" onclick="login()" id="loginBtn">Authorize Session</button>
       <div id="loginError" style="color:var(--accent); margin-top:20px; font-size:12px; font-weight:800;"></div>
     </div>
   </div>
@@ -130,7 +131,8 @@
           <button type="button" class="btn-cancel-edit" onclick="cancelEdit()">← Cancel Edit & Go Back</button>
         </div>
 
-        <div id="paymentContainer" style="display:flex; flex-direction:column; height:100%;">
+        <div id="paymentForm" style="display:flex; flex-direction:column; height:100%;">
+          
           <div class="form-section">
             <div class="section-header"><div class="step-num">01</div><div class="section-title">Entity Selection</div></div>
             <div class="brand-grid">
@@ -139,7 +141,7 @@
               <div class="brand-btn" id="btn-HOL" onclick="setBrand('HOL', this)">HOLYBELLY</div>
               <div class="brand-btn" id="btn-LOV" onclick="setBrand('LOV', this)">LOVA</div>
             </div>
-            <input type="hidden" id="brand">
+            <input type="hidden" id="brand" required>
           </div>
 
           <div class="form-section">
@@ -177,7 +179,6 @@
           </div>
 
           <div class="email-confirmation"><span style="font-size:16px;">✉️</span><span>Proof of Payment receipt will be sent to: <strong id="userEmailDisp">...</strong></span></div>
-          
           <button type="button" class="btn-submit-main" id="submitBtn" onclick="handleFormValidationAndSubmit()">Transmit Payment Request</button>
         </div>
       </div>
@@ -335,8 +336,9 @@
       const bCode = brandCodeMap[item.sheetName];
       document.getElementById('brand').value = bCode;
       
+      // BRAND-SPECIFIC EDIT BACKGROUND COLORING
       const themes = {
-        'LAV': { bg: '#fff5f5', color: '#991b1b', border: '#fecaca', text: 'LAVA' },
+        'LAV': { bg: '#fff0f0', color: '#991b1b', border: '#fecaca', text: 'LAVA' },
         'BIA': { bg: '#eef2ff', color: '#3730a3', border: '#c7d2fe', text: 'BIANCA' },
         'HOL': { bg: '#fffbeb', color: '#92400e', border: '#fde68a', text: 'HOLYBELLY' },
         'LOV': { bg: '#f3f4f6', color: '#374151', border: '#e5e7eb', text: 'LOVA' }
@@ -377,7 +379,7 @@
     }
 
     function handleFile(input) { 
-      const MAX_SIZE = 5 * 1024 * 1024; // 5MB Limit
+      const MAX_SIZE = 5 * 1024 * 1024; 
       if (input.files.length) { 
         if(input.files[0].size > MAX_SIZE) {
           alert("Error: File is too large! Please upload a PDF or image under 5MB.");
@@ -389,11 +391,9 @@
       } 
     }
 
-    // THE SECURE DATA VALIDATOR
     function handleFormValidationAndSubmit() {
-      if (isSubmitting) return; // The Double-Submit Lock
+      if (isSubmitting) return; 
 
-      // Manual Required Check
       const brand = document.getElementById('brand').value;
       const supplier = document.getElementById('supplier').value;
       const amount = document.getElementById('amount').value;
@@ -432,10 +432,10 @@
       }
       if (document.getElementById('delConfirm').value !== "Delete this file") {
         isSubmitting = false; 
-        return alert("Please copy and paste the exact confirmation phrase.");
+        return alert("Please type or paste the exact confirmation phrase.");
       }
       closeDeleteModal();
-      isSubmitting = true; // Lock the door while sending
+      isSubmitting = true; 
       executeBackendCall();
     }
 
@@ -450,9 +450,7 @@
       
       if (file) {
         const reader = new FileReader();
-        reader.onload = async function() { 
-          await sendPayload(brand, file.name, reader.result.split(',')[1], btn); 
-        };
+        reader.onload = async function() { await sendPayload(brand, file.name, reader.result.split(',')[1], btn); };
         reader.onerror = function() {
           isSubmitting = false;
           btn.disabled = false;
@@ -496,12 +494,12 @@
           }
         } catch (e) {
           isSubmitting = false;
-          alert("Data anomaly. The server threw a text error. \n\nError: " + textResponse.substring(0, 100));
+          alert("A system error occurred. The data might have saved, please check your Activity Log.\n\nError: " + textResponse.substring(0, 100));
           btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request";
         }
       } catch (e) { 
         isSubmitting = false;
-        alert("CRITICAL ERROR: Connection crashed mid-flight. \n\nThe file payload was too heavy for Google to process and it severed the connection."); 
+        alert("CRITICAL ERROR: Connection crashed mid-flight. Ensure you re-deployed code.gs as a NEW VERSION."); 
         btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request"; 
       }
     }
