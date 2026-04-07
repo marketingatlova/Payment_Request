@@ -22,6 +22,8 @@
     .nav-item { padding: 14px 30px; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.4); cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px; }
     .nav-item.active { color: #fff; background: rgba(255,255,255,0.08); border-right: 4px solid var(--accent); }
     .sidebar-batch { margin: 20px 20px 0; padding: 18px; background: rgba(255,255,255,0.03); border-radius: 14px; border: 1px solid rgba(255,255,255,0.05); }
+    .batch-label { font-size: 9px; font-weight: 800; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+    .batch-date { font-size: 13px; font-weight: 700; color: #60a5fa; }
     .nav-logout { margin-top: auto; padding: 20px 30px; font-size: 11px; color: rgba(255,255,255,0.2); cursor: pointer; border-top: 1px solid rgba(255,255,255,0.05); }
 
     .main-area { flex: 1; display: flex; flex-direction: column; height: 100vh; }
@@ -52,6 +54,8 @@
     .upload-zone.active { border-color: var(--green); background: var(--green-bg); }
 
     .email-confirmation { background: #f8fafc; border: 1px solid var(--border); border-radius: 12px; padding: 12px 20px; margin-top: 5px; display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--text-dim); }
+    .email-confirmation strong { color: var(--navy); font-weight: 800; }
+
     .btn-submit-main { background: var(--navy); color: #fff; padding: 20px; border-radius: 16px; font-weight: 800; font-size: 17px; border: none; cursor: pointer; width: 100%; transition: 0.3s; box-shadow: 0 10px 20px rgba(15,19,31,0.15); margin-top: 15px; margin-bottom: 20px;}
     .btn-submit-main:hover { transform: translateY(-3px); background: var(--navy-light); }
 
@@ -71,12 +75,12 @@
   <div id="deleteModal" class="login-overlay hidden" style="z-index: 4000; background: rgba(15,19,31,0.8);">
     <div class="login-card" style="border: 2px solid var(--accent); padding: 40px;">
       <h2 style="color: var(--accent); margin-bottom: 10px; font-size: 24px;">⚠️ Overwrite Evidence</h2>
-      <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 25px; line-height: 1.5;">You attached a new document. The original invoice file will be permanently deleted from the vault. Please verify your identity.</p>
+      <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 25px; line-height: 1.5;">You are attaching a new document. Please verify your identity to proceed.</p>
       <input type="password" id="delPin" class="pin-input" placeholder="Enter PIN" style="height: 48px; font-size: 20px; letter-spacing: 8px; margin-top:0;">
       <input type="text" id="delConfirm" class="pin-input" placeholder='Type "Delete this file"' style="height: 48px; font-size: 14px; letter-spacing: 0px;">
       <div style="display:flex; gap:12px; margin-top:10px;">
         <button class="btn-submit-main" style="margin:0; background: #e4e1db; color: var(--navy); box-shadow:none;" onclick="closeDeleteModal()">Cancel</button>
-        <button class="btn-submit-main" style="margin:0; background: var(--accent); box-shadow:none;" onclick="confirmDeleteAndSubmit()">Confirm Wipe & Save</button>
+        <button class="btn-submit-main" style="margin:0; background: var(--accent); box-shadow:none;" onclick="confirmDeleteAndSubmit()">Confirm & Save</button>
       </div>
     </div>
   </div>
@@ -150,7 +154,7 @@
             <div class="section-header"><div class="step-num">04</div><div class="section-title">Documentation</div></div>
             <div class="upload-zone" id="dropZone" onclick="document.getElementById('invoiceFile').click()">
               <div id="fileNameDisp" style="font-size:13px; font-weight:700; color:var(--text-dim);">Tap to Upload Invoice Document</div>
-              <input type="file" id="invoiceFile" class="hidden" onchange="handleFile(this)" accept="image/*,application/pdf">
+              <input type="file" id="invoiceFile" class="hidden" onchange="handleFile(this)" accept="image/*,application/pdf" required>
             </div>
           </div>
 
@@ -168,7 +172,7 @@
         <div style="font-size:50px;">✨</div>
         <h2 style="font-size:24px; font-weight:800; margin-top:15px;">Transmission Complete</h2>
         <p id="refIdDisp" style="font-family:monospace; font-size:20px; font-weight:800; color:var(--navy); margin: 20px 0;"></p>
-        <button class="btn-submit-main" onclick="location.reload()" style="width:auto; padding:12px 40px; font-size:14px;">Done</button>
+        <button class="btn-submit-main" onclick="resetToNew()" style="width:auto; padding:12px 40px; font-size:14px;">Done</button>
       </div>
     </div>
   </main>
@@ -205,8 +209,13 @@
     function showTab(tab) {
       document.getElementById('tabForm').classList.toggle('hidden', tab !== 'form');
       document.getElementById('tabHistory').classList.toggle('hidden', tab !== 'history');
+      document.getElementById('successMsg').classList.add('hidden');
       document.getElementById('navForm').classList.toggle('active', tab === 'form');
       document.getElementById('navHistory').classList.toggle('active', tab === 'history');
+      
+      if (!editingId) {
+        document.getElementById('pageTitle').innerText = tab === 'form' ? 'New Payment Request' : 'My Activity Log';
+      }
       if (tab === 'history') fetchHistory();
     }
 
@@ -220,7 +229,12 @@
       document.getElementById('dropZone').classList.remove('active');
       document.getElementById('invoiceFile').required = true;
       document.getElementById('submitBtn').innerText = "Transmit Payment Request";
-      showTab('form');
+      
+      document.getElementById('successMsg').classList.add('hidden');
+      document.getElementById('tabHistory').classList.add('hidden');
+      document.getElementById('tabForm').classList.remove('hidden');
+      document.getElementById('navHistory').classList.remove('active');
+      document.getElementById('navForm').classList.add('active');
     }
 
     function canEdit(origDateRaw) {
@@ -239,6 +253,9 @@
       try {
         const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'getDashboardData', pincode: pin }) });
         const data = await res.json();
+        
+        if (data.status !== 'success') throw new Error('Auth Denied');
+        
         document.getElementById('histLoading').classList.add('hidden');
         myData = [...data.pending, ...data.history].filter(i => i.requester.toLowerCase().trim() === user.name.toLowerCase().trim());
         
@@ -264,7 +281,7 @@
             ${item.note ? `<div style="background: var(--canvas); padding: 12px; border-radius: 8px; font-size: 13px; color: var(--text-dim); border-left: 3px solid var(--border); font-style: italic;">Note: ${item.note}</div>` : ''}
             ${item.popUrl ? `<div style="padding-top: 16px; border-top: 1px solid var(--border);"><a href="${item.popUrl}" target="_blank" style="font-size: 12px; font-weight: 800; color: var(--green); text-decoration: none;">📄 View Official Proof of Payment</a></div>` : ''}
           </div>`).join('');
-      } catch (e) { document.getElementById('histLoading').classList.add('hidden'); list.innerHTML = '<center style="padding:30px; color:#c0392b; font-weight:800;">Error syncing.</center>'; }
+      } catch (e) { document.getElementById('histLoading').classList.add('hidden'); list.innerHTML = '<center style="padding:30px; color:#c0392b; font-weight:800;">Error syncing history.</center>'; }
     }
 
     function setBrand(code, el) { if(editingId) return; document.querySelectorAll('.brand-btn').forEach(b => b.classList.remove('active')); el.classList.add('active'); document.getElementById('brand').value = code; }
@@ -283,7 +300,12 @@
       document.getElementById('supplier').value = item.supplier;
       document.getElementById('amount').value = item.amount;
       document.getElementById('docType').value = item.docType || 'Invoice';
-      document.getElementById('dueDate').value = item.dueDateRaw;
+      
+      // Fix date population
+      if (item.dueDateRaw) {
+        document.getElementById('dueDate').value = item.dueDateRaw;
+      }
+      
       document.getElementById('urgent').checked = (item.urgent === 'Urgent');
       document.getElementById('notes').value = item.note || '';
 
@@ -341,9 +363,13 @@
       try {
         const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
         const result = await res.json();
-        if (result.status === 'success') { document.getElementById('tabForm').classList.add('hidden'); document.getElementById('successMsg').classList.remove('hidden'); document.getElementById('refIdDisp').innerText = "REF: " + result.id; }
+        if (result.status === 'success') { 
+          document.getElementById('tabForm').classList.add('hidden'); 
+          document.getElementById('successMsg').classList.remove('hidden'); 
+          document.getElementById('refIdDisp').innerText = "REF: " + result.id; 
+        }
         else { alert(result.message); btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request"; }
-      } catch (e) { alert("Network Error."); btn.disabled = false; }
+      } catch (e) { alert("Connection Error. Please ensure code.gs was deployed as a 'New Version'."); btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request"; }
     }
   </script>
 </body>
