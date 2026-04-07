@@ -31,6 +31,12 @@
     .view-content { flex: 1; padding: 20px 40px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; }
     
     #tabForm { width: 100%; max-width: 850px; margin: 0 auto; display: flex; flex-direction: column; height: 100%; }
+    
+    /* BRAND EDIT BANNER */
+    #editBanner { padding: 15px 24px; border-radius: 14px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 14px; transition: 0.3s; }
+    .btn-cancel-edit { background: transparent; border: 1px solid currentColor; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 800; color: inherit; transition: 0.2s; }
+    .btn-cancel-edit:hover { opacity: 0.7; }
+
     .form-section { background: var(--surface); border-radius: 18px; border: 1px solid var(--border); padding: 22px 28px; margin-bottom: 12px; flex-shrink: 1; }
     .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; border-bottom: 1px solid #f8fafc; padding-bottom: 10px; }
     .step-num { width: 22px; height: 22px; background: var(--navy); color: #fff; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; }
@@ -54,8 +60,6 @@
     .upload-zone.active { border-color: var(--green); background: var(--green-bg); }
 
     .email-confirmation { background: #f8fafc; border: 1px solid var(--border); border-radius: 12px; padding: 12px 20px; margin-top: 5px; display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--text-dim); }
-    .email-confirmation strong { color: var(--navy); font-weight: 800; }
-
     .btn-submit-main { background: var(--navy); color: #fff; padding: 20px; border-radius: 16px; font-weight: 800; font-size: 17px; border: none; cursor: pointer; width: 100%; transition: 0.3s; box-shadow: 0 10px 20px rgba(15,19,31,0.15); margin-top: 15px; margin-bottom: 20px;}
     .btn-submit-main:hover { transform: translateY(-3px); background: var(--navy-light); }
     .btn-submit-main:disabled { background: #9ca3af; cursor: not-allowed; box-shadow: none; transform: none; }
@@ -73,6 +77,19 @@
 </head>
 <body>
 
+  <div id="deleteModal" class="login-overlay hidden" style="z-index: 4000; background: rgba(15,19,31,0.8);">
+    <div class="login-card" style="border: 2px solid var(--accent); padding: 40px;">
+      <h2 style="color: var(--accent); margin-bottom: 10px; font-size: 24px;">⚠️ Overwrite Evidence</h2>
+      <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 25px; line-height: 1.5;">You are attaching a new document. Please verify your identity to proceed.</p>
+      <input type="password" id="delPin" class="pin-input" placeholder="Enter PIN" style="height: 48px; font-size: 20px; letter-spacing: 8px; margin-top:0;">
+      <input type="text" id="delConfirm" class="pin-input" placeholder='Type "Delete this file"' style="height: 48px; font-size: 14px; letter-spacing: 0px;">
+      <div style="display:flex; gap:12px; margin-top:10px;">
+        <button class="btn-submit-main" style="margin:0; background: #e4e1db; color: var(--navy); box-shadow:none;" onclick="closeDeleteModal()">Cancel</button>
+        <button class="btn-submit-main" style="margin:0; background: var(--accent); box-shadow:none;" onclick="confirmDeleteAndSubmit()">Confirm & Save</button>
+      </div>
+    </div>
+  </div>
+
   <div class="login-overlay" id="loginScreen">
     <div class="login-card">
       <div class="login-logo">LOVA</div>
@@ -87,12 +104,7 @@
     <div class="sidebar-brand"><h1 style="font-family:'Playfair Display'; font-size:28px; letter-spacing:1px;">LOVA</h1></div>
     <div class="nav-item active" id="navForm" onclick="resetToNew()">New Payment Request</div>
     <div class="nav-item" id="navHistory" onclick="showTab('history')">My Activity Log</div>
-    
-    <div class="sidebar-batch">
-      <div class="batch-label">Next Payment Batch</div>
-      <div class="batch-date" id="payFriday">...</div>
-    </div>
-    
+    <div class="sidebar-batch"><div class="batch-label">Next Payment Batch</div><div class="batch-date" id="payFriday">...</div></div>
     <div class="nav-logout" onclick="location.reload()">Logout Portal</div>
   </aside>
 
@@ -104,8 +116,13 @@
 
     <div class="view-content">
       <div id="tabForm">
-        <form id="paymentForm" onsubmit="event.preventDefault(); executeBackendCall();" style="display:flex; flex-direction:column; height:100%;">
-          
+
+        <div id="editBanner" class="hidden">
+          <span id="editBannerText">✏️ Editing Request</span>
+          <button type="button" class="btn-cancel-edit" onclick="cancelEdit()">Cancel Edit & Go Back</button>
+        </div>
+
+        <form id="paymentForm" style="display:flex; flex-direction:column; height:100%;">
           <div class="form-section">
             <div class="section-header"><div class="step-num">01</div><div class="section-title">Entity Selection</div></div>
             <div class="brand-grid">
@@ -208,6 +225,7 @@
       
       if (!editingId) {
         document.getElementById('pageTitle').innerText = tab === 'form' ? 'New Payment Request' : 'My Activity Log';
+        document.getElementById('editBanner').classList.add('hidden');
       }
       if (tab === 'history') fetchHistory();
     }
@@ -215,6 +233,7 @@
     function resetToNew() {
       editingId = null;
       document.getElementById('pageTitle').innerText = 'New Payment Request';
+      document.getElementById('editBanner').classList.add('hidden');
       document.getElementById('paymentForm').reset();
       document.getElementById('brand').value = '';
       document.querySelectorAll('.brand-btn').forEach(b => { b.classList.remove('active'); b.classList.remove('disabled'); });
@@ -228,6 +247,11 @@
       document.getElementById('tabForm').classList.remove('hidden');
       document.getElementById('navHistory').classList.remove('active');
       document.getElementById('navForm').classList.add('active');
+    }
+
+    function cancelEdit() {
+      resetToNew();
+      showTab('history');
     }
 
     function canEdit(origDateRaw) {
@@ -284,11 +308,27 @@
     function startEdit(idx) {
       const item = myData[idx];
       editingId = item.id;
-      document.getElementById('pageTitle').innerText = "Editing Request: " + item.id;
+      document.getElementById('pageTitle').innerText = "Refine Payment Request";
       
       const brandCodeMap = { 'LAVA': 'LAV', 'Bianca Holdings': 'BIA', 'HolyBelly': 'HOL', 'Lova': 'LOV' };
       const bCode = brandCodeMap[item.sheetName];
       document.getElementById('brand').value = bCode;
+      
+      // BRAND THEME LOGIC
+      const themes = {
+        'LAV': { bg: '#fee2e2', color: '#991b1b', text: 'LAVA' },
+        'BIA': { bg: '#e0e7ff', color: '#3730a3', text: 'BIANCA' },
+        'HOL': { bg: '#fef3c7', color: '#92400e', text: 'HOLYBELLY' },
+        'LOV': { bg: '#f3f4f6', color: '#374151', text: 'LOVA' }
+      };
+      const theme = themes[bCode];
+      const banner = document.getElementById('editBanner');
+      banner.style.backgroundColor = theme.bg;
+      banner.style.color = theme.color;
+      banner.style.borderTop = `4px solid ${theme.color}`;
+      document.getElementById('editBannerText').innerText = `✏️ Modifying ${theme.text} Request (${item.id})`;
+      banner.classList.remove('hidden');
+
       document.querySelectorAll('.brand-btn').forEach(b => { b.classList.remove('active'); b.classList.add('disabled'); });
       document.getElementById('btn-' + bCode).classList.add('active');
 
@@ -313,6 +353,27 @@
 
     function handleFile(input) { 
       if (input.files.length) { document.getElementById('fileNameDisp').innerText = "📎 Locked: " + input.files[0].name; document.getElementById('dropZone').classList.add('active'); } 
+    }
+
+    // Attach listener safely
+    document.getElementById('paymentForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      if (editingId && document.getElementById('invoiceFile').files.length > 0) {
+        document.getElementById('deleteModal').classList.remove('hidden');
+      } else { executeBackendCall(); }
+    });
+
+    function closeDeleteModal() {
+      document.getElementById('deleteModal').classList.add('hidden');
+      document.getElementById('delPin').value = '';
+      document.getElementById('delConfirm').value = '';
+    }
+
+    function confirmDeleteAndSubmit() {
+      if (document.getElementById('delPin').value !== pin) return alert("Incorrect PIN");
+      if (document.getElementById('delConfirm').value !== "Delete this file") return alert("Please type the exact confirmation phrase.");
+      closeDeleteModal();
+      executeBackendCall();
     }
 
     function executeBackendCall() {
@@ -344,21 +405,25 @@
       
       try {
         const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
-        const result = await res.json();
+        const textResponse = await res.text(); 
         
-        if (result.status === 'success') { 
-          document.getElementById('tabForm').classList.add('hidden'); 
-          document.getElementById('successMsg').classList.remove('hidden'); 
-          document.getElementById('refIdDisp').innerText = "REF: " + result.id; 
-        } else { 
-          alert("Server Rejected: " + result.message); 
-          btn.disabled = false; 
-          btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request"; 
+        try {
+          const result = JSON.parse(textResponse);
+          if (result.status === 'success') { 
+            document.getElementById('tabForm').classList.add('hidden'); 
+            document.getElementById('successMsg').classList.remove('hidden'); 
+            document.getElementById('refIdDisp').innerText = "REF: " + result.id; 
+          } else { 
+            alert("Server Rejected: " + result.message); 
+            btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request"; 
+          }
+        } catch (e) {
+          alert("Server Timeout or Exception. The data might have saved, check your Activity Log in a few moments.\n\nError: " + textResponse.substring(0, 100));
+          btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request";
         }
       } catch (e) { 
-        alert("Network Error (" + e.message + "). Please verify internet connection."); 
-        btn.disabled = false; 
-        btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request"; 
+        alert("Server Crash. Please ensure you deployed code.gs as a NEW VERSION."); 
+        btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request"; 
       }
     }
   </script>
