@@ -130,7 +130,7 @@
           <button type="button" class="btn-cancel-edit" onclick="cancelEdit()">← Cancel Edit & Go Back</button>
         </div>
 
-        <div id="paymentForm" style="display:flex; flex-direction:column; height:100%;">
+        <div id="paymentContainer" style="display:flex; flex-direction:column; height:100%;">
           <div class="form-section">
             <div class="section-header"><div class="step-num">01</div><div class="section-title">Entity Selection</div></div>
             <div class="brand-grid">
@@ -197,11 +197,10 @@
   </main>
 
   <script>
-    // YOUR GAS DEPLOYMENT URL IS CORRECT HERE. DO NOT CHANGE.
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbyEUJYIu9_O6E50KzKzdEY4EG2VLo4y0Yj8igGRZVMI_zEapqn5w758gdt_nG5tluEdHA/exec';
     let user = null, pin = '', myData = [];
     let editingId = null;
-    let isSubmitting = false;
+    let isSubmitting = false; 
 
     function init() {
       const d = new Date(); const day = d.getDay();
@@ -251,7 +250,6 @@
       document.getElementById('formWrapper').style.border = "none";
       document.getElementById('editBanner').classList.add('hidden');
 
-      // Manually reset fields since we removed the form tag
       document.getElementById('brand').value = '';
       document.getElementById('supplier').value = '';
       document.getElementById('amount').value = '';
@@ -369,6 +367,7 @@
 
       document.getElementById('fileNameDisp').innerText = "📎 Current File Saved. Tap to Replace.";
       document.getElementById('dropZone').classList.remove('active');
+      document.getElementById('invoiceFile').value = null; 
       
       const btn = document.getElementById('submitBtn');
       btn.innerText = "Save & Update Vault";
@@ -378,7 +377,7 @@
     }
 
     function handleFile(input) { 
-      const MAX_SIZE = 5 * 1024 * 1024; 
+      const MAX_SIZE = 5 * 1024 * 1024; // 5MB Limit
       if (input.files.length) { 
         if(input.files[0].size > MAX_SIZE) {
           alert("Error: File is too large! Please upload a PDF or image under 5MB.");
@@ -476,27 +475,33 @@
       };
       
       try {
-        // RAW FETCH (No headers to bypass strict CORS preflight rules)
         const res = await fetch(GAS_URL, { 
           method: 'POST', 
           body: JSON.stringify(payload) 
         });
         
-        const result = await res.json(); 
+        const textResponse = await res.text(); 
         
-        if (result.status === 'success') { 
-          isSubmitting = false; 
-          document.getElementById('formWrapper').classList.add('hidden'); 
-          document.getElementById('successMsg').classList.remove('hidden'); 
-          document.getElementById('refIdDisp').innerText = "REF: " + result.id; 
-        } else { 
-          isSubmitting = false; 
-          alert("Server Error: " + result.message); 
-          btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request"; 
+        try {
+          const result = JSON.parse(textResponse);
+          if (result.status === 'success') { 
+            isSubmitting = false; 
+            document.getElementById('formWrapper').classList.add('hidden'); 
+            document.getElementById('successMsg').classList.remove('hidden'); 
+            document.getElementById('refIdDisp').innerText = "REF: " + result.id; 
+          } else { 
+            isSubmitting = false; 
+            alert("Server Error: " + result.message); 
+            btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request"; 
+          }
+        } catch (e) {
+          isSubmitting = false;
+          alert("Data anomaly. The server threw a text error. \n\nError: " + textResponse.substring(0, 100));
+          btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request";
         }
       } catch (e) { 
         isSubmitting = false;
-        alert("The browser interrupted the connection to Google. Please check your Activity Log, the data may have successfully saved."); 
+        alert("CRITICAL ERROR: Connection crashed mid-flight. \n\nThe file payload was too heavy for Google to process and it severed the connection."); 
         btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request"; 
       }
     }
