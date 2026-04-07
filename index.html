@@ -30,7 +30,7 @@
     .top-header { background: var(--surface); padding: 18px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
     .view-content { flex: 1; padding: 20px 40px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; }
     
-    #tabForm { width: 100%; max-width: 850px; margin: 0 auto; display: flex; flex-direction: column; height: 100%; transition: 0.3s; }
+    #formWrapper { width: 100%; max-width: 850px; margin: 0 auto; display: flex; flex-direction: column; height: 100%; transition: 0.3s; }
     
     #editBanner { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 15px; }
     .btn-cancel-edit { background: var(--surface); border: 1px solid var(--border); padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: 800; color: var(--text-dim); transition: 0.2s; }
@@ -92,8 +92,8 @@
       <input type="text" id="delConfirm" class="pin-input" placeholder='Paste phrase here...' style="height: 48px; font-size: 14px; letter-spacing: 0px;">
       
       <div style="display:flex; gap:12px; margin-top:10px;">
-        <button class="btn-submit-main" style="margin:0; background: #e4e1db; color: var(--navy); box-shadow:none;" onclick="closeDeleteModal()">Cancel</button>
-        <button class="btn-submit-main" style="margin:0; background: var(--accent); box-shadow:none;" onclick="confirmDeleteAndSubmit()">Confirm & Save</button>
+        <button type="button" class="btn-submit-main" style="margin:0; background: #e4e1db; color: var(--navy); box-shadow:none;" onclick="closeDeleteModal()">Cancel</button>
+        <button type="button" class="btn-submit-main" style="margin:0; background: var(--accent); box-shadow:none;" onclick="confirmDeleteAndSubmit()">Confirm & Save</button>
       </div>
     </div>
   </div>
@@ -124,14 +124,14 @@
 
     <div class="view-content">
       
-      <form id="paymentForm" style="display:flex; flex-direction:column; height:100%;">
-        
-        <div id="tabForm">
-          <div id="editBanner" class="hidden">
-            <span id="editBannerText" style="font-size: 18px; font-weight: 800;">✏️ Modifying Request</span>
-            <button type="button" class="btn-cancel-edit" onclick="cancelEdit()">← Cancel Edit</button>
-          </div>
+      <div id="formWrapper">
+        <div id="editBanner" class="hidden">
+          <span id="editBannerText" style="font-size: 18px; font-weight: 800;">✏️ Modifying Request</span>
+          <button type="button" class="btn-cancel-edit" onclick="cancelEdit()">← Cancel Edit & Go Back</button>
+        </div>
 
+        <form id="paymentForm" style="display:flex; flex-direction:column; height:100%;">
+          
           <div class="form-section">
             <div class="section-header"><div class="step-num">01</div><div class="section-title">Entity Selection</div></div>
             <div class="brand-grid">
@@ -179,8 +179,8 @@
 
           <div class="email-confirmation"><span style="font-size:16px;">✉️</span><span>Proof of Payment receipt will be sent to: <strong id="userEmailDisp">...</strong></span></div>
           <button type="submit" class="btn-submit-main" id="submitBtn">Transmit Payment Request</button>
-        </div>
-      </form>
+        </form>
+      </div>
 
       <div id="tabHistory" class="hidden" style="overflow-y:auto; padding-bottom:50px;">
         <div id="histLoading" style="text-align:center; padding:40px; color:#aaa; font-size:13px;">Syncing activity log...</div>
@@ -191,7 +191,7 @@
         <div style="font-size:50px;">✨</div>
         <h2 style="font-size:24px; font-weight:800; margin-top:15px;">Transmission Complete</h2>
         <p id="refIdDisp" style="font-family:monospace; font-size:20px; font-weight:800; color:var(--navy); margin: 20px 0;"></p>
-        <button class="btn-submit-main" onclick="resetToNew()" style="width:auto; padding:12px 40px; font-size:14px;">Done</button>
+        <button type="button" class="btn-submit-main" onclick="resetToNew()" style="width:auto; padding:12px 40px; font-size:14px;">Done</button>
       </div>
     </div>
   </main>
@@ -226,7 +226,7 @@
     }
 
     function showTab(tab) {
-      document.getElementById('paymentForm').classList.toggle('hidden', tab !== 'form');
+      document.getElementById('formWrapper').classList.toggle('hidden', tab !== 'form');
       document.getElementById('tabHistory').classList.toggle('hidden', tab !== 'history');
       document.getElementById('successMsg').classList.add('hidden');
       document.getElementById('navForm').classList.toggle('active', tab === 'form');
@@ -243,10 +243,9 @@
       editingId = null;
       document.getElementById('pageTitle').innerText = 'New Payment Request';
       
-      // CLEAR BRAND COLORING
-      document.getElementById('tabForm').style.backgroundColor = "transparent";
-      document.getElementById('tabForm').style.padding = "0";
-      document.getElementById('tabForm').style.border = "none";
+      document.getElementById('formWrapper').style.backgroundColor = "transparent";
+      document.getElementById('formWrapper').style.padding = "0";
+      document.getElementById('formWrapper').style.border = "none";
       document.getElementById('editBanner').classList.add('hidden');
 
       document.getElementById('paymentForm').reset();
@@ -304,7 +303,7 @@
                 <div style="font-size: 20px; font-weight: 800; color: var(--green);">${parseFloat(item.amount).toLocaleString('en-US', {minimumFractionDigits: 2})} <span style="font-size:12px; opacity:0.6;">THB</span></div>
                 <div style="margin-top: 8px; display:flex; align-items:center; justify-content:flex-end;">
                   <span style="font-size: 9px; font-weight: 800; padding: 4px 8px; border-radius: 20px; text-transform: uppercase; background: ${item.popUrl ? 'var(--green-bg)' : '#f3f4f6'}; color: ${item.popUrl ? 'var(--green)' : '#6b7280'};">${item.popUrl ? 'Paid' : 'In Queue'}</span>
-                  ${(!item.popUrl && canEdit(item.origDateRaw)) ? `<button class="btn-edit" onclick="startEdit(${idx})">✏️ Edit</button>` : ''}
+                  ${(!item.popUrl && canEdit(item.origDateRaw)) ? `<button type="button" class="btn-edit" onclick="startEdit(${idx})">✏️ Edit</button>` : ''}
                 </div>
               </div>
             </div>
@@ -325,7 +324,6 @@
       const bCode = brandCodeMap[item.sheetName];
       document.getElementById('brand').value = bCode;
       
-      // BRAND THEME LOGIC
       const themes = {
         'LAV': { bg: '#fff5f5', color: '#991b1b', border: '#fecaca', text: 'LAVA' },
         'BIA': { bg: '#eef2ff', color: '#3730a3', border: '#c7d2fe', text: 'BIANCA' },
@@ -334,10 +332,10 @@
       };
       const theme = themes[bCode];
       
-      document.getElementById('tabForm').style.backgroundColor = theme.bg;
-      document.getElementById('tabForm').style.padding = "25px";
-      document.getElementById('tabForm').style.borderRadius = "24px";
-      document.getElementById('tabForm').style.border = `2px solid ${theme.border}`;
+      document.getElementById('formWrapper').style.backgroundColor = theme.bg;
+      document.getElementById('formWrapper').style.padding = "25px";
+      document.getElementById('formWrapper').style.borderRadius = "24px";
+      document.getElementById('formWrapper').style.border = `2px solid ${theme.border}`;
 
       const banner = document.getElementById('editBanner');
       banner.style.color = theme.color;
@@ -365,10 +363,19 @@
     }
 
     function handleFile(input) { 
-      if (input.files.length) { document.getElementById('fileNameDisp').innerText = "📎 Locked: " + input.files[0].name; document.getElementById('dropZone').classList.add('active'); } 
+      const MAX_SIZE = 3 * 1024 * 1024; // 3MB Safety Limit to prevent Google Server Crash
+      if (input.files.length) { 
+        if(input.files[0].size > MAX_SIZE) {
+          alert("Error: File is too large! Please upload a PDF or image under 3MB.");
+          input.value = null;
+          return;
+        }
+        document.getElementById('fileNameDisp').innerText = "📎 Ready to Upload: " + input.files[0].name; 
+        document.getElementById('dropZone').classList.add('active'); 
+      } 
     }
 
-    // THE SINGLE SECURE EVENT LISTENER
+    // THE ONLY EVENT LISTENER FOR FORM SUBMISSION
     document.getElementById('paymentForm').addEventListener('submit', function(e) {
       e.preventDefault();
       if (editingId && document.getElementById('invoiceFile').files.length > 0) {
@@ -418,18 +425,24 @@
       
       try {
         const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
-        const result = await res.json();
+        const textResponse = await res.text(); 
         
-        if (result.status === 'success') { 
-          document.getElementById('paymentForm').classList.add('hidden'); 
-          document.getElementById('successMsg').classList.remove('hidden'); 
-          document.getElementById('refIdDisp').innerText = "REF: " + result.id; 
-        } else { 
-          alert("Server Rejected: " + result.message); 
-          btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request"; 
+        try {
+          const result = JSON.parse(textResponse);
+          if (result.status === 'success') { 
+            document.getElementById('formWrapper').classList.add('hidden'); 
+            document.getElementById('successMsg').classList.remove('hidden'); 
+            document.getElementById('refIdDisp').innerText = "REF: " + result.id; 
+          } else { 
+            alert("Server Rejected: " + result.message); 
+            btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request"; 
+          }
+        } catch (e) {
+          alert("A server error occurred. Ensure your Google Sheet 'LAVA' tab has been expanded to Column N. \nError detail: " + textResponse.substring(0, 100));
+          btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request";
         }
       } catch (e) { 
-        alert("Network Error (" + e.message + "). The server did not respond."); 
+        alert("CRITICAL: Network Error. Ensure you deployed code.gs as a NEW VERSION in Apps Script."); 
         btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request"; 
       }
     }
