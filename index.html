@@ -6,12 +6,17 @@
   <title>LOVA — Staff Portal</title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
   <style>
-    :root { --navy: #0f131f; --navy-light: #1a1f2e; --accent: #c0392b; --canvas: #f7f5f0; --surface: #ffffff; --border: #e4e1db; --text: #1a1f2e; --text-dim: #5a5750; --green: #166534; --green-bg: #dcfce7; }
+    :root {
+      --navy: #0f131f; --navy-light: #1a1f2e; --accent: #c0392b; --canvas: #f7f5f0; 
+      --surface: #ffffff; --border: #e4e1db; --text: #1a1f2e; --text-dim: #5a5750;
+      --green: #166534; --green-bg: #dcfce7;
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    
     html, body { height: 100vh; overflow: hidden; font-family: 'Plus Jakarta Sans', sans-serif; background: var(--canvas); color: var(--text); }
     body { display: flex; }
 
-    .login-overlay { position: fixed; inset: 0; background: var(--navy); z-index: 3000; display: flex; align-items: center; justify-content: center; }
+    .login-overlay { position: fixed; inset: 0; background: var(--navy); z-index: 1000; display: flex; align-items: center; justify-content: center; }
     .login-card { background: var(--surface); padding: 50px; border-radius: 28px; text-align: center; width: 100%; max-width: 400px; box-shadow: 0 40px 80px rgba(0,0,0,0.6); }
     .login-logo { font-family: 'Playfair Display', serif; font-size: 38px; color: var(--navy); margin-bottom: 5px; }
     .pin-input { width: 100%; height: 55px; text-align: center; font-size: 26px; letter-spacing: 12px; margin: 25px 0; border: 2px solid var(--border); border-radius: 14px; outline: none; transition: 0.3s; }
@@ -21,6 +26,7 @@
     .sidebar-brand { padding: 0 30px 35px; }
     .nav-item { padding: 14px 30px; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.4); cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px; }
     .nav-item.active { color: #fff; background: rgba(255,255,255,0.08); border-right: 4px solid var(--accent); }
+    
     .sidebar-batch { margin: 20px 20px 0; padding: 18px; background: rgba(255,255,255,0.03); border-radius: 14px; border: 1px solid rgba(255,255,255,0.05); }
     .batch-label { font-size: 9px; font-weight: 800; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
     .batch-date { font-size: 13px; font-weight: 700; color: #60a5fa; }
@@ -72,19 +78,6 @@
 </head>
 <body>
 
-  <div id="deleteModal" class="login-overlay hidden" style="z-index: 4000; background: rgba(15,19,31,0.8);">
-    <div class="login-card" style="border: 2px solid var(--accent); padding: 40px;">
-      <h2 style="color: var(--accent); margin-bottom: 10px; font-size: 24px;">⚠️ Overwrite Evidence</h2>
-      <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 25px; line-height: 1.5;">You are attaching a new document. Please verify your identity to proceed.</p>
-      <input type="password" id="delPin" class="pin-input" placeholder="Enter PIN" style="height: 48px; font-size: 20px; letter-spacing: 8px; margin-top:0;">
-      <input type="text" id="delConfirm" class="pin-input" placeholder='Type "Delete this file"' style="height: 48px; font-size: 14px; letter-spacing: 0px;">
-      <div style="display:flex; gap:12px; margin-top:10px;">
-        <button class="btn-submit-main" style="margin:0; background: #e4e1db; color: var(--navy); box-shadow:none;" onclick="closeDeleteModal()">Cancel</button>
-        <button class="btn-submit-main" style="margin:0; background: var(--accent); box-shadow:none;" onclick="confirmDeleteAndSubmit()">Confirm & Save</button>
-      </div>
-    </div>
-  </div>
-
   <div class="login-overlay" id="loginScreen">
     <div class="login-card">
       <div class="login-logo">LOVA</div>
@@ -99,7 +92,12 @@
     <div class="sidebar-brand"><h1 style="font-family:'Playfair Display'; font-size:28px; letter-spacing:1px;">LOVA</h1></div>
     <div class="nav-item active" id="navForm" onclick="resetToNew()">New Payment Request</div>
     <div class="nav-item" id="navHistory" onclick="showTab('history')">My Activity Log</div>
-    <div class="sidebar-batch"><div class="batch-label">Next Payment Batch</div><div class="batch-date" id="payFriday">...</div></div>
+    
+    <div class="sidebar-batch">
+      <div class="batch-label">Next Payment Batch</div>
+      <div class="batch-date" id="payFriday">...</div>
+    </div>
+    
     <div class="nav-logout" onclick="location.reload()">Logout Portal</div>
   </aside>
 
@@ -111,7 +109,7 @@
 
     <div class="view-content">
       <div id="tabForm">
-        <form id="paymentForm" onsubmit="event.preventDefault(); initiateSubmit();" style="display:flex; flex-direction:column; height:100%;">
+        <form id="paymentForm" onsubmit="event.preventDefault(); executeBackendCall();" style="display:flex; flex-direction:column; height:100%;">
           
           <div class="form-section">
             <div class="section-header"><div class="step-num">01</div><div class="section-title">Entity Selection</div></div>
@@ -135,7 +133,10 @@
               <div class="input-group">
                 <div class="label">Doc Type</div>
                 <select id="docType" class="input" required style="height:48px;">
-                  <option value="Invoice">Invoice</option><option value="Receipt">Receipt</option><option value="Quotation">Quotation</option><option value="Clear Advance">Clear Advance</option>
+                  <option value="Invoice">Invoice</option>
+                  <option value="Receipt">Receipt</option>
+                  <option value="Quotation">Quotation</option>
+                  <option value="Clear Advance">Clear Advance</option>
                 </select>
               </div>
             </div>
@@ -145,7 +146,10 @@
             <div class="section-header"><div class="step-num">03</div><div class="section-title">Schedule & Priority</div></div>
             <div class="grid-pair">
               <div class="input-group"><div class="label">Due Date</div><input type="date" id="dueDate" class="input" required></div>
-              <div class="input-group"><div class="label">Urgency</div><label class="urgent-row" for="urgent"><span style="font-size:11px; font-weight:800; color:var(--accent);">FLAG URGENT</span><input type="checkbox" id="urgent" class="checkbox"></label></div>
+              <div class="input-group">
+                <div class="label">Urgency</div>
+                <label class="urgent-row" for="urgent"><span style="font-size:11px; font-weight:800; color:var(--accent);">FLAG URGENT</span><input type="checkbox" id="urgent" class="checkbox"></label>
+              </div>
             </div>
             <div class="input-group" style="margin:0"><div class="label">Payment Note</div><input type="text" id="notes" class="input" placeholder="What is this paying for?"></div>
           </div>
@@ -158,7 +162,11 @@
             </div>
           </div>
 
-          <div class="email-confirmation"><span style="font-size:16px;">✉️</span><span>Proof of Payment receipt will be sent to: <strong id="userEmailDisp">...</strong></span></div>
+          <div class="email-confirmation">
+            <span style="font-size:16px;">✉️</span>
+            <span>Proof of Payment receipt will be sent to: <strong id="userEmailDisp">...</strong></span>
+          </div>
+
           <button type="submit" class="btn-submit-main" id="submitBtn">Transmit Payment Request</button>
         </form>
       </div>
@@ -179,7 +187,7 @@
 
   <script>
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbyEUJYIu9_O6E50KzKzdEY4EG2VLo4y0Yj8igGRZVMI_zEapqn5w758gdt_nG5tluEdHA/exec';
-    let user = null, pin = '', myData = [];
+    let user = null; let pin = ''; let myData = [];
     let editingId = null;
 
     function init() {
@@ -301,7 +309,6 @@
       document.getElementById('amount').value = item.amount;
       document.getElementById('docType').value = item.docType || 'Invoice';
       
-      // Fix date population
       if (item.dueDateRaw) {
         document.getElementById('dueDate').value = item.dueDateRaw;
       }
@@ -321,25 +328,7 @@
       if (input.files.length) { document.getElementById('fileNameDisp').innerText = "📎 Locked: " + input.files[0].name; document.getElementById('dropZone').classList.add('active'); } 
     }
 
-    function initiateSubmit() {
-      if (editingId && document.getElementById('invoiceFile').files.length > 0) {
-        document.getElementById('deleteModal').classList.remove('hidden');
-      } else { executeBackendCall(); }
-    }
-
-    function closeDeleteModal() {
-      document.getElementById('deleteModal').classList.add('hidden');
-      document.getElementById('delPin').value = '';
-      document.getElementById('delConfirm').value = '';
-    }
-
-    function confirmDeleteAndSubmit() {
-      if (document.getElementById('delPin').value !== pin) return alert("Incorrect PIN");
-      if (document.getElementById('delConfirm').value !== "Delete this file") return alert("Please type the exact confirmation phrase.");
-      closeDeleteModal();
-      executeBackendCall();
-    }
-
+    // FIXED: Directly execute the backend call (No ghost modal logic)
     function executeBackendCall() {
       const btn = document.getElementById('submitBtn'); const file = document.getElementById('invoiceFile').files[0];
       const brand = document.getElementById('brand').value;
@@ -349,7 +338,9 @@
         const reader = new FileReader();
         reader.onload = async function() { sendPayload(brand, file.name, reader.result.split(',')[1], btn); };
         reader.readAsDataURL(file);
-      } else { sendPayload(brand, null, null, btn); }
+      } else { 
+        sendPayload(brand, null, null, btn); 
+      }
     }
 
     async function sendPayload(brand, fName, fBase64, btn) {
@@ -369,7 +360,7 @@
           document.getElementById('refIdDisp').innerText = "REF: " + result.id; 
         }
         else { alert(result.message); btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request"; }
-      } catch (e) { alert("Connection Error. Please ensure code.gs was deployed as a 'New Version'."); btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request"; }
+      } catch (e) { alert("Connection Error. Please try again."); btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request"; }
     }
   </script>
 </body>
