@@ -6,17 +6,12 @@
   <title>LOVA — Staff Portal</title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --navy: #0f131f; --navy-light: #1a1f2e; --accent: #c0392b; --canvas: #f7f5f0; 
-      --surface: #ffffff; --border: #e4e1db; --text: #1a1f2e; --text-dim: #5a5750;
-      --green: #166534; --green-bg: #dcfce7;
-    }
+    :root { --navy: #0f131f; --navy-light: #1a1f2e; --accent: #c0392b; --canvas: #f7f5f0; --surface: #ffffff; --border: #e4e1db; --text: #1a1f2e; --text-dim: #5a5750; --green: #166534; --green-bg: #dcfce7; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    
     html, body { height: 100vh; overflow: hidden; font-family: 'Plus Jakarta Sans', sans-serif; background: var(--canvas); color: var(--text); }
     body { display: flex; }
 
-    .login-overlay { position: fixed; inset: 0; background: var(--navy); z-index: 1000; display: flex; align-items: center; justify-content: center; }
+    .login-overlay { position: fixed; inset: 0; background: var(--navy); z-index: 3000; display: flex; align-items: center; justify-content: center; }
     .login-card { background: var(--surface); padding: 50px; border-radius: 28px; text-align: center; width: 100%; max-width: 400px; box-shadow: 0 40px 80px rgba(0,0,0,0.6); }
     .login-logo { font-family: 'Playfair Display', serif; font-size: 38px; color: var(--navy); margin-bottom: 5px; }
     .pin-input { width: 100%; height: 55px; text-align: center; font-size: 26px; letter-spacing: 12px; margin: 25px 0; border: 2px solid var(--border); border-radius: 14px; outline: none; transition: 0.3s; }
@@ -64,6 +59,7 @@
 
     .btn-submit-main { background: var(--navy); color: #fff; padding: 20px; border-radius: 16px; font-weight: 800; font-size: 17px; border: none; cursor: pointer; width: 100%; transition: 0.3s; box-shadow: 0 10px 20px rgba(15,19,31,0.15); margin-top: 15px; margin-bottom: 20px;}
     .btn-submit-main:hover { transform: translateY(-3px); background: var(--navy-light); }
+    .btn-submit-main:disabled { background: #9ca3af; cursor: not-allowed; box-shadow: none; transform: none; }
 
     /* HISTORY */
     #tabHistory { width: 100%; max-width: 850px; margin: 0 auto; overflow-y: auto; padding-bottom: 50px; }
@@ -109,7 +105,7 @@
 
     <div class="view-content">
       <div id="tabForm">
-        <form id="paymentForm" onsubmit="event.preventDefault(); executeBackendCall();" style="display:flex; flex-direction:column; height:100%;">
+        <form id="paymentForm" style="display:flex; flex-direction:column; height:100%;">
           
           <div class="form-section">
             <div class="section-header"><div class="step-num">01</div><div class="section-title">Entity Selection</div></div>
@@ -133,10 +129,7 @@
               <div class="input-group">
                 <div class="label">Doc Type</div>
                 <select id="docType" class="input" required style="height:48px;">
-                  <option value="Invoice">Invoice</option>
-                  <option value="Receipt">Receipt</option>
-                  <option value="Quotation">Quotation</option>
-                  <option value="Clear Advance">Clear Advance</option>
+                  <option value="Invoice">Invoice</option><option value="Receipt">Receipt</option><option value="Quotation">Quotation</option><option value="Clear Advance">Clear Advance</option>
                 </select>
               </div>
             </div>
@@ -146,10 +139,7 @@
             <div class="section-header"><div class="step-num">03</div><div class="section-title">Schedule & Priority</div></div>
             <div class="grid-pair">
               <div class="input-group"><div class="label">Due Date</div><input type="date" id="dueDate" class="input" required></div>
-              <div class="input-group">
-                <div class="label">Urgency</div>
-                <label class="urgent-row" for="urgent"><span style="font-size:11px; font-weight:800; color:var(--accent);">FLAG URGENT</span><input type="checkbox" id="urgent" class="checkbox"></label>
-              </div>
+              <div class="input-group"><div class="label">Urgency</div><label class="urgent-row" for="urgent"><span style="font-size:11px; font-weight:800; color:var(--accent);">FLAG URGENT</span><input type="checkbox" id="urgent" class="checkbox"></label></div>
             </div>
             <div class="input-group" style="margin:0"><div class="label">Payment Note</div><input type="text" id="notes" class="input" placeholder="What is this paying for?"></div>
           </div>
@@ -162,11 +152,7 @@
             </div>
           </div>
 
-          <div class="email-confirmation">
-            <span style="font-size:16px;">✉️</span>
-            <span>Proof of Payment receipt will be sent to: <strong id="userEmailDisp">...</strong></span>
-          </div>
-
+          <div class="email-confirmation"><span style="font-size:16px;">✉️</span><span>Proof of Payment receipt will be sent to: <strong id="userEmailDisp">...</strong></span></div>
           <button type="submit" class="btn-submit-main" id="submitBtn">Transmit Payment Request</button>
         </form>
       </div>
@@ -187,7 +173,7 @@
 
   <script>
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbyEUJYIu9_O6E50KzKzdEY4EG2VLo4y0Yj8igGRZVMI_zEapqn5w758gdt_nG5tluEdHA/exec';
-    let user = null; let pin = ''; let myData = [];
+    let user = null, pin = '', myData = [];
     let editingId = null;
 
     function init() {
@@ -246,7 +232,9 @@
     }
 
     function canEdit(origDateRaw) {
+      if (!origDateRaw) return true;
       const d = new Date(origDateRaw);
+      if (isNaN(d.getTime())) return true;
       const day = d.getDay();
       const diff = d.getDate() + (day <= 5 ? (5 - day) : (5 - day + 7));
       const targetFriday = new Date(d.setDate(diff));
@@ -328,9 +316,15 @@
       if (input.files.length) { document.getElementById('fileNameDisp').innerText = "📎 Locked: " + input.files[0].name; document.getElementById('dropZone').classList.add('active'); } 
     }
 
-    // FIXED: Directly execute the backend call (No ghost modal logic)
+    // Attach listener instead of inline to prevent browser aborts
+    document.getElementById('paymentForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      executeBackendCall();
+    });
+
     function executeBackendCall() {
-      const btn = document.getElementById('submitBtn'); const file = document.getElementById('invoiceFile').files[0];
+      const btn = document.getElementById('submitBtn'); const fileInput = document.getElementById('invoiceFile');
+      const file = fileInput.files.length > 0 ? fileInput.files[0] : null;
       const brand = document.getElementById('brand').value;
       btn.disabled = true; btn.innerText = "Transmitting to Vault...";
       
@@ -351,16 +345,28 @@
         isUrgent: document.getElementById('urgent').checked, note: document.getElementById('notes').value, 
         fileName: fName, fileBase64: fBase64, userName: user.name, email: user.email, pincode: pin 
       };
+      
       try {
         const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
-        const result = await res.json();
-        if (result.status === 'success') { 
-          document.getElementById('tabForm').classList.add('hidden'); 
-          document.getElementById('successMsg').classList.remove('hidden'); 
-          document.getElementById('refIdDisp').innerText = "REF: " + result.id; 
+        const textResponse = await res.text(); 
+        
+        try {
+          const result = JSON.parse(textResponse);
+          if (result.status === 'success') { 
+            document.getElementById('tabForm').classList.add('hidden'); 
+            document.getElementById('successMsg').classList.remove('hidden'); 
+            document.getElementById('refIdDisp').innerText = "REF: " + result.id; 
+          } else { 
+            alert("Server Rejected: " + result.message); btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request"; 
+          }
+        } catch (e) {
+          alert("CRITICAL ERROR: Google Server crashed. \n\n1. Ensure you hit 'Deploy as New Version'.\n2. Do NOT use 'Test Deployment'.\n\nGoogle Response: " + textResponse.substring(0, 100));
+          btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request";
         }
-        else { alert(result.message); btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request"; }
-      } catch (e) { alert("Connection Error. Please try again."); btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request"; }
+      } catch (e) { 
+        alert("Network Error (" + e.message + "). Check internet or re-deploy script as a NEW VERSION."); 
+        btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request"; 
+      }
     }
   </script>
 </body>
