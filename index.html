@@ -21,7 +21,6 @@
     .sidebar-brand { padding: 0 30px 35px; }
     .nav-item { padding: 14px 30px; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.4); cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px; }
     .nav-item.active { color: #fff; background: rgba(255,255,255,0.08); border-right: 4px solid var(--accent); }
-    
     .sidebar-batch { margin: 20px 20px 0; padding: 18px; background: rgba(255,255,255,0.03); border-radius: 14px; border: 1px solid rgba(255,255,255,0.05); }
     .batch-label { font-size: 9px; font-weight: 800; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
     .batch-date { font-size: 13px; font-weight: 700; color: #60a5fa; }
@@ -105,7 +104,7 @@
 
     <div class="view-content">
       <div id="tabForm">
-        <form id="paymentForm" style="display:flex; flex-direction:column; height:100%;">
+        <form id="paymentForm" onsubmit="event.preventDefault(); executeBackendCall();" style="display:flex; flex-direction:column; height:100%;">
           
           <div class="form-section">
             <div class="section-header"><div class="step-num">01</div><div class="section-title">Entity Selection</div></div>
@@ -316,17 +315,14 @@
       if (input.files.length) { document.getElementById('fileNameDisp').innerText = "📎 Locked: " + input.files[0].name; document.getElementById('dropZone').classList.add('active'); } 
     }
 
-    // Attach listener instead of inline to prevent browser aborts
-    document.getElementById('paymentForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      executeBackendCall();
-    });
-
     function executeBackendCall() {
-      const btn = document.getElementById('submitBtn'); const fileInput = document.getElementById('invoiceFile');
+      const btn = document.getElementById('submitBtn'); 
+      const fileInput = document.getElementById('invoiceFile');
       const file = fileInput.files.length > 0 ? fileInput.files[0] : null;
       const brand = document.getElementById('brand').value;
-      btn.disabled = true; btn.innerText = "Transmitting to Vault...";
+      
+      btn.disabled = true; 
+      btn.innerText = "Transmitting to Vault...";
       
       if (file) {
         const reader = new FileReader();
@@ -348,24 +344,21 @@
       
       try {
         const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
-        const textResponse = await res.text(); 
+        const result = await res.json();
         
-        try {
-          const result = JSON.parse(textResponse);
-          if (result.status === 'success') { 
-            document.getElementById('tabForm').classList.add('hidden'); 
-            document.getElementById('successMsg').classList.remove('hidden'); 
-            document.getElementById('refIdDisp').innerText = "REF: " + result.id; 
-          } else { 
-            alert("Server Rejected: " + result.message); btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request"; 
-          }
-        } catch (e) {
-          alert("CRITICAL ERROR: Google Server crashed. \n\n1. Ensure you hit 'Deploy as New Version'.\n2. Do NOT use 'Test Deployment'.\n\nGoogle Response: " + textResponse.substring(0, 100));
-          btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request";
+        if (result.status === 'success') { 
+          document.getElementById('tabForm').classList.add('hidden'); 
+          document.getElementById('successMsg').classList.remove('hidden'); 
+          document.getElementById('refIdDisp').innerText = "REF: " + result.id; 
+        } else { 
+          alert("Server Rejected: " + result.message); 
+          btn.disabled = false; 
+          btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request"; 
         }
       } catch (e) { 
-        alert("Network Error (" + e.message + "). Check internet or re-deploy script as a NEW VERSION."); 
-        btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request"; 
+        alert("Network Error (" + e.message + "). Please verify internet connection."); 
+        btn.disabled = false; 
+        btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request"; 
       }
     }
   </script>
