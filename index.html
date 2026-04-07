@@ -215,7 +215,6 @@
       try {
         const res = await fetch(GAS_URL, { 
           method: 'POST', 
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // SAFE CORS HEADER
           body: JSON.stringify({ action: 'verifyLogin', pincode: input.value }) 
         });
         const data = await res.json();
@@ -290,7 +289,6 @@
       try {
         const res = await fetch(GAS_URL, { 
           method: 'POST', 
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // SAFE CORS HEADER
           body: JSON.stringify({ action: 'getDashboardData', pincode: pin }) 
         });
         const data = await res.json();
@@ -379,10 +377,11 @@
     }
 
     function handleFile(input) { 
-      const MAX_SIZE = 5 * 1024 * 1024; // 5MB Safety Limit
+      // STRICT 2.5MB LIMIT to guarantee the file safely passes Google's firewall
+      const MAX_SIZE = 2.5 * 1024 * 1024; 
       if (input.files.length) { 
         if(input.files[0].size > MAX_SIZE) {
-          alert("Error: File is too large! Please upload a PDF or image under 5MB.");
+          alert("❌ FILE TOO LARGE FOR GOOGLE SERVERS.\n\nYour file is over 2.5MB. Please compress the PDF or upload a smaller image file to continue.");
           input.value = null;
           return;
         }
@@ -459,11 +458,9 @@
       };
       
       try {
-        // THE FIX: Strict headers injected to prevent Google CORS blocking
+        // RAW FETCH: No custom headers, entirely browser-native to avoid CORS preflight blocks
         const res = await fetch(GAS_URL, { 
           method: 'POST', 
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          redirect: 'follow',
           body: JSON.stringify(payload) 
         });
         
@@ -483,12 +480,12 @@
           }
         } catch (e) {
           isSubmitting = false;
-          alert("Data anomaly detected. The data might have saved, please check your Activity Log.\n\nError: " + textResponse.substring(0, 100));
+          alert("Data anomaly. The server threw a text error. \n\nError: " + textResponse.substring(0, 100));
           btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request";
         }
       } catch (e) { 
         isSubmitting = false;
-        alert("CRITICAL: Network connection aborted by Google. \n\nPlease verify in Apps Script that 'Execute as' is set to 'ME' and not 'User accessing the web app'."); 
+        alert("CRITICAL ERROR: Connection crashed mid-flight. \n\nThe file payload was too heavy for Google to process and it severed the connection."); 
         btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request"; 
       }
     }
