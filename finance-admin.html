@@ -197,13 +197,35 @@
   </main>
 
   <script>
-    // IMPORTANT: Make sure this matches your deployed Google Apps Script URL
+    // ============================================================
+    // CONFIGURATION — update this URL if you redeploy your GAS
+    // ============================================================
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbyEUJYIu9_O6E50KzKzdEY4EG2VLo4y0Yj8igGRZVMI_zEapqn5w758gdt_nG5tluEdHA/exec';
-    
+
+    // ============================================================
+    // GLOBAL STATE
+    // ============================================================
     let user = null, pin = '', myData = [];
     let editingId = null;
     let isSubmitting = false;
 
+    // ---- FILE CACHE -----------------------------------------
+    // Files are read into memory the moment they are selected.
+    // This prevents "file gone" errors that happen when the
+    // browser tries to re-read the file at submit time on slow
+    // or unstable connections.
+    let _cachedBase64   = null;   // base64 string (no data-URI prefix)
+    let _cachedFileName = null;   // original filename with extension
+
+    function _clearFileCache() {
+      _cachedBase64   = null;
+      _cachedFileName = null;
+    }
+    // --------------------------------------------------------
+
+    // ============================================================
+    // INIT
+    // ============================================================
     function init() {
       const d = new Date(); const day = d.getDay();
       const diff = d.getDate() + (day <= 5 ? (5 - day) : (5 - day + 7));
@@ -211,33 +233,43 @@
     }
     init();
 
+    // ============================================================
+    // LOGIN
+    // ============================================================
     async function login() {
-      const input = document.getElementById('staffPin'); const btn = document.getElementById('loginBtn');
+      const input = document.getElementById('staffPin');
+      const btn   = document.getElementById('loginBtn');
       if (!input.value) return;
       btn.disabled = true; btn.innerText = 'Verifying PIN...';
       try {
-        const res = await fetch(GAS_URL, { 
-          method: 'POST', 
-          body: JSON.stringify({ action: 'verifyLogin', pincode: input.value }) 
+        const res  = await fetch(GAS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'verifyLogin', pincode: input.value })
         });
         const data = await res.json();
-        if (data.status === 'success') { 
-          user = data; pin = input.value; 
-          document.getElementById('userNameBadge').innerText = data.name; 
-          document.getElementById('userEmailDisp').innerText = data.email;
-          document.getElementById('loginScreen').style.display = 'none'; 
+        if (data.status === 'success') {
+          user = data; pin = input.value;
+          document.getElementById('userNameBadge').innerText  = data.name;
+          document.getElementById('userEmailDisp').innerText  = data.email;
+          document.getElementById('loginScreen').style.display = 'none';
+        } else {
+          document.getElementById('loginError').innerText = data.message;
+          btn.disabled = false; btn.innerText = 'Authorize Session';
         }
-        else { document.getElementById('loginError').innerText = data.message; btn.disabled = false; btn.innerText = 'Authorize Session'; }
-      } catch (e) { btn.disabled = false; }
+      } catch (e) { btn.disabled = false; btn.innerText = 'Authorize Session'; }
     }
 
+    // ============================================================
+    // TAB / VIEW HELPERS
+    // ============================================================
     function showTab(tab) {
       document.getElementById('formWrapper').classList.toggle('hidden', tab !== 'form');
       document.getElementById('tabHistory').classList.toggle('hidden', tab !== 'history');
       document.getElementById('successMsg').classList.add('hidden');
       document.getElementById('navForm').classList.toggle('active', tab === 'form');
       document.getElementById('navHistory').classList.toggle('active', tab === 'history');
-      
+
       if (!editingId) {
         document.getElementById('pageTitle').innerText = tab === 'form' ? 'New Payment Request' : 'My Activity Log';
         document.getElementById('editBanner').classList.add('hidden');
@@ -246,31 +278,35 @@
     }
 
     function resetToNew() {
-      editingId = null;
-      isSubmitting = false; 
+      editingId    = null;
+      isSubmitting = false;
+      _clearFileCache();                                   // ← wipe any stale file data
+
       document.getElementById('pageTitle').innerText = 'New Payment Request';
-      
-      document.getElementById('formWrapper').style.backgroundColor = "transparent";
-      document.getElementById('formWrapper').style.padding = "0";
-      document.getElementById('formWrapper').style.border = "none";
+      document.getElementById('formWrapper').style.backgroundColor = 'transparent';
+      document.getElementById('formWrapper').style.padding         = '0';
+      document.getElementById('formWrapper').style.border          = 'none';
       document.getElementById('editBanner').classList.add('hidden');
 
-      document.getElementById('brand').value = '';
+      document.getElementById('brand').value    = '';
       document.getElementById('supplier').value = '';
-      document.getElementById('amount').value = '';
-      document.getElementById('dueDate').value = '';
-      document.getElementById('notes').value = '';
+      document.getElementById('amount').value   = '';
+      document.getElementById('dueDate').value  = '';
+      document.getElementById('notes').value    = '';
       document.getElementById('urgent').checked = false;
       document.getElementById('invoiceFile').value = null;
 
-      document.querySelectorAll('.brand-btn').forEach(b => { b.classList.remove('active'); b.classList.remove('disabled'); });
-      document.getElementById('fileNameDisp').innerText = "Tap to Upload Invoice Document (Max 1.3MB)";
+      document.querySelectorAll('.brand-btn').forEach(b => {
+        b.classList.remove('active');
+        b.classList.remove('disabled');
+      });
+      document.getElementById('fileNameDisp').innerText = 'Tap to Upload Invoice Document (Max 1.3MB)';
       document.getElementById('dropZone').classList.remove('active');
-      
+
       const btn = document.getElementById('submitBtn');
-      btn.innerText = "Transmit Payment Request";
-      btn.disabled = false;
-      
+      btn.innerText = 'Transmit Payment Request';
+      btn.disabled  = false;
+
       showTab('form');
     }
 
@@ -283,7 +319,7 @@
       if (!origDateRaw) return true;
       const d = new Date(origDateRaw);
       if (isNaN(d.getTime())) return true;
-      const day = d.getDay();
+      const day  = d.getDay();
       const diff = d.getDate() + (day <= 5 ? (5 - day) : (5 - day + 7));
       const targetFriday = new Date(d.setDate(diff));
       const cutoff = new Date(targetFriday);
@@ -292,22 +328,30 @@
       return new Date() <= cutoff;
     }
 
+    // ============================================================
+    // HISTORY
+    // ============================================================
     async function fetchHistory() {
-      const list = document.getElementById('histList'); list.innerHTML = ''; document.getElementById('histLoading').classList.remove('hidden');
+      const list = document.getElementById('histList');
+      list.innerHTML = '';
+      document.getElementById('histLoading').classList.remove('hidden');
       try {
-        const res = await fetch(GAS_URL, { 
-          method: 'POST', 
-          body: JSON.stringify({ action: 'getDashboardData', pincode: pin }) 
+        const res  = await fetch(GAS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'getDashboardData', pincode: pin })
         });
         const data = await res.json();
-        
         if (data.status !== 'success') throw new Error('Auth Denied');
-        
+
         document.getElementById('histLoading').classList.add('hidden');
-        myData = [...data.pending, ...data.history].filter(i => i.requester.toLowerCase().trim() === user.name.toLowerCase().trim());
-        
-        if (myData.length === 0) return list.innerHTML = '<center style="padding:40px; color:#aaa; font-weight:600;">No history found.</center>';
-        
+        myData = [...data.pending, ...data.history].filter(
+          i => i.requester.toLowerCase().trim() === user.name.toLowerCase().trim()
+        );
+
+        if (myData.length === 0)
+          return list.innerHTML = '<center style="padding:40px; color:#aaa; font-weight:600;">No history found.</center>';
+
         list.innerHTML = myData.map((item, idx) => `
           <div class="history-card">
             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
@@ -328,21 +372,37 @@
             ${item.note ? `<div style="background: var(--canvas); padding: 12px; border-radius: 8px; font-size: 13px; color: var(--text-dim); border-left: 3px solid var(--border); font-style: italic;">Note: ${item.note}</div>` : ''}
             ${item.popUrl ? `<div style="padding-top: 16px; border-top: 1px solid var(--border);"><a href="${item.popUrl}" target="_blank" style="font-size: 12px; font-weight: 800; color: var(--green); text-decoration: none;">📄 View Official Proof of Payment</a></div>` : ''}
           </div>`).join('');
-      } catch (e) { document.getElementById('histLoading').classList.add('hidden'); list.innerHTML = '<center style="padding:30px; color:#c0392b; font-weight:800;">Error syncing history.</center>'; }
+      } catch (e) {
+        document.getElementById('histLoading').classList.add('hidden');
+        list.innerHTML = '<center style="padding:30px; color:#c0392b; font-weight:800;">Error syncing history.</center>';
+      }
     }
 
-    function setBrand(code, el) { if(editingId) return; document.querySelectorAll('.brand-btn').forEach(b => b.classList.remove('active')); el.classList.add('active'); document.getElementById('brand').value = code; }
-    
+    // ============================================================
+    // BRAND SELECTION
+    // ============================================================
+    function setBrand(code, el) {
+      if (editingId) return;
+      document.querySelectorAll('.brand-btn').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById('brand').value = code;
+    }
+
+    // ============================================================
+    // EDIT MODE
+    // ============================================================
     function startEdit(idx) {
       const item = myData[idx];
-      editingId = item.id;
-      isSubmitting = false; 
-      document.getElementById('pageTitle').innerText = "Refine Payment Request";
-      
+      editingId    = item.id;
+      isSubmitting = false;
+      _clearFileCache();                                   // ← always wipe before entering edit mode
+
+      document.getElementById('pageTitle').innerText = 'Refine Payment Request';
+
       const brandCodeMap = { 'LAVA': 'LAV', 'Bianca Holdings': 'BIA', 'HolyBelly': 'HOL', 'Lova': 'LOV' };
       const bCode = brandCodeMap[item.sheetName];
       document.getElementById('brand').value = bCode;
-      
+
       const themes = {
         'LAV': { bg: '#fff0f0', color: '#991b1b', border: '#fecaca', text: 'LAVA' },
         'BIA': { bg: '#eef2ff', color: '#3730a3', border: '#c7d2fe', text: 'BIANCA' },
@@ -350,218 +410,282 @@
         'LOV': { bg: '#f3f4f6', color: '#374151', border: '#e5e7eb', text: 'LOVA' }
       };
       const theme = themes[bCode];
-      
+
       document.getElementById('formWrapper').style.backgroundColor = theme.bg;
-      document.getElementById('formWrapper').style.padding = "25px";
-      document.getElementById('formWrapper').style.borderRadius = "24px";
-      document.getElementById('formWrapper').style.border = `2px solid ${theme.border}`;
+      document.getElementById('formWrapper').style.padding         = '25px';
+      document.getElementById('formWrapper').style.borderRadius    = '24px';
+      document.getElementById('formWrapper').style.border          = `2px solid ${theme.border}`;
 
       const banner = document.getElementById('editBanner');
       banner.style.color = theme.color;
       document.getElementById('editBannerText').innerText = `✏️ Modifying ${theme.text} Request (${item.id})`;
       banner.classList.remove('hidden');
 
-      document.querySelectorAll('.brand-btn').forEach(b => { b.classList.remove('active'); b.classList.add('disabled'); });
+      document.querySelectorAll('.brand-btn').forEach(b => {
+        b.classList.remove('active');
+        b.classList.add('disabled');
+      });
       document.getElementById('btn-' + bCode).classList.add('active');
 
       document.getElementById('supplier').value = item.supplier;
-      document.getElementById('amount').value = item.amount;
-      document.getElementById('docType').value = item.docType || 'Invoice';
-      
-      if (item.dueDateRaw) { document.getElementById('dueDate').value = item.dueDateRaw; }
-      
+      document.getElementById('amount').value   = item.amount;
+      document.getElementById('docType').value  = item.docType || 'Invoice';
+      if (item.dueDateRaw) document.getElementById('dueDate').value = item.dueDateRaw;
       document.getElementById('urgent').checked = (item.urgent === 'Urgent');
-      document.getElementById('notes').value = item.note || '';
+      document.getElementById('notes').value    = item.note || '';
 
-      document.getElementById('fileNameDisp').innerText = "📎 Current File Saved. Tap to Replace.";
+      // Reset file picker — no old file data should be in cache
+      document.getElementById('invoiceFile').value = null;
+      document.getElementById('fileNameDisp').innerText = '📎 Current File Saved. Tap to Replace.';
       document.getElementById('dropZone').classList.remove('active');
-      document.getElementById('invoiceFile').value = null; 
-      
+
       const btn = document.getElementById('submitBtn');
-      btn.innerText = "Save & Update Vault";
-      btn.disabled = false;
-      
+      btn.innerText = 'Save & Update Vault';
+      btn.disabled  = false;
+
       showTab('form');
     }
 
-    // 🆕 1. Clear memory before loading new file & cache immediately on selection
-    function handleFile(input) { 
-      const MAX_SIZE = 1.3 * 1024 * 1024; 
-      
-      window._cachedBase64 = null;
-      window._cachedFileName = null;
-      
-      if (input.files.length) { 
-        if(input.files[0].size > MAX_SIZE) {
-          alert("❌ GOOGLE SERVER LIMIT EXCEEDED.\n\nTo ensure reliable processing, files must be under 1.3MB. Your file is " + (input.files[0].size / 1024 / 1024).toFixed(1) + "MB.\n\nPlease compress this document before uploading.");
-          input.value = null;
-          document.getElementById('dropZone').classList.remove('active');
-          document.getElementById('fileNameDisp').innerText = "Tap to Upload Invoice Document (Max 1.3MB)";
-          return;
-        }
-        
-        const reader = new FileReader();
-        reader.onload = function() {
-          window._cachedBase64 = reader.result.split(',')[1];
-          window._cachedFileName = input.files[0].name;
-          document.getElementById('fileNameDisp').innerText = "📎 Ready to Upload: " + input.files[0].name; 
-          document.getElementById('dropZone').classList.add('active'); 
-        };
-        reader.onerror = function() {
-          window._cachedBase64 = null;
-          window._cachedFileName = null;
-          input.value = null;
-          document.getElementById('fileNameDisp').innerText = "Tap to Upload Invoice Document (Max 1.3MB)";
-          document.getElementById('dropZone').classList.remove('active');
-          alert("❌ Could not read file. Please try again.");
-        };
-        reader.readAsDataURL(input.files[0]);
-      } 
+    // ============================================================
+    // FILE HANDLING — pre-read into memory on selection
+    // ============================================================
+    function handleFile(input) {
+      const MAX_SIZE = 1.3 * 1024 * 1024;
+
+      // Step 1 — wipe any previous cache immediately
+      _clearFileCache();
+      document.getElementById('dropZone').classList.remove('active');
+      document.getElementById('fileNameDisp').innerText = editingId
+        ? '📎 Current File Saved. Tap to Replace.'
+        : 'Tap to Upload Invoice Document (Max 1.3MB)';
+
+      if (!input.files.length) return;
+
+      const file = input.files[0];
+
+      // Step 2 — size guard
+      if (file.size > MAX_SIZE) {
+        alert(
+          '❌ FILE TOO LARGE\n\n' +
+          'Google Apps Script cannot reliably receive files over 1.3 MB.\n' +
+          'Your file is ' + (file.size / 1024 / 1024).toFixed(2) + ' MB.\n\n' +
+          'Please compress or export a smaller version and try again.'
+        );
+        input.value = null;
+        return;
+      }
+
+      // Step 3 — pre-read into memory right now (not at submit time)
+      const reader = new FileReader();
+
+      reader.onload = function () {
+        // Store in module-level variables — safe from garbage collection
+        _cachedBase64   = reader.result.split(',')[1];
+        _cachedFileName = file.name;
+        document.getElementById('fileNameDisp').innerText = '📎 Ready to Upload: ' + file.name;
+        document.getElementById('dropZone').classList.add('active');
+      };
+
+      reader.onerror = function () {
+        _clearFileCache();
+        input.value = null;
+        document.getElementById('fileNameDisp').innerText = editingId
+          ? '📎 Current File Saved. Tap to Replace.'
+          : 'Tap to Upload Invoice Document (Max 1.3MB)';
+        document.getElementById('dropZone').classList.remove('active');
+        alert('❌ Could not read the file. Please try selecting it again.');
+      };
+
+      reader.readAsDataURL(file);
     }
 
+    // ============================================================
+    // FORM VALIDATION → route to modal or direct submit
+    // ============================================================
     function handleFormValidationAndSubmit() {
       if (isSubmitting) return;
 
-      const brand = document.getElementById('brand').value;
+      const brand   = document.getElementById('brand').value;
       const supplier = document.getElementById('supplier').value;
-      const amount = document.getElementById('amount').value;
+      const amount  = document.getElementById('amount').value;
       const docType = document.getElementById('docType').value;
       const dueDate = document.getElementById('dueDate').value;
 
       if (!brand || !supplier || !amount || !docType || !dueDate) {
-        alert("Please complete all required fields (Brand, Supplier, Amount, Doc Type, Due Date).");
+        alert('Please complete all required fields (Brand, Supplier, Amount, Doc Type, Due Date).');
         return;
       }
 
-      if (!editingId && document.getElementById('invoiceFile').files.length === 0) {
-        alert("Please attach an invoice document.");
+      // New request must have a file
+      if (!editingId && !_cachedBase64) {
+        alert('Please attach an invoice document before submitting.');
         return;
       }
 
-      if (editingId && document.getElementById('invoiceFile').files.length > 0) {
+      // Edit + new file selected → show overwrite confirmation modal
+      if (editingId && _cachedBase64) {
         document.getElementById('deleteModal').classList.remove('hidden');
-      } else { 
+      } else {
+        // Edit with no replacement file, or brand-new request with file already cached
         isSubmitting = true;
-        executeBackendCall(); 
+        executeBackendCall();
       }
     }
 
-    // 🆕 2. Wipe cached data if user cancels overwrite modal
+    // ============================================================
+    // DELETE / OVERWRITE MODAL
+    // ============================================================
     function closeDeleteModal() {
-      isSubmitting = false; 
       document.getElementById('deleteModal').classList.add('hidden');
-      document.getElementById('delPin').value = '';
+      document.getElementById('delPin').value     = '';
       document.getElementById('delConfirm').value = '';
-      
-      window._cachedBase64 = null;
-      window._cachedFileName = null;
+
+      // Wipe the newly selected replacement file so the user
+      // must consciously re-select if they reopen the modal
+      _clearFileCache();
       document.getElementById('invoiceFile').value = null;
-      document.getElementById('fileNameDisp').innerText = editingId ? "📎 Current File Saved. Tap to Replace." : "Tap to Upload Invoice Document (Max 1.3MB)";
+      document.getElementById('fileNameDisp').innerText = '📎 Current File Saved. Tap to Replace.';
       document.getElementById('dropZone').classList.remove('active');
+
+      isSubmitting = false;
     }
 
     function confirmDeleteAndSubmit() {
       if (document.getElementById('delPin').value !== pin) {
-        isSubmitting = false; 
-        return alert("Incorrect PIN");
+        return alert('Incorrect PIN. Please try again.');
       }
-      if (document.getElementById('delConfirm').value !== "Delete this file") {
-        isSubmitting = false; 
-        return alert("Please copy and paste the exact confirmation phrase.");
+      if (document.getElementById('delConfirm').value !== 'Delete this file') {
+        return alert('Please copy and paste the exact confirmation phrase.');
       }
-      closeDeleteModal();
-      isSubmitting = true; 
+
+      // Hide the modal but keep the cached file data intact for upload
+      document.getElementById('deleteModal').classList.add('hidden');
+      document.getElementById('delPin').value     = '';
+      document.getElementById('delConfirm').value = '';
+
+      isSubmitting = true;
       executeBackendCall();
     }
 
-    // 🆕 3. Use pre-cached data to avoid re-reading file on slow connections
+    // ============================================================
+    // EXECUTE BACKEND CALL — uses pre-cached file data
+    // ============================================================
     function executeBackendCall() {
-      const btn = document.getElementById('submitBtn'); 
+      const btn   = document.getElementById('submitBtn');
       const brand = document.getElementById('brand').value;
-      
-      btn.disabled = true; 
-      btn.innerText = "Transmitting to Vault...";
 
-      const fBase64 = window._cachedBase64 || null;
-      const fName = window._cachedFileName || null;
-
-      if (!editingId && (!fBase64 || !fName)) {
+      // Guard: if a new request has no cached file, abort cleanly
+      if (!editingId && !_cachedBase64) {
         isSubmitting = false;
-        btn.disabled = false;
-        btn.innerText = "Transmit Payment Request";
-        alert("❌ File data was lost. Please re-select your invoice document and try again.");
+        alert('❌ File data is missing. Please re-select your invoice document and try again.');
+        btn.disabled  = false;
+        btn.innerText = 'Transmit Payment Request';
         return;
       }
 
-      sendPayload(brand, fName, fBase64, btn);
+      btn.disabled  = true;
+      btn.innerText = 'Transmitting to Vault...';
+
+      // Pass cached values directly — no FileReader needed here
+      sendPayload(brand, _cachedFileName, _cachedBase64, btn);
     }
 
-    // 🆕 4. Added Retry Logic, Exponential Backoff, and AbortController Timeout
+    // ============================================================
+    // SEND PAYLOAD — with automatic retry (up to 3 attempts)
+    // ============================================================
     async function sendPayload(brand, fName, fBase64, btn, attempt = 1) {
       const MAX_ATTEMPTS = 3;
-      
-      const payload = { 
-        action: editingId ? 'editRequest' : 'submitRequest', id: editingId, brand, 
-        requestTitle: document.getElementById('supplier').value, amount: document.getElementById('amount').value, 
-        documentType: document.getElementById('docType').value, dueDate: document.getElementById('dueDate').value, 
-        isUrgent: document.getElementById('urgent').checked, note: document.getElementById('notes').value, 
-        fileName: fName, fileBase64: fBase64, userName: user.name, email: user.email, pincode: pin 
+
+      const payload = {
+        action:       editingId ? 'editRequest' : 'submitRequest',
+        id:           editingId,
+        brand,
+        requestTitle: document.getElementById('supplier').value,
+        amount:       document.getElementById('amount').value,
+        documentType: document.getElementById('docType').value,
+        dueDate:      document.getElementById('dueDate').value,
+        isUrgent:     document.getElementById('urgent').checked,
+        note:         document.getElementById('notes').value,
+        fileName:     fName,
+        fileBase64:   fBase64,
+        userName:     user.name,
+        email:        user.email,
+        pincode:      pin
       };
-      
+
       if (attempt > 1) {
-        btn.innerText = `Retrying... (Attempt ${attempt}/${MAX_ATTEMPTS})`;
+        btn.innerText = `Retrying… (Attempt ${attempt} of ${MAX_ATTEMPTS})`;
       }
-      
-      let timeoutId;
+
       try {
+        // Give Google Apps Script up to 55 seconds before we consider it timed out.
+        // GAS itself has a 60-second hard limit, so 55 s keeps us safely inside that.
         const controller = new AbortController();
-        timeoutId = setTimeout(() => controller.abort(), 55000);
-        
-        const res = await fetch(GAS_URL, { 
-          method: 'POST', 
+        const timeoutId  = setTimeout(() => controller.abort(), 55000);
+
+        const res = await fetch(GAS_URL, {
+          method:   'POST',
           redirect: 'follow',
-          signal: controller.signal,
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify(payload) 
+          signal:   controller.signal,
+          headers:  { 'Content-Type': 'text/plain;charset=utf-8' },
+          body:     JSON.stringify(payload)
         });
-        
+
         clearTimeout(timeoutId);
-        const textResponse = await res.text(); 
-        
+
+        const textResponse = await res.text();
+
+        let result;
         try {
-          const result = JSON.parse(textResponse);
-          if (result.status === 'success') { 
-            window._cachedBase64 = null;
-            window._cachedFileName = null;
-            isSubmitting = false; 
-            document.getElementById('formWrapper').classList.add('hidden'); 
-            document.getElementById('successMsg').classList.remove('hidden'); 
-            document.getElementById('refIdDisp').innerText = "REF: " + result.id; 
-          } else { 
-            isSubmitting = false; 
-            alert("Server Error: " + result.message); 
-            btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request"; 
-          }
-        } catch (e) {
-          isSubmitting = false;
-          alert("Data anomaly. The server threw a text error. \n\nError: " + textResponse.substring(0, 100));
-          btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request";
+          result = JSON.parse(textResponse);
+        } catch (parseErr) {
+          // GAS sometimes returns HTML error pages — surface useful text
+          throw new Error('Non-JSON response from server: ' + textResponse.substring(0, 120));
         }
 
-      } catch (e) { 
-        if (timeoutId) clearTimeout(timeoutId);
-        
-        if (attempt < MAX_ATTEMPTS) {
-          const waitSeconds = attempt * 4; 
-          btn.innerText = `Connection issue. Retrying in ${waitSeconds}s...`;
-          await new Promise(resolve => setTimeout(resolve, waitSeconds * 1000));
+        if (result.status === 'success') {
+          // ✅ SUCCESS — clear cache, show confirmation
+          _clearFileCache();
+          isSubmitting = false;
+          document.getElementById('formWrapper').classList.add('hidden');
+          document.getElementById('successMsg').classList.remove('hidden');
+          document.getElementById('refIdDisp').innerText = 'REF: ' + result.id;
+        } else {
+          // Server returned a structured error (auth, locked row, etc.)
+          isSubmitting = false;
+          alert('Server Error: ' + result.message);
+          btn.disabled  = false;
+          btn.innerText = editingId ? 'Save & Update Vault' : 'Transmit Payment Request';
+        }
+
+      } catch (err) {
+
+        const isAbort   = err.name === 'AbortError';
+        const isNetwork = err instanceof TypeError; // fetch network failure
+
+        if ((isAbort || isNetwork) && attempt < MAX_ATTEMPTS) {
+          // Network/timeout error — wait and retry automatically
+          const waitSec = attempt * 5; // 5 s, then 10 s
+          btn.innerText = `Connection issue — retrying in ${waitSec}s… (${attempt}/${MAX_ATTEMPTS})`;
+          await new Promise(resolve => setTimeout(resolve, waitSec * 1000));
           return sendPayload(brand, fName, fBase64, btn, attempt + 1);
         }
-        
-        console.error("Fetch Error after all retries:", e);
+
+        // All retries exhausted, or non-retriable error
+        console.error('Upload failed after all attempts:', err);
         isSubmitting = false;
-        alert(`❌ UPLOAD FAILED after ${MAX_ATTEMPTS} attempts.\n\nThe file may be too large for your current connection, or Google's servers are temporarily unavailable.\n\nPlease:\n1. Try compressing the file further\n2. Switch to a more stable connection\n3. Wait a few minutes and try again`); 
-        btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request"; 
+        alert(
+          `❌ UPLOAD FAILED after ${attempt} attempt${attempt > 1 ? 's' : ''}.\n\n` +
+          'Possible causes:\n' +
+          '• File is too large for your current connection\n' +
+          '• Google Apps Script server is temporarily unavailable\n' +
+          '• Your internet connection dropped mid-upload\n\n' +
+          'Your form data is still intact. Please check your connection and tap the button again.'
+        );
+        btn.disabled  = false;
+        btn.innerText = editingId ? 'Save & Update Vault' : 'Transmit Payment Request';
+        // NOTE: isSubmitting = false means the user can tap again without refreshing
+        // NOTE: _cachedBase64 is still set, so they do NOT need to re-select the file
       }
     }
   </script>
