@@ -214,11 +214,7 @@
       if (!input.value) return;
       btn.disabled = true; btn.innerText = 'Verifying PIN...';
       try {
-        const res = await fetch(GAS_URL, { 
-          method: 'POST', 
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ action: 'verifyLogin', pincode: input.value }) 
-        });
+        const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'verifyLogin', pincode: input.value }) });
         const data = await res.json();
         if (data.status === 'success') { 
           user = data; pin = input.value; 
@@ -294,11 +290,7 @@
     async function fetchHistory() {
       const list = document.getElementById('histList'); list.innerHTML = ''; document.getElementById('histLoading').classList.remove('hidden');
       try {
-        const res = await fetch(GAS_URL, { 
-          method: 'POST', 
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ action: 'getDashboardData', pincode: pin }) 
-        });
+        const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'getDashboardData', pincode: pin }) });
         const data = await res.json();
         
         if (data.status !== 'success') throw new Error('Auth Denied');
@@ -385,10 +377,10 @@
     }
 
     function handleFile(input) { 
-      const MAX_SIZE = 3.5 * 1024 * 1024; // 3.5MB Hard Limit to bypass Google proxy drops
+      const MAX_SIZE = 5 * 1024 * 1024; 
       if (input.files.length) { 
         if(input.files[0].size > MAX_SIZE) {
-          alert("❌ FILE TOO LARGE FOR GOOGLE SERVERS.\n\nYour file is over 3.5MB. Please compress the PDF or upload a smaller image file to continue.");
+          alert("❌ FILE TOO LARGE FOR GOOGLE SERVERS.\n\nYour file is over 5MB. Please compress the PDF or upload a smaller image file to continue.");
           input.value = null;
           return;
         }
@@ -479,10 +471,8 @@
       };
       
       try {
-        // STRICT TEXT/PLAIN OVERRIDE: Forces data past CORS
         const res = await fetch(GAS_URL, { 
           method: 'POST', 
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify(payload) 
         });
         
@@ -502,12 +492,12 @@
           }
         } catch (e) {
           isSubmitting = false;
-          alert("Server responded with unrecognized text. The data might have saved, please check Activity Log.\n\nError: " + textResponse.substring(0, 100));
+          alert("Error: Google Server Crashed (OOM Limit Reached). Try uploading a slightly smaller file.");
           btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request";
         }
       } catch (e) { 
         isSubmitting = false;
-        alert("CRITICAL ERROR: Connection dropped. Please confirm code.gs was deployed as a NEW VERSION."); 
+        alert("CRITICAL ERROR: Connection dropped. Please verify the file is not too large and that your connection is stable."); 
         btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request"; 
       }
     }
