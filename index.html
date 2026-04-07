@@ -171,7 +171,7 @@
           <div class="form-section" style="margin-bottom:0">
             <div class="section-header"><div class="step-num">04</div><div class="section-title">Documentation</div></div>
             <div class="upload-zone" id="dropZone" onclick="document.getElementById('invoiceFile').click()">
-              <div id="fileNameDisp" style="font-size:13px; font-weight:700; color:var(--text-dim);">Tap to Upload Invoice Document</div>
+              <div id="fileNameDisp" style="font-size:13px; font-weight:700; color:var(--text-dim);">Tap to Upload Invoice Document (Max 1.3MB)</div>
               <input type="file" id="invoiceFile" class="hidden" onchange="handleFile(this)" accept="image/*,application/pdf">
             </div>
           </div>
@@ -197,7 +197,9 @@
   </main>
 
   <script>
+    // IMPORTANT: Make sure this URL matches your NEW Web App Deployment URL
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbyEUJYIu9_O6E50KzKzdEY4EG2VLo4y0Yj8igGRZVMI_zEapqn5w758gdt_nG5tluEdHA/exec';
+    
     let user = null, pin = '', myData = [];
     let editingId = null;
     let isSubmitting = false;
@@ -214,7 +216,11 @@
       if (!input.value) return;
       btn.disabled = true; btn.innerText = 'Verifying PIN...';
       try {
-        const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'verifyLogin', pincode: input.value }) });
+        const res = await fetch(GAS_URL, { 
+          method: 'POST', 
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'verifyLogin', pincode: input.value }) 
+        });
         const data = await res.json();
         if (data.status === 'success') { 
           user = data; pin = input.value; 
@@ -259,7 +265,7 @@
       document.getElementById('invoiceFile').value = null;
 
       document.querySelectorAll('.brand-btn').forEach(b => { b.classList.remove('active'); b.classList.remove('disabled'); });
-      document.getElementById('fileNameDisp').innerText = "Tap to Upload Invoice Document";
+      document.getElementById('fileNameDisp').innerText = "Tap to Upload Invoice Document (Max 1.3MB)";
       document.getElementById('dropZone').classList.remove('active');
       
       const btn = document.getElementById('submitBtn');
@@ -290,7 +296,11 @@
     async function fetchHistory() {
       const list = document.getElementById('histList'); list.innerHTML = ''; document.getElementById('histLoading').classList.remove('hidden');
       try {
-        const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'getDashboardData', pincode: pin }) });
+        const res = await fetch(GAS_URL, { 
+          method: 'POST', 
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'getDashboardData', pincode: pin }) 
+        });
         const data = await res.json();
         
         if (data.status !== 'success') throw new Error('Auth Denied');
@@ -336,7 +346,7 @@
       document.getElementById('brand').value = bCode;
       
       const themes = {
-        'LAV': { bg: '#fff5f5', color: '#991b1b', border: '#fecaca', text: 'LAVA' },
+        'LAV': { bg: '#fff0f0', color: '#991b1b', border: '#fecaca', text: 'LAVA' },
         'BIA': { bg: '#eef2ff', color: '#3730a3', border: '#c7d2fe', text: 'BIANCA' },
         'HOL': { bg: '#fffbeb', color: '#92400e', border: '#fde68a', text: 'HOLYBELLY' },
         'LOV': { bg: '#f3f4f6', color: '#374151', border: '#e5e7eb', text: 'LOVA' }
@@ -376,12 +386,15 @@
       showTab('form');
     }
 
+    // THE UPDATED MEMORY GATE: Reduced to 1.3MB to account for 33% Base64 inflation
     function handleFile(input) { 
-      const MAX_SIZE = 5 * 1024 * 1024; 
+      const MAX_SIZE = 1.3 * 1024 * 1024; 
       if (input.files.length) { 
         if(input.files[0].size > MAX_SIZE) {
-          alert("❌ FILE TOO LARGE FOR GOOGLE SERVERS.\n\nYour file is over 5MB. Please compress the PDF or upload a smaller image file to continue.");
+          alert("❌ GOOGLE SERVER LIMIT EXCEEDED.\n\nTo ensure reliable processing, files must be under 1.3MB. Your file is " + (input.files[0].size / 1024 / 1024).toFixed(1) + "MB.\n\nPlease compress this document before uploading.");
           input.value = null;
+          document.getElementById('dropZone').classList.remove('active');
+          document.getElementById('fileNameDisp').innerText = "Tap to Upload Invoice Document (Max 1.3MB)";
           return;
         }
         document.getElementById('fileNameDisp').innerText = "📎 Ready to Upload: " + input.files[0].name; 
@@ -430,7 +443,7 @@
       }
       if (document.getElementById('delConfirm').value !== "Delete this file") {
         isSubmitting = false; 
-        return alert("Please type or paste the exact confirmation phrase.");
+        return alert("Please copy and paste the exact confirmation phrase.");
       }
       closeDeleteModal();
       isSubmitting = true; 
@@ -473,6 +486,8 @@
       try {
         const res = await fetch(GAS_URL, { 
           method: 'POST', 
+          redirect: 'follow',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify(payload) 
         });
         
@@ -492,10 +507,11 @@
           }
         } catch (e) {
           isSubmitting = false;
-          alert("Error: Google Server Crashed (OOM Limit Reached). Try uploading a slightly smaller file.");
+          alert("Data anomaly. The server threw a text error. \n\nError: " + textResponse.substring(0, 100));
           btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request";
         }
       } catch (e) { 
+        console.error("Fetch Error:", e);
         isSubmitting = false;
         alert("CRITICAL ERROR: Connection dropped. Please verify the file is not too large and that your connection is stable."); 
         btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request"; 
