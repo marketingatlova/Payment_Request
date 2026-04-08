@@ -53,7 +53,8 @@
     .brand-btn.active { background: var(--navy); color: #fff; border-color: var(--navy); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
     .brand-btn.disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
 
-    .urgent-row { display: flex; align-items: center; justify-content: space-between; background: #fff5f5; padding: 0 20px; border-radius: 10px; border: 1px solid #fed7d7; cursor: pointer; height: 48px; margin-top: auto; }
+    /* FIX: Removed margin-top:auto so it tightly aligns with the input box next to it */
+    .urgent-row { display: flex; align-items: center; justify-content: space-between; background: #fff5f5; padding: 0 20px; border-radius: 10px; border: 1px solid #fed7d7; cursor: pointer; height: 48px; }
     .checkbox { width: 22px; height: 22px; accent-color: var(--accent); cursor: pointer; }
 
     .upload-zone { border: 2px dashed var(--border); border-radius: 14px; padding: 25px; text-align: center; background: #fafafa; cursor: pointer; transition: 0.3s; }
@@ -481,7 +482,7 @@
       document.getElementById('urgent').checked = (item.urgent === 'Urgent');
       document.getElementById('notes').value = item.note || '';
       
-      updatePredictedBatch(); // Instantly calculate the batch on edit open
+      updatePredictedBatch(); 
 
       document.getElementById('dropZone').classList.add('hidden');
       document.getElementById('editFilePanel').classList.remove('hidden');
