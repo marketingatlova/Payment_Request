@@ -33,7 +33,7 @@
     .nav-item { padding: 14px 32px; font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.5); cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 12px; }
     .nav-item:hover { color: #fff; background: rgba(255,255,255,0.05); }
     .nav-item.active { color: #fff; background: rgba(255,255,255,0.1); border-right: 4px solid var(--accent); }
-    .nav-logout { margin-top: 10px; color: rgba(255,255,255,0.3); border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px; font-size: 12px; }
+    .nav-logout { margin-top: 10px; color: rgba(255,255,255,0.3); border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px; font-size: 12px; cursor: pointer; }
     .nav-logout:hover { color: #ff7675; }
 
     /* ==================== MAIN AREA ==================== */
@@ -128,8 +128,18 @@
     <div class="nav-item" onclick="switchView('aging')" id="nav-aging">AP Aging & Reports</div>
     
     <div style="margin-top:auto; padding:32px;">
+      
+      <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.1);">
+        <div style="font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 8px;">Next Batch Override</div>
+        <input type="date" id="globalBatchInput" style="width: 100%; padding: 8px 12px; border-radius: 6px; border: none; font-size: 12px; margin-bottom: 8px; background: rgba(255,255,255,0.9); outline:none;">
+        <div style="display:flex; gap:8px;">
+          <button onclick="updateGlobalBatch(true)" style="flex:1; padding: 8px; background: #fff5f5; color: var(--accent); border: none; border-radius: 6px; font-size: 10px; font-weight: 700; cursor: pointer;">Clear</button>
+          <button onclick="updateGlobalBatch(false)" id="btnGlobalSet" style="flex:1; padding: 8px; background: var(--green); color: #fff; border: none; border-radius: 6px; font-size: 10px; font-weight: 700; cursor: pointer;">Set Custom Date</button>
+        </div>
+      </div>
+
       <button onclick="fetchData()" style="width:100%; padding:12px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#fff; border-radius:10px; cursor:pointer; font-size:11px; margin-bottom:10px;">↻ Sync Data</button>
-      <div class="nav-item nav-logout" onclick="logout()">Logout Portal</div>
+      <div class="nav-logout" onclick="location.reload()">Logout Portal</div>
     </div>
   </aside>
 
@@ -235,18 +245,6 @@
       }
     }
 
-    function logout() {
-      pin = '';
-      adminName = 'Manager';
-      document.getElementById('adminPin').value = '';
-      document.getElementById('loginScreen').style.display = 'flex';
-      document.getElementById('loginError').innerText = '';
-      document.getElementById('loginBtn').disabled = false;
-      document.getElementById('loginBtn').innerText = 'Authorize Session';
-      document.getElementById('adminNameDisp').innerText = 'Manager';
-      uploadCache = {};
-    }
-
     async function fetchData() {
       document.getElementById('loading').classList.remove('hidden');
       document.getElementById('list').innerHTML = '';
@@ -264,6 +262,52 @@
       } catch (e) { 
         console.error(e); 
         document.getElementById('loading').innerText = "ERROR SYNCING DATA. PLEASE REFRESH.";
+      }
+    }
+
+    async function updateGlobalBatch(isClear = false) {
+      const input = document.getElementById('globalBatchInput');
+      const btn = document.getElementById('btnGlobalSet');
+      const dateVal = isClear ? '' : input.value;
+      
+      if (!isClear && !dateVal) return alert("Please select a date first.");
+      
+      btn.innerText = "Saving...";
+      try {
+        await fetch(GAS_URL, { 
+          method: 'POST', 
+          redirect: 'follow', 
+          body: JSON.stringify({ action: 'setGlobalBatch', pincode: pin, newDate: dateVal }) 
+        });
+        if (isClear) input.value = '';
+        fetchData(); // Resync everything to recalculate the batch dates
+      } catch(e) {
+        alert("Failed to update global batch date.");
+      } finally {
+        btn.innerText = "Set Custom Date";
+      }
+    }
+
+    async function setIndivBatch(itemId) {
+      const inputVal = document.getElementById(`indiv-date-${itemId}`).value;
+      const targetInvoice = cache.pending.find(i => i.id === itemId);
+      if (!targetInvoice) return alert("Invoice not found.");
+      
+      const btn = event.target;
+      btn.innerText = "Saving...";
+      btn.disabled = true;
+
+      try {
+        await fetch(GAS_URL, { 
+          method: 'POST', 
+          redirect: 'follow', 
+          body: JSON.stringify({ action: 'setIndivBatch', pincode: pin, managerName: adminName, invoice: targetInvoice, newDate: inputVal }) 
+        });
+        fetchData(); // Resync Dashboard
+      } catch(e) {
+        alert("Failed to update expected batch date.");
+        btn.innerText = "Update & Notify";
+        btn.disabled = false;
       }
     }
 
@@ -286,7 +330,6 @@
       const MAX_SIZE = 1.3 * 1024 * 1024; 
 
       delete uploadCache[itemId]; 
-
       const existingPreview = document.getElementById(`preview-${itemId}`);
       if (existingPreview) existingPreview.remove();
 
@@ -295,50 +338,33 @@
         
         if (file.size > MAX_SIZE) {
           alert("❌ SERVER LIMIT EXCEEDED.\n\nFile must be under 1.3MB. Please compress the file and try again.");
-          input.value = null;
-          proxy.innerText = "Attach Slip";
-          proxy.classList.remove('selected');
-          return;
+          input.value = null; proxy.innerText = "Attach Slip"; proxy.classList.remove('selected'); return;
         }
 
         const reader = new FileReader();
         proxy.innerText = "Reading file...";
         
         reader.onload = function() {
-          uploadCache[itemId] = {
-            base64: reader.result.split(',')[1],
-            name: file.name
-          };
-          
+          uploadCache[itemId] = { base64: reader.result.split(',')[1], name: file.name };
           proxy.innerHTML = `<span class="trunc">${file.name}</span><span style="font-size:9px; opacity:0.7; margin-top:2px;">Tap to change</span>`;
           proxy.classList.add('selected');
           
           if (file.type.startsWith('image/')) {
              const imgPreview = document.createElement('img');
-             imgPreview.id = `preview-${itemId}`;
-             imgPreview.src = reader.result;
+             imgPreview.id = `preview-${itemId}`; imgPreview.src = reader.result;
              imgPreview.style.cssText = "height: 48px; width: 48px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); margin-right: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);";
              proxy.parentElement.insertBefore(imgPreview, proxy);
           } else {
              const docPreview = document.createElement('div');
-             docPreview.id = `preview-${itemId}`;
-             docPreview.innerHTML = "📄";
+             docPreview.id = `preview-${itemId}`; docPreview.innerHTML = "📄";
              docPreview.style.cssText = "height: 48px; width: 48px; display:flex; align-items:center; justify-content:center; font-size:24px; background:#f1f3f4; border-radius: 8px; border: 1px solid var(--border); margin-right: 12px;";
              proxy.parentElement.insertBefore(docPreview, proxy);
           }
         };
-        
-        reader.onerror = function() {
-          input.value = null;
-          proxy.innerText = "Attach Slip";
-          proxy.classList.remove('selected');
-          alert("❌ Could not read the file. Please try again.");
-        };
-        
+        reader.onerror = function() { input.value = null; proxy.innerText = "Attach Slip"; proxy.classList.remove('selected'); alert("❌ Could not read the file. Please try again."); };
         reader.readAsDataURL(file);
       } else {
-        proxy.innerText = "Attach Slip";
-        proxy.classList.remove('selected');
+        proxy.innerText = "Attach Slip"; proxy.classList.remove('selected');
       }
     }
 
@@ -363,11 +389,9 @@
       csv += 'Reference ID,Entity,Supplier,Submission Date,Due Date,Batch Date,Amount (THB),Aging Bucket,Note,Original Invoice URL\n';
       
       filtered.forEach(item => {
-        let diffDays = 0;
-        let bucket = "Current";
+        let diffDays = 0; let bucket = "Current";
         if (item.dueDateRaw) {
-          const due = new Date(item.dueDateRaw);
-          const now = new Date();
+          const due = new Date(item.dueDateRaw); const now = new Date();
           diffDays = Math.ceil((now - due) / (1000 * 60 * 60 * 24));
           if (diffDays <= 0) bucket = "Current";
           else if (diffDays <= 30) bucket = "1-30 Days";
@@ -375,20 +399,15 @@
           else if (diffDays <= 90) bucket = "61-90 Days";
           else bucket = "90+ Days";
         }
-        
         const escape = (str) => `"${(str || '').toString().replace(/"/g, '""')}"`;
-        
         csv += `${escape(item.id)},${escape(item.sheetName)},${escape(item.supplier)},${escape(item.date)},${escape(item.dueDateFormatted)},${escape(item.batchDate)},${item.amount},${escape(bucket)},${escape(item.note)},${escape(item.invoiceUrl)}\n`;
       });
       
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
-      link.setAttribute("href", url);
-      link.setAttribute("download", `LOVA_Finance_Export_${new Date().toISOString().split('T')[0]}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      link.setAttribute("href", url); link.setAttribute("download", `LOVA_Finance_Export_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link); link.click(); document.body.removeChild(link);
     }
 
     function render() {
@@ -433,20 +452,16 @@
           let current = 0, d30 = 0, d60 = 0, d90 = 0, d90plus = 0;
           
           const rows = filtered.map(item => {
-            let bucket = "Current";
-            let badge = "background:#dcfce7; color:#166534;"; 
+            let bucket = "Current"; let badge = "background:#dcfce7; color:#166534;"; 
             if (item.dueDateRaw) {
-              const due = new Date(item.dueDateRaw);
-              const now = new Date();
+              const due = new Date(item.dueDateRaw); const now = new Date();
               const diff = Math.ceil((now - due) / (1000 * 60 * 60 * 24));
               if (diff <= 0) { bucket = "Current"; current += parseFloat(item.amount || 0); }
               else if (diff <= 30) { bucket = "1-30 Days"; d30 += parseFloat(item.amount || 0); badge = "background:#fef3c7; color:#b45309;"; }
               else if (diff <= 60) { bucket = "31-60 Days"; d60 += parseFloat(item.amount || 0); badge = "background:#ffedd5; color:#c2410c;"; }
               else if (diff <= 90) { bucket = "61-90 Days"; d90 += parseFloat(item.amount || 0); badge = "background:#fee2e2; color:#b91c1c;"; }
               else { bucket = "90+ Days"; d90plus += parseFloat(item.amount || 0); badge = "background:#fef2f2; color:#991b1b;"; }
-            } else {
-              current += parseFloat(item.amount || 0);
-            }
+            } else { current += parseFloat(item.amount || 0); }
             
             return `
               <tr style="border-bottom: 1px solid var(--border);">
@@ -454,9 +469,15 @@
                 <td style="padding: 16px; font-size: 13px; font-weight:600;">${item.supplier}</td>
                 <td style="padding: 16px; font-size: 10px;"><span style="padding:4px 8px; border-radius:4px; font-weight:800; text-transform:uppercase; ${badge}">${bucket}</span></td>
                 <td style="padding: 16px; font-size: 13px; font-weight:800; color:var(--green);">${parseFloat(item.amount).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
-                <td style="padding: 16px; font-size: 12px;">${item.dueDateFormatted || 'N/A'}</td>
+                <td style="padding: 16px; font-size: 12px;">
+                  <div style="margin-bottom:6px;">${item.dueDateFormatted || 'N/A'}</div>
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <input type="date" id="indiv-date-${item.id}" value="${item.indivBatchRaw || ''}" style="padding:4px; border:1px solid var(--border); border-radius:4px; font-size:10px; width:110px; outline:none;">
+                    <button onclick="setIndivBatch('${item.id}')" style="background:var(--navy); color:#fff; border:none; padding:5px 8px; border-radius:4px; font-size:9px; cursor:pointer;">Set & Notify</button>
+                  </div>
+                </td>
                 <td style="padding: 16px; text-align:right;">
-                  ${item.invoiceUrl ? `<a href="${item.invoiceUrl}" target="_blank" style="color:var(--navy); font-weight:800; text-decoration:underline; font-size:11px;">View Invoice</a>` : '<span style="font-size:11px; color:#aaa;">No File</span>'}
+                  ${item.invoiceUrl ? `<a href="${item.invoiceUrl}" target="_blank" style="color:var(--text-dim); text-decoration:underline; font-size:12px;">View Invoice</a>` : '<span style="font-size:11px; color:#aaa;">No File</span>'}
                 </td>
               </tr>
             `;
@@ -482,7 +503,7 @@
                     <th style="padding: 16px; font-size:11px; font-weight:800; color:var(--text-dim); text-transform:uppercase;">Supplier</th>
                     <th style="padding: 16px; font-size:11px; font-weight:800; color:var(--text-dim); text-transform:uppercase;">Aging Status</th>
                     <th style="padding: 16px; font-size:11px; font-weight:800; color:var(--text-dim); text-transform:uppercase;">Amount (THB)</th>
-                    <th style="padding: 16px; font-size:11px; font-weight:800; color:var(--text-dim); text-transform:uppercase;">Due Date</th>
+                    <th style="padding: 16px; font-size:11px; font-weight:800; color:var(--text-dim); text-transform:uppercase;">Expected Batch Date</th>
                     <th style="padding: 16px; text-align:right;">Original File</th>
                   </tr>
                 </thead>
@@ -499,12 +520,10 @@
       container.innerHTML = filtered.map(item => {
         let isOverdue = false;
         if (item.dueDateRaw) {
-            const today = new Date();
-            today.setHours(0,0,0,0);
+            const today = new Date(); today.setHours(0,0,0,0);
             const due = new Date(item.dueDateRaw);
             if (due < today) isOverdue = true;
         }
-
         return `
         <div class="data-card">
           <div style="flex:1; padding-right:40px;">
@@ -513,7 +532,7 @@
             <div class="inv-meta">
               ID: <strong>${item.id}</strong> • Requester: <strong>${item.requester}</strong><br>
               Due Date: <strong style="${isOverdue && currentView === 'pipeline' ? 'color:#c0392b;' : 'color:var(--navy);'}">${item.dueDateFormatted || 'N/A'} ${isOverdue && currentView === 'pipeline' ? '(OVERDUE)' : ''}</strong><br>
-              Batch Date: <strong style="color:var(--accent);">${item.batchDate}</strong>
+              Expected Batch Date: <strong style="color:var(--accent);">${item.batchDate}</strong>
             </div>
             ${item.note ? `<div class="inv-note">Note: ${item.note}</div>` : ''}
             ${item.auditLog ? `<div style="font-size: 10px; font-style: italic; color: #b45309; background: #fef3c7; padding: 6px 10px; border-radius: 6px; display: inline-block; margin-top: 12px; font-weight: 700;">${item.auditLog}</div>` : ''}
@@ -560,105 +579,53 @@
       const btn = document.getElementById('btnConfirmReject');
       btn.disabled = true; btn.innerText = "Returning...";
 
-      const payload = {
-        action: 'rejectPOP',
-        pincode: pin,
-        managerName: adminName,
-        reason: feedback,
-        invoice: targetInvoice
-      };
+      const payload = { action: 'rejectPOP', pincode: pin, managerName: adminName, reason: feedback, invoice: targetInvoice };
 
       try {
-        const res = await fetch(GAS_URL, { 
-          method: 'POST', 
-          redirect: 'follow',
-          body: JSON.stringify(payload) 
-        });
+        const res = await fetch(GAS_URL, { method: 'POST', redirect: 'follow', body: JSON.stringify(payload) });
         const result = await res.json();
-        
-        if (result.status === 'success') {
-          closeRejectModal();
-          fetchData(); 
-        } else {
-          alert("Error: " + result.message);
-        }
+        if (result.status === 'success') { closeRejectModal(); fetchData(); } 
+        else { alert("Error: " + result.message); }
       } catch (e) {
         alert("Connection dropped. Please try again.");
-      } finally {
-        btn.disabled = false; btn.innerText = "Confirm Return";
-      }
+      } finally { btn.disabled = false; btn.innerText = "Confirm Return"; }
     }
 
     async function processPayment(itemId, attempt = 1) {
       const MAX_ATTEMPTS = 3;
       const btn = document.getElementById(`btn-${itemId}`);
       const cachedFile = uploadCache[itemId];
-      
       const targetInvoice = cache.pending.find(i => i.id === itemId);
 
       if (!targetInvoice) return alert("Error: Invoice record not found in memory.");
       if (!cachedFile) return alert("Please attach the Proof of Payment slip first.");
 
-      if (attempt > 1) {
-        btn.innerText = `Retrying (${attempt}/${MAX_ATTEMPTS})...`;
-      } else {
-        btn.disabled = true; 
-        btn.innerText = "Processing...";
-      }
+      if (attempt > 1) { btn.innerText = `Retrying (${attempt}/${MAX_ATTEMPTS})...`; } 
+      else { btn.disabled = true; btn.innerText = "Processing..."; }
 
-      const payload = { 
-        action: 'submitPOP', 
-        pincode: pin,
-        managerName: adminName, 
-        invoice: targetInvoice, 
-        fileName: cachedFile.name, 
-        fileBase64: cachedFile.base64 
-      };
+      const payload = { action: 'submitPOP', pincode: pin, managerName: adminName, invoice: targetInvoice, fileName: cachedFile.name, fileBase64: cachedFile.base64 };
 
       let timeoutId;
       try {
         const controller = new AbortController();
         timeoutId = setTimeout(() => controller.abort(), 55000);
-
-        const res = await fetch(GAS_URL, { 
-          method: 'POST', 
-          redirect: 'follow',
-          signal: controller.signal,
-          body: JSON.stringify(payload) 
-        });
-        
+        const res = await fetch(GAS_URL, { method: 'POST', redirect: 'follow', signal: controller.signal, body: JSON.stringify(payload) });
         clearTimeout(timeoutId);
         const textResponse = await res.text();
-        
         try {
           const result = JSON.parse(textResponse);
-          if (result.status === 'success') { 
-            delete uploadCache[itemId]; 
-            fetchData(); 
-          } else { 
-            alert("Server Error: " + result.message); 
-            btn.disabled = false; 
-            btn.innerText = "Process POP"; 
-          }
-        } catch (e) {
-          alert("Data anomaly. Server threw an error:\n\n" + textResponse.substring(0, 100));
-          btn.disabled = false; 
-          btn.innerText = "Process POP";
-        }
+          if (result.status === 'success') { delete uploadCache[itemId]; fetchData(); } 
+          else { alert("Server Error: " + result.message); btn.disabled = false; btn.innerText = "Process POP"; }
+        } catch (e) { alert("Data anomaly. Server threw an error:\n\n" + textResponse.substring(0, 100)); btn.disabled = false; btn.innerText = "Process POP"; }
       } catch (e) { 
         if (timeoutId) clearTimeout(timeoutId);
-        
         if (attempt < MAX_ATTEMPTS) {
           const waitSeconds = attempt * 4; 
           btn.innerText = `Connection issue. Retrying in ${waitSeconds}s...`;
           await new Promise(resolve => setTimeout(resolve, waitSeconds * 1000));
           return processPayment(itemId, attempt + 1);
         }
-        
-        console.error("Fetch Error:", e);
-        alert(`❌ UPLOAD FAILED after ${MAX_ATTEMPTS} attempts.\n\nThe file may be too large for your current connection, or Google's servers are temporarily unavailable. Please try again.`); 
-        btn.disabled = false; 
-        btn.innerText = "Process POP"; 
+        alert(`❌ UPLOAD FAILED. Please check connection and try again.`); btn.disabled = false; btn.innerText = "Process POP"; 
       }
     }
   </script>
