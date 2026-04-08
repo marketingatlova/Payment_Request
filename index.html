@@ -29,9 +29,9 @@
 
     .main-area { flex: 1; display: flex; flex-direction: column; height: 100vh; }
     .top-header { background: var(--surface); padding: 18px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
-    .view-content { flex: 1; padding: 20px 40px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; }
-    
-    #formWrapper { width: 100%; max-width: 850px; margin: 0 auto; display: flex; flex-direction: column; height: 100%; transition: 0.3s; }
+    /* FIX: Unlocked scrolling */
+    .view-content { flex: 1; padding: 20px 40px; display: flex; flex-direction: column; justify-content: space-between; overflow-y: auto; }
+    #formWrapper { width: 100%; max-width: 850px; margin: 0 auto; display: flex; flex-direction: column; min-height: 100%; transition: 0.3s; }
     
     #editBanner { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 15px; }
     .btn-cancel-edit { background: var(--surface); border: 1px solid var(--border); padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: 800; color: var(--text-dim); transition: 0.2s; }
@@ -53,7 +53,6 @@
     .brand-btn.active { background: var(--navy); color: #fff; border-color: var(--navy); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
     .brand-btn.disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
 
-    /* FIX: Removed margin-top:auto so it tightly aligns with the input box next to it */
     .urgent-row { display: flex; align-items: center; justify-content: space-between; background: #fff5f5; padding: 0 20px; border-radius: 10px; border: 1px solid #fed7d7; cursor: pointer; height: 48px; }
     .checkbox { width: 22px; height: 22px; accent-color: var(--accent); cursor: pointer; }
 
@@ -83,6 +82,16 @@
   </style>
 </head>
 <body>
+
+  <div id="taxModal" class="login-overlay hidden" style="z-index: 5000; background: rgba(15,19,31,0.85);">
+    <div class="login-card" style="border: 2px solid #f97316; padding: 40px; max-width: 450px;">
+      <h2 style="color: #c2410c; margin-bottom: 10px; font-size: 24px;">⚠️ Action Required</h2>
+      <p style="font-size: 14px; color: var(--navy); margin-bottom: 15px; font-weight: 800;">You have <span id="taxCountDisp">...</span> pending Tax Invoice(s).</p>
+      <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 20px; line-height: 1.5;">Finance has processed your payments, but the original physical Tax Invoices are still missing. Please hand over the physical documents with their Reference IDs to the Finance team immediately.</p>
+      
+      <button type="button" class="btn-submit-main" style="margin:0; background: var(--navy); box-shadow:none;" onclick="document.getElementById('taxModal').classList.add('hidden');">I understand</button>
+    </div>
+  </div>
 
   <div id="deleteModal" class="login-overlay hidden" style="z-index: 4000; background: rgba(15,19,31,0.85);">
     <div class="login-card" style="border: 2px solid var(--accent); padding: 40px; max-width: 450px;">
@@ -311,6 +320,7 @@
           document.getElementById('userEmailDisp').innerText = data.email;
           document.getElementById('payFriday').innerHTML = data.nextBatchStr;
           document.getElementById('loginScreen').style.display = 'none'; 
+          fetchHistory(); // Fetch data immediately to check for pending taxes
         }
         else { document.getElementById('loginError').innerText = data.message; btn.disabled = false; btn.innerText = 'Authorize Session'; }
       } catch (e) { btn.disabled = false; }
@@ -402,6 +412,13 @@
         document.getElementById('histLoading').classList.add('hidden');
         myData = [...data.pending, ...data.history].filter(i => i.requester.toLowerCase().trim() === user.name.toLowerCase().trim());
         
+        // CHECK FOR PENDING TAX INVOICES & TRIGGER POPUP
+        const pendingTaxes = myData.filter(i => i.taxStatus === 'Pending' && i.popUrl && i.popUrl !== 'REJECTED');
+        if (pendingTaxes.length > 0) {
+           document.getElementById('taxCountDisp').innerText = pendingTaxes.length;
+           document.getElementById('taxModal').classList.remove('hidden');
+        }
+
         if (myData.length === 0) return list.innerHTML = '<center style="padding:40px; color:#aaa; font-weight:600;">No history found.</center>';
         
         list.innerHTML = myData.map((item, idx) => {
@@ -412,12 +429,17 @@
              rejectReason = splitLog.length > 1 ? splitLog[1] : 'Please check with Finance.';
           }
 
+          let taxWarning = '';
+          if (item.taxStatus === 'Pending' && item.popUrl && !isRejected) {
+             taxWarning = `<span style="font-size: 9px; font-weight: 800; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; background: #ffedd5; color: #c2410c; margin-left: 8px; vertical-align: middle;">⚠️ Missing Tax Invoice</span>`;
+          }
+
           return `
           <div class="history-card ${isRejected ? 'rejected' : ''}">
             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
               <div>
                 <span class="hist-brand-tag">${item.sheetName}</span>
-                <div style="font-size: 18px; font-weight: 800; color: var(--navy);">${item.supplier}</div>
+                <div style="font-size: 18px; font-weight: 800; color: var(--navy);">${item.supplier} ${taxWarning}</div>
                 <div style="font-size: 12px; color: var(--text-dim); margin-top:4px;">ID: <strong>${item.id}</strong> • Submitted: <strong>${item.date}</strong></div>
                 <div style="font-size: 12px; color: var(--text-dim); margin-top:2px;">Expected Batch Date: <strong style="color:var(--accent);">${item.batchDate}</strong></div>
                 ${item.auditLog && !isRejected ? `<div class="audit-tag">${item.auditLog}</div>` : ''}
