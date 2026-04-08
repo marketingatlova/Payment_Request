@@ -69,7 +69,6 @@
     #tabHistory { width: 100%; max-width: 850px; margin: 0 auto; overflow-y: auto; padding-bottom: 50px; }
     .history-card { background: #fff; border-radius: 16px; padding: 24px; border: 1px solid var(--border); margin-bottom: 16px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); transition: 0.2s;}
     
-    /* REJECTED VISUALS */
     .history-card.rejected { background: #f9fafb; border: 1px dashed #d1d5db; opacity: 0.85; }
     .reject-warning { margin-top: 16px; padding: 12px 16px; background: #fef2f2; color: #991b1b; border-radius: 8px; font-size: 13px; font-weight: 700; border-left: 4px solid #ef4444; }
 
@@ -212,18 +211,43 @@
   </main>
 
   <script>
-    // IMPORTANT: Make sure this matches your deployed Google Apps Script URL
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbyEUJYIu9_O6E50KzKzdEY4EG2VLo4y0Yj8igGRZVMI_zEapqn5w758gdt_nG5tluEdHA/exec';
     
+    // NEW: 2026 Holiday Dictionary to sync the Staff Sidebar Batch Date
+    const HOLIDAYS_2026 = {
+      '2026-01-01': "New Year's Day", '2026-01-02': "Special Holiday", '2026-03-03': "Makha Bucha",
+      '2026-04-06': "Chakri Day", '2026-04-13': "Songkran", '2026-04-14': "Songkran", '2026-04-15': "Songkran",
+      '2026-05-01': "Labor Day", '2026-05-04': "Coronation Day", '2026-06-01': "Visakha Bucha",
+      '2026-06-03': "Queen's Birthday", '2026-07-28': "King's Birthday", '2026-07-29': "Asarnha Bucha",
+      '2026-08-12': "Queen Mother's Birthday", '2026-10-13': "King Bhumibol Memorial",
+      '2026-10-23': "King Chulalongkorn Memorial", '2026-12-07': "King Bhumibol Birthday Sub",
+      '2026-12-10': "Constitution Day", '2026-12-31': "New Year's Eve"
+    };
+
     let user = null, pin = '', myData = [];
     let editingId = null;
     let isSubmitting = false;
     let isFileDeleted = false; 
 
     function init() {
-      const d = new Date(); const day = d.getDay();
-      const diff = d.getDate() + (day <= 5 ? (5 - day) : (5 - day + 7));
-      document.getElementById('payFriday').innerText = new Date(d.setDate(diff)).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      const d = new Date(); 
+      let daysUntilFriday = (5 - d.getDay() + 7) % 7;
+      if (daysUntilFriday === 0) daysUntilFriday = 7;
+      
+      const target = new Date(d);
+      target.setDate(d.getDate() + daysUntilFriday);
+      
+      const y = target.getFullYear();
+      const m = String(target.getMonth() + 1).padStart(2, '0');
+      const day = String(target.getDate()).padStart(2, '0');
+      const dateStr = `${y}-${m}-${day}`;
+      
+      if (HOLIDAYS_2026[dateStr]) {
+        target.setDate(target.getDate() + 4);
+        document.getElementById('payFriday').innerHTML = target.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + `<br><span style="font-size:8px; color:#ff7675; line-height:1;">Shifted (PH: ${HOLIDAYS_2026[dateStr]})</span>`;
+      } else {
+        document.getElementById('payFriday').innerText = target.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      }
     }
     init();
 
@@ -331,7 +355,6 @@
         if (myData.length === 0) return list.innerHTML = '<center style="padding:40px; color:#aaa; font-weight:600;">No history found.</center>';
         
         list.innerHTML = myData.map((item, idx) => {
-          // Detect if the item was rejected by Finance
           const isRejected = item.popUrl === 'REJECTED';
           let rejectReason = '';
           if (isRejected && item.auditLog) {
@@ -346,6 +369,7 @@
                 <span class="hist-brand-tag">${item.sheetName}</span>
                 <div style="font-size: 18px; font-weight: 800; color: var(--navy);">${item.supplier}</div>
                 <div style="font-size: 12px; color: var(--text-dim); margin-top:4px;">ID: <strong>${item.id}</strong> • Submitted: <strong>${item.date}</strong></div>
+                <div style="font-size: 12px; color: var(--text-dim); margin-top:2px;">Batch Date: <strong style="color:var(--accent);">${item.batchDate}</strong></div>
                 ${item.auditLog && !isRejected ? `<div class="audit-tag">${item.auditLog}</div>` : ''}
               </div>
               <div style="text-align:right;">
