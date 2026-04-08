@@ -3,689 +3,401 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LOVA — Staff Portal</title>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <title>LOVA — Finance Command</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    :root { --navy: #0f131f; --navy-light: #1a1f2e; --accent: #c0392b; --canvas: #f7f5f0; --surface: #ffffff; --border: #e4e1db; --text: #1a1f2e; --text-dim: #5a5750; --green: #166534; --green-bg: #dcfce7; }
+    :root {
+      --navy: #0f131f; --navy-light: #1a1f2e; --accent: #c0392b; --canvas: #f7f5f0; 
+      --surface: #ffffff; --border: #e4e1db; --text: #1a1f2e; --text-dim: #5a5750;
+      --green: #166534; --green-bg: #dcfce7;
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100vh; overflow: hidden; font-family: 'Plus Jakarta Sans', sans-serif; background: var(--canvas); color: var(--text); }
-    body { display: flex; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--canvas); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
 
-    .login-overlay { position: fixed; inset: 0; background: var(--navy); z-index: 3000; display: flex; align-items: center; justify-content: center; }
-    .login-card { background: var(--surface); padding: 50px; border-radius: 28px; text-align: center; width: 100%; max-width: 400px; box-shadow: 0 40px 80px rgba(0,0,0,0.6); }
-    .login-logo { font-family: 'Playfair Display', serif; font-size: 38px; color: var(--navy); margin-bottom: 5px; }
-    .pin-input { width: 100%; height: 55px; text-align: center; font-size: 26px; letter-spacing: 12px; margin: 25px 0; border: 2px solid var(--border); border-radius: 14px; outline: none; transition: 0.3s; }
-    .pin-input:focus { border-color: var(--navy); box-shadow: 0 0 0 4px rgba(15,19,31,0.05); }
+    /* ==================== LOGIN ==================== */
+    .login-overlay { position: fixed; inset: 0; background: var(--navy); z-index: 1000; display: flex; align-items: center; justify-content: center; }
+    .login-card { background: var(--surface); padding: 48px; border-radius: 20px; text-align: center; width: 100%; max-width: 420px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+    .login-logo { font-family: 'Playfair Display', serif; font-size: 32px; margin-bottom: 8px; }
+    .pin-input { width: 100%; height: 60px; text-align: center; font-size: 28px; letter-spacing: 12px; margin: 24px 0; border: 2px solid var(--border); border-radius: 12px; outline: none; transition: 0.2s; }
+    .pin-input:focus { border-color: var(--navy); }
 
-    .sidebar { width: 260px; background: var(--navy); color: #fff; display: flex; flex-direction: column; padding: 35px 0; }
-    .sidebar-brand { padding: 0 30px 35px; }
-    .nav-item { padding: 14px 30px; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.4); cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px; }
-    .nav-item.active { color: #fff; background: rgba(255,255,255,0.08); border-right: 4px solid var(--accent); }
-    .sidebar-batch { margin: 20px 20px 0; padding: 18px; background: rgba(255,255,255,0.03); border-radius: 14px; border: 1px solid rgba(255,255,255,0.05); }
-    .batch-label { font-size: 9px; font-weight: 800; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
-    .batch-date { font-size: 13px; font-weight: 700; color: #60a5fa; }
-    .nav-logout { margin-top: auto; padding: 20px 30px; font-size: 11px; color: rgba(255,255,255,0.2); cursor: pointer; border-top: 1px solid rgba(255,255,255,0.05); }
+    /* ==================== SIDEBAR ==================== */
+    .sidebar { width: 280px; background: var(--navy); color: #fff; display: flex; flex-direction: column; padding: 32px 0; border-right: 1px solid rgba(255,255,255,0.05);}
+    .sidebar-brand { padding: 0 32px 40px; }
+    .nav-item { padding: 14px 32px; font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.5); cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 12px; }
+    .nav-item:hover { color: #fff; background: rgba(255,255,255,0.05); }
+    .nav-item.active { color: #fff; background: rgba(255,255,255,0.1); border-right: 4px solid var(--accent); }
+    .nav-logout { margin-top: 10px; color: rgba(255,255,255,0.3); border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px; font-size: 12px; }
+    .nav-logout:hover { color: #ff7675; }
 
-    .main-area { flex: 1; display: flex; flex-direction: column; height: 100vh; }
-    .top-header { background: var(--surface); padding: 18px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
-    .view-content { flex: 1; padding: 20px 40px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; }
+    /* ==================== MAIN AREA ==================== */
+    .main-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .top-header { background: var(--surface); padding: 24px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+    .view-content { flex: 1; padding: 40px; overflow-y: auto; }
     
-    #formWrapper { width: 100%; max-width: 850px; margin: 0 auto; display: flex; flex-direction: column; height: 100%; transition: 0.3s; }
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 32px; }
+    .stat-card { background: var(--surface); padding: 24px; border-radius: 16px; border: 1px solid var(--border); }
+    .stat-label { font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+    .stat-value { font-size: 24px; font-weight: 700; margin-top: 4px; }
+
+    /* ==================== FILTER BAR ==================== */
+    .filter-bar { background: var(--surface); padding: 20px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 24px; display: flex; gap: 16px; align-items: center; }
+    .filter-group { display: flex; flex-direction: column; gap: 4px; }
+    .filter-label { font-size: 10px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; }
+    .filter-input { background: #f8fafc; border: 1px solid var(--border); padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; font-family: inherit; outline: none;}
+    .search-input { flex: 1; padding: 12px 16px; border-radius: 10px; border: 1px solid var(--border); font-size: 13px;}
+
+    /* ==================== DATA CARDS ==================== */
+    .data-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 32px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; transition: 0.3s; }
+    .data-card:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(0,0,0,0.05); }
     
-    #editBanner { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 15px; }
-    .btn-cancel-edit { background: var(--surface); border: 1px solid var(--border); padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: 800; color: var(--text-dim); transition: 0.2s; }
-    .btn-cancel-edit:hover { background: #f1f3f4; color: var(--navy); }
+    .brand-tag { font-size: 10px; font-weight: 800; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; margin-bottom: 12px; display: inline-block; letter-spacing: 0.5px; }
+    .tag-lava { background: #fee2e2; color: #991b1b; }
+    .tag-bianca { background: #e0e7ff; color: #3730a3; }
+    .tag-holybelly { background: #fef3c7; color: #92400e; }
+    .tag-lova { background: #f3f4f6; color: #374151; }
 
-    .form-section { background: var(--surface); border-radius: 18px; border: 1px solid var(--border); padding: 22px 28px; margin-bottom: 12px; flex-shrink: 1; }
-    .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; border-bottom: 1px solid #f8fafc; padding-bottom: 10px; }
-    .step-num { width: 22px; height: 22px; background: var(--navy); color: #fff; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; }
-    .section-title { font-size: 12px; font-weight: 800; color: var(--navy); text-transform: uppercase; letter-spacing: 1.5px; }
+    .inv-name { font-size: 22px; font-weight: 800; color: var(--navy); margin-bottom: 8px; }
+    .inv-note { font-size: 14px; color: var(--text-dim); background: #f8fafc; padding: 12px 16px; border-radius: 10px; border-left: 3px solid var(--border); margin: 12px 0; font-style: italic; }
+    .inv-meta { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+    .inv-meta strong { color: var(--navy); font-weight: 700; }
+    
+    /* ==================== ACTION ZONE ==================== */
+    .action-container { text-align: right; min-width: 340px; }
+    .inv-amount { font-size: 38px; font-weight: 900; color: var(--green); margin-bottom: 20px; letter-spacing: -1px; }
 
-    .grid-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    .input-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
-    .label { font-size: 12px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; }
-    .input { background: #fcfdfd; border: 1px solid var(--border); padding: 12px 16px; border-radius: 10px; font-size: 15px; font-family: inherit; transition: 0.2s; outline: none; height: 48px; }
-    .input:focus { border-color: var(--navy); background: #fff; }
+    .custom-upload { position: relative; display: inline-flex; align-items: center; margin-right: 12px; }
+    .btn-file-proxy { background: #f1f3f4; color: var(--text-dim); padding: 14px 20px; border-radius: 12px; font-weight: 700; font-size: 12px; cursor: pointer; border: 1px solid var(--border); transition: 0.2s; white-space: nowrap; max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
+    .btn-file-proxy:hover { background: #e8eaed; }
+    .btn-file-proxy.selected { background: var(--green-bg); color: var(--green); border-color: var(--green); }
+    .real-file-input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 
-    .brand-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-    .brand-btn { padding: 14px; border: 1.5px solid var(--border); border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; background: #fff; text-align: center; transition: 0.2s; color: var(--text-dim);}
-    .brand-btn.active { background: var(--navy); color: #fff; border-color: var(--navy); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-    .brand-btn.disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
-
-    .urgent-row { display: flex; align-items: center; justify-content: space-between; background: #fff5f5; padding: 0 20px; border-radius: 10px; border: 1px solid #fed7d7; cursor: pointer; height: 48px; margin-top: auto; }
-    .checkbox { width: 22px; height: 22px; accent-color: var(--accent); cursor: pointer; }
-
-    .upload-zone { border: 2px dashed var(--border); border-radius: 14px; padding: 25px; text-align: center; background: #fafafa; cursor: pointer; transition: 0.3s; }
-    .upload-zone.active { border-color: var(--green); background: var(--green-bg); }
-
-    .email-confirmation { background: #f8fafc; border: 1px solid var(--border); border-radius: 12px; padding: 12px 20px; margin-top: 5px; display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--text-dim); }
-    .email-confirmation strong { color: var(--navy); font-weight: 800; }
-
-    .btn-submit-main { background: var(--navy); color: #fff; padding: 20px; border-radius: 16px; font-weight: 800; font-size: 17px; border: none; cursor: pointer; width: 100%; transition: 0.3s; box-shadow: 0 10px 20px rgba(15,19,31,0.15); margin-top: 15px; margin-bottom: 20px;}
-    .btn-submit-main:hover { transform: translateY(-3px); background: var(--navy-light); }
-    .btn-submit-main:disabled { background: #9ca3af; cursor: not-allowed; box-shadow: none; transform: none; }
-
-    /* HISTORY */
-    #tabHistory { width: 100%; max-width: 850px; margin: 0 auto; overflow-y: auto; padding-bottom: 50px; }
-    .history-card { background: #fff; border-radius: 16px; padding: 24px; border: 1px solid var(--border); margin-bottom: 16px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
-    .hist-brand-tag { font-size: 9px; font-weight: 800; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; background: #f1f3f4; color: var(--navy); margin-bottom: 8px; display: inline-block; letter-spacing: 0.5px; }
-    .btn-edit { background: #f8fafc; border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 800; color: var(--navy); cursor: pointer; transition: 0.2s; margin-left: 10px;}
-    .btn-edit:hover { background: var(--border); }
-    .audit-tag { font-size: 10px; font-style: italic; color: #b45309; background: #fef3c7; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 8px; }
+    .btn-process { background: var(--navy); color: #fff; padding: 14px 32px; border-radius: 12px; font-weight: 700; border: none; cursor: pointer; font-size: 14px; transition: 0.2s; box-shadow: 0 4px 10px rgba(15,19,31,0.2); }
+    .btn-process:hover { background: var(--navy-light); transform: scale(1.02); }
+    .btn-process:disabled { background: #9ca3af; cursor: not-allowed; transform: none; box-shadow: none; }
+    
+    .btn-view-slip { background: var(--green-bg); color: var(--green); text-decoration: none; padding: 14px 28px; border-radius: 12px; font-weight: 800; font-size: 14px; display: inline-block; transition: 0.2s; }
 
     .hidden { display: none !important; }
   </style>
 </head>
 <body>
 
-  <div id="deleteModal" class="login-overlay hidden" style="z-index: 4000; background: rgba(15,19,31,0.85);">
-    <div class="login-card" style="border: 2px solid var(--accent); padding: 40px; max-width: 450px;">
-      <h2 style="color: var(--accent); margin-bottom: 10px; font-size: 24px;">⚠️ Overwrite Evidence</h2>
-      <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 20px; line-height: 1.5;">You are attaching a new document. The original invoice will be permanently removed.</p>
-      
-      <div style="background: rgba(15,19,31,0.05); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid rgba(15,19,31,0.1);">
-        <p style="font-size: 11px; color: var(--text-dim); margin-bottom: 8px; text-transform: uppercase; font-weight:800;">Tap to copy this exact phrase:</p>
-        <input type="text" value="Delete this file" readonly style="width: 100%; text-align: center; font-size: 18px; color: var(--navy); font-weight: 800; cursor: copy; background: #fff; padding: 10px; border-radius: 8px; border: 1px dashed var(--border); outline: none;" onclick="this.select(); document.execCommand('copy');">
-      </div>
-
-      <input type="password" id="delPin" class="pin-input" placeholder="Enter PIN" style="height: 48px; font-size: 20px; letter-spacing: 8px; margin-top:0;">
-      <input type="text" id="delConfirm" class="pin-input" placeholder='Paste phrase here...' style="height: 48px; font-size: 14px; letter-spacing: 0px;">
-      
-      <div style="display:flex; gap:12px; margin-top:10px;">
-        <button type="button" class="btn-submit-main" style="margin:0; background: #e4e1db; color: var(--navy); box-shadow:none;" onclick="closeDeleteModal()">Cancel</button>
-        <button type="button" class="btn-submit-main" style="margin:0; background: var(--accent); box-shadow:none;" onclick="confirmDeleteAndSubmit()">Confirm & Save</button>
-      </div>
-    </div>
-  </div>
-
   <div class="login-overlay" id="loginScreen">
     <div class="login-card">
       <div class="login-logo">LOVA</div>
-      <p style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 2px; font-weight: 800;">Staff Entry Portal</p>
-      <input type="password" id="staffPin" class="pin-input" placeholder="PIN" onkeydown="if(event.key==='Enter') login()">
-      <button type="button" class="btn-submit-main" style="margin:0" onclick="login()" id="loginBtn">Authorize Session</button>
-      <div id="loginError" style="color:var(--accent); margin-top:20px; font-size:12px; font-weight:800;"></div>
+      <p style="font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px;">Finance Manager Portal</p>
+      <input type="password" id="adminPin" class="pin-input" placeholder="PIN" onkeydown="if(event.key==='Enter') login()">
+      <button class="btn-process" style="width:100%" onclick="login()" id="loginBtn">Authorize Session</button>
+      <div id="loginError" style="color:var(--accent); margin-top:16px; font-size:12px; font-weight:700;"></div>
     </div>
   </div>
 
   <aside class="sidebar">
-    <div class="sidebar-brand"><h1 style="font-family:'Playfair Display'; font-size:28px; letter-spacing:1px;">LOVA</h1></div>
-    <div class="nav-item active" id="navForm" onclick="resetToNew()">New Payment Request</div>
-    <div class="nav-item" id="navHistory" onclick="showTab('history')">My Activity Log</div>
-    <div class="sidebar-batch"><div class="batch-label">Next Payment Batch</div><div class="batch-date" id="payFriday">...</div></div>
-    <div class="nav-logout" onclick="location.reload()">Logout Portal</div>
+    <div class="sidebar-brand">
+      <h1 style="font-family:'Playfair Display'; font-size:24px; letter-spacing:1px;">LOVA</h1>
+      <p style="font-size:10px; opacity:0.5; letter-spacing:2px; margin-top:4px;">FINANCE HUB</p>
+    </div>
+    <div class="nav-item active" onclick="switchView('pipeline')" id="nav-pipeline">Payment Pending POP</div>
+    <div class="nav-item" onclick="switchView('history')" id="nav-history">Payment Vault</div>
+    
+    <div style="margin-top:auto; padding:32px;">
+      <button onclick="fetchData()" style="width:100%; padding:12px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#fff; border-radius:10px; cursor:pointer; font-size:11px; margin-bottom:10px;">↻ Sync Data</button>
+      <div class="nav-item nav-logout" onclick="logout()">Logout Portal</div>
+    </div>
   </aside>
 
   <main class="main-area">
     <header class="top-header">
-      <h2 id="pageTitle" style="font-size: 22px; font-weight: 800;">New Payment Request</h2>
-      <div id="userNameBadge" style="font-size:12px; font-weight:800; color:var(--text-dim);">Authorized Member</div>
+      <h2 id="viewTitle" style="font-size: 22px; font-weight:800;">Payment Pending POP</h2>
+      <div style="font-size:12px; font-weight:700; color:var(--text-dim);">Authorized Account: <span style="color:var(--green);">Manager</span></div>
     </header>
 
     <div class="view-content">
       
-      <div id="formWrapper">
-        <div id="editBanner" class="hidden">
-          <span id="editBannerText" style="font-size: 18px; font-weight: 800;">✏️ Modifying Request</span>
-          <button type="button" class="btn-cancel-edit" onclick="cancelEdit()">← Cancel Edit & Go Back</button>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Active Queue</div>
+          <div class="stat-value" id="stat-pending-count">0</div>
         </div>
-
-        <div id="paymentContainer" style="display:flex; flex-direction:column; height:100%;">
-          <div class="form-section">
-            <div class="section-header"><div class="step-num">01</div><div class="section-title">Entity Selection</div></div>
-            <div class="brand-grid">
-              <div class="brand-btn" id="btn-LAV" onclick="setBrand('LAV', this)">LAVA</div>
-              <div class="brand-btn" id="btn-BIA" onclick="setBrand('BIA', this)">BIANCA</div>
-              <div class="brand-btn" id="btn-HOL" onclick="setBrand('HOL', this)">HOLYBELLY</div>
-              <div class="brand-btn" id="btn-LOV" onclick="setBrand('LOV', this)">LOVA</div>
-            </div>
-            <input type="hidden" id="brand">
-          </div>
-
-          <div class="form-section">
-            <div class="section-header"><div class="step-num">02</div><div class="section-title">Transaction Details</div></div>
-            <div class="input-group">
-              <div class="label">Payee / Supplier Name</div>
-              <input type="text" id="supplier" class="input" placeholder="Supplier name...">
-            </div>
-            <div class="grid-pair">
-              <div class="input-group"><div class="label">Amount (THB)</div><input type="number" step="0.01" id="amount" class="input" placeholder="0.00"></div>
-              <div class="input-group">
-                <div class="label">Doc Type</div>
-                <select id="docType" class="input" style="height:48px;">
-                  <option value="Invoice">Invoice</option><option value="Receipt">Receipt</option><option value="Quotation">Quotation</option><option value="Clear Advance">Clear Advance</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div class="form-section">
-            <div class="section-header"><div class="step-num">03</div><div class="section-title">Schedule & Priority</div></div>
-            <div class="grid-pair">
-              <div class="input-group"><div class="label">Due Date</div><input type="date" id="dueDate" class="input"></div>
-              <div class="input-group"><div class="label">Urgency</div><label class="urgent-row" for="urgent"><span style="font-size:11px; font-weight:800; color:var(--accent);">FLAG URGENT</span><input type="checkbox" id="urgent" class="checkbox"></label></div>
-            </div>
-            <div class="input-group" style="margin:0"><div class="label">Payment Note</div><input type="text" id="notes" class="input" placeholder="What is this paying for?"></div>
-          </div>
-
-          <div class="form-section" style="margin-bottom:0">
-            <div class="section-header"><div class="step-num">04</div><div class="section-title">Documentation</div></div>
-            <div class="upload-zone" id="dropZone" onclick="document.getElementById('invoiceFile').click()">
-              <div id="fileNameDisp" style="font-size:13px; font-weight:700; color:var(--text-dim);">Tap to Upload Invoice Document (Max 1.3MB)</div>
-              <input type="file" id="invoiceFile" class="hidden" onchange="handleFile(this)" accept="image/*,application/pdf">
-            </div>
-          </div>
-
-          <div class="email-confirmation"><span style="font-size:16px;">✉️</span><span>Proof of Payment receipt will be sent to: <strong id="userEmailDisp">...</strong></span></div>
-          
-          <button type="button" class="btn-submit-main" id="submitBtn" onclick="handleFormValidationAndSubmit()">Transmit Payment Request</button>
+        <div class="stat-card">
+          <div class="stat-label">Total Amount (THB)</div>
+          <div class="stat-value" id="stat-total-amount">0.00</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Vault History</div>
+          <div class="stat-value" id="stat-vault-count">0</div>
         </div>
       </div>
 
-      <div id="tabHistory" class="hidden" style="overflow-y:auto; padding-bottom:50px;">
-        <div id="histLoading" style="text-align:center; padding:40px; color:#aaa; font-size:13px;">Syncing activity log...</div>
-        <div id="histList"></div>
+      <div class="filter-bar">
+        <div class="filter-group" style="flex:1">
+          <div class="filter-label">Search Context</div>
+          <input type="text" class="search-input" id="search" placeholder="Supplier or ID..." oninput="render()">
+        </div>
+        <div class="filter-group">
+          <div class="filter-label">Brand</div>
+          <select id="filter-brand" class="filter-input" onchange="render()">
+            <option value="ALL">All Brands</option>
+            <option value="LAVA">LAVA</option>
+            <option value="Bianca Holdings">Bianca</option>
+            <option value="HolyBelly">HolyBelly</option>
+            <option value="Lova">Lova</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <div class="filter-label">From Date</div>
+          <input type="date" id="filter-from" class="filter-input" onchange="render()">
+        </div>
+        <div class="filter-group">
+          <div class="filter-label">To Date</div>
+          <input type="date" id="filter-to" class="filter-input" onchange="render()">
+        </div>
       </div>
 
-      <div id="successMsg" class="hidden" style="text-align:center; padding:50px; background:#fff; border-radius:24px; border:1px solid var(--border); max-width:500px; margin:0 auto;">
-        <div style="font-size:50px;">✨</div>
-        <h2 style="font-size:24px; font-weight:800; margin-top:15px;">Transmission Complete</h2>
-        <p id="refIdDisp" style="font-family:monospace; font-size:20px; font-weight:800; color:var(--navy); margin: 20px 0;"></p>
-        <button type="button" class="btn-submit-main" onclick="resetToNew()" style="width:auto; padding:12px 40px; font-size:14px;">Done</button>
-      </div>
+      <div id="loading" style="text-align:center; padding:120px; color:var(--text-dim); font-weight:700; letter-spacing:1px;">SYNCHRONIZING FINANCIAL PIPELINE...</div>
+      <div id="list"></div>
+
     </div>
   </main>
 
   <script>
-    // ============================================================
-    // CONFIGURATION — update this URL if you redeploy your GAS
-    // ============================================================
+    // IMPORTANT: Make sure this URL matches your deployed Apps Script web app URL
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbyEUJYIu9_O6E50KzKzdEY4EG2VLo4y0Yj8igGRZVMI_zEapqn5w758gdt_nG5tluEdHA/exec';
+    let pin = '';
+    let currentView = 'pipeline';
+    let cache = { pending: [], history: [] };
+    let uploadCache = {}; // Stores pre-read base64 files securely by item ID
 
-    // ============================================================
-    // GLOBAL STATE
-    // ============================================================
-    let user = null, pin = '', myData = [];
-    let editingId = null;
-    let isSubmitting = false;
-
-    // ---- FILE CACHE -----------------------------------------
-    // Files are read into memory the moment they are selected.
-    // This prevents "file gone" errors that happen when the
-    // browser tries to re-read the file at submit time on slow
-    // or unstable connections.
-    let _cachedBase64   = null;   // base64 string (no data-URI prefix)
-    let _cachedFileName = null;   // original filename with extension
-
-    function _clearFileCache() {
-      _cachedBase64   = null;
-      _cachedFileName = null;
-    }
-    // --------------------------------------------------------
-
-    // ============================================================
-    // INIT
-    // ============================================================
-    function init() {
-      const d = new Date(); const day = d.getDay();
-      const diff = d.getDate() + (day <= 5 ? (5 - day) : (5 - day + 7));
-      document.getElementById('payFriday').innerText = new Date(d.setDate(diff)).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-    }
-    init();
-
-    // ============================================================
-    // LOGIN
-    // ============================================================
     async function login() {
-      const input = document.getElementById('staffPin');
-      const btn   = document.getElementById('loginBtn');
+      const input = document.getElementById('adminPin');
+      const btn = document.getElementById('loginBtn');
       if (!input.value) return;
-      btn.disabled = true; btn.innerText = 'Verifying PIN...';
+      
+      btn.disabled = true; btn.innerText = 'Authenticating...';
       try {
-        const res  = await fetch(GAS_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ action: 'verifyLogin', pincode: input.value })
+        const res = await fetch(GAS_URL, { 
+          method: 'POST', 
+          redirect: 'follow', // Fixed stability issue
+          body: JSON.stringify({ action: 'verifyAdminLogin', pincode: input.value }) 
         });
         const data = await res.json();
+        
         if (data.status === 'success') {
-          user = data; pin = input.value;
-          document.getElementById('userNameBadge').innerText  = data.name;
-          document.getElementById('userEmailDisp').innerText  = data.email;
+          pin = input.value;
           document.getElementById('loginScreen').style.display = 'none';
+          fetchData();
         } else {
           document.getElementById('loginError').innerText = data.message;
           btn.disabled = false; btn.innerText = 'Authorize Session';
         }
-      } catch (e) { btn.disabled = false; btn.innerText = 'Authorize Session'; }
-    }
-
-    // ============================================================
-    // TAB / VIEW HELPERS
-    // ============================================================
-    function showTab(tab) {
-      document.getElementById('formWrapper').classList.toggle('hidden', tab !== 'form');
-      document.getElementById('tabHistory').classList.toggle('hidden', tab !== 'history');
-      document.getElementById('successMsg').classList.add('hidden');
-      document.getElementById('navForm').classList.toggle('active', tab === 'form');
-      document.getElementById('navHistory').classList.toggle('active', tab === 'history');
-
-      if (!editingId) {
-        document.getElementById('pageTitle').innerText = tab === 'form' ? 'New Payment Request' : 'My Activity Log';
-        document.getElementById('editBanner').classList.add('hidden');
+      } catch (e) { 
+        btn.disabled = false; btn.innerText = 'Authorize Session';
+        document.getElementById('loginError').innerText = "Network Error. Check connection.";
       }
-      if (tab === 'history') fetchHistory();
     }
 
-    function resetToNew() {
-      editingId    = null;
-      isSubmitting = false;
-      _clearFileCache();                                   // ← wipe any stale file data
-
-      document.getElementById('pageTitle').innerText = 'New Payment Request';
-      document.getElementById('formWrapper').style.backgroundColor = 'transparent';
-      document.getElementById('formWrapper').style.padding         = '0';
-      document.getElementById('formWrapper').style.border          = 'none';
-      document.getElementById('editBanner').classList.add('hidden');
-
-      document.getElementById('brand').value    = '';
-      document.getElementById('supplier').value = '';
-      document.getElementById('amount').value   = '';
-      document.getElementById('dueDate').value  = '';
-      document.getElementById('notes').value    = '';
-      document.getElementById('urgent').checked = false;
-      document.getElementById('invoiceFile').value = null;
-
-      document.querySelectorAll('.brand-btn').forEach(b => {
-        b.classList.remove('active');
-        b.classList.remove('disabled');
-      });
-      document.getElementById('fileNameDisp').innerText = 'Tap to Upload Invoice Document (Max 1.3MB)';
-      document.getElementById('dropZone').classList.remove('active');
-
-      const btn = document.getElementById('submitBtn');
-      btn.innerText = 'Transmit Payment Request';
-      btn.disabled  = false;
-
-      showTab('form');
+    function logout() {
+      pin = '';
+      document.getElementById('adminPin').value = '';
+      document.getElementById('loginScreen').style.display = 'flex';
+      document.getElementById('loginError').innerText = '';
+      document.getElementById('loginBtn').disabled = false;
+      document.getElementById('loginBtn').innerText = 'Authorize Session';
+      uploadCache = {};
     }
 
-    function cancelEdit() {
-      resetToNew();
-      showTab('history');
-    }
-
-    function canEdit(origDateRaw) {
-      if (!origDateRaw) return true;
-      const d = new Date(origDateRaw);
-      if (isNaN(d.getTime())) return true;
-      const day  = d.getDay();
-      const diff = d.getDate() + (day <= 5 ? (5 - day) : (5 - day + 7));
-      const targetFriday = new Date(d.setDate(diff));
-      const cutoff = new Date(targetFriday);
-      cutoff.setDate(targetFriday.getDate() - 1);
-      cutoff.setHours(23, 59, 59, 999);
-      return new Date() <= cutoff;
-    }
-
-    // ============================================================
-    // HISTORY
-    // ============================================================
-    async function fetchHistory() {
-      const list = document.getElementById('histList');
-      list.innerHTML = '';
-      document.getElementById('histLoading').classList.remove('hidden');
+    async function fetchData() {
+      document.getElementById('loading').classList.remove('hidden');
+      document.getElementById('list').innerHTML = '';
+      uploadCache = {}; // Clear pending uploads on sync
+      
       try {
-        const res  = await fetch(GAS_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ action: 'getDashboardData', pincode: pin })
+        const res = await fetch(GAS_URL, { 
+          method: 'POST', 
+          redirect: 'follow', // Fixed stability issue
+          body: JSON.stringify({ action: 'getDashboardData', pincode: pin }) 
         });
-        const data = await res.json();
-        if (data.status !== 'success') throw new Error('Auth Denied');
-
-        document.getElementById('histLoading').classList.add('hidden');
-        myData = [...data.pending, ...data.history].filter(
-          i => i.requester.toLowerCase().trim() === user.name.toLowerCase().trim()
-        );
-
-        if (myData.length === 0)
-          return list.innerHTML = '<center style="padding:40px; color:#aaa; font-weight:600;">No history found.</center>';
-
-        list.innerHTML = myData.map((item, idx) => `
-          <div class="history-card">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-              <div>
-                <span class="hist-brand-tag">${item.sheetName}</span>
-                <div style="font-size: 18px; font-weight: 800; color: var(--navy);">${item.supplier}</div>
-                <div style="font-size: 12px; color: var(--text-dim); margin-top:4px;">ID: <strong>${item.id}</strong> • Submitted: <strong>${item.date}</strong></div>
-                ${item.auditLog ? `<div class="audit-tag">⚠️ ${item.auditLog}</div>` : ''}
-              </div>
-              <div style="text-align:right;">
-                <div style="font-size: 20px; font-weight: 800; color: var(--green);">${parseFloat(item.amount).toLocaleString('en-US', {minimumFractionDigits: 2})} <span style="font-size:12px; opacity:0.6;">THB</span></div>
-                <div style="margin-top: 8px; display:flex; align-items:center; justify-content:flex-end;">
-                  <span style="font-size: 9px; font-weight: 800; padding: 4px 8px; border-radius: 20px; text-transform: uppercase; background: ${item.popUrl ? 'var(--green-bg)' : '#f3f4f6'}; color: ${item.popUrl ? 'var(--green)' : '#6b7280'};">${item.popUrl ? 'Paid' : 'In Queue'}</span>
-                  ${(!item.popUrl && canEdit(item.origDateRaw)) ? `<button type="button" class="btn-edit" onclick="startEdit(${idx})">✏️ Edit</button>` : ''}
-                </div>
-              </div>
-            </div>
-            ${item.note ? `<div style="background: var(--canvas); padding: 12px; border-radius: 8px; font-size: 13px; color: var(--text-dim); border-left: 3px solid var(--border); font-style: italic;">Note: ${item.note}</div>` : ''}
-            ${item.popUrl ? `<div style="padding-top: 16px; border-top: 1px solid var(--border);"><a href="${item.popUrl}" target="_blank" style="font-size: 12px; font-weight: 800; color: var(--green); text-decoration: none;">📄 View Official Proof of Payment</a></div>` : ''}
-          </div>`).join('');
-      } catch (e) {
-        document.getElementById('histLoading').classList.add('hidden');
-        list.innerHTML = '<center style="padding:30px; color:#c0392b; font-weight:800;">Error syncing history.</center>';
+        cache = await res.json();
+        document.getElementById('loading').classList.add('hidden');
+        render();
+      } catch (e) { 
+        console.error(e); 
+        document.getElementById('loading').innerText = "ERROR SYNCING DATA. PLEASE REFRESH.";
       }
     }
 
-    // ============================================================
-    // BRAND SELECTION
-    // ============================================================
-    function setBrand(code, el) {
-      if (editingId) return;
-      document.querySelectorAll('.brand-btn').forEach(b => b.classList.remove('active'));
-      el.classList.add('active');
-      document.getElementById('brand').value = code;
+    function switchView(view) {
+      currentView = view;
+      document.getElementById('nav-pipeline').classList.toggle('active', view === 'pipeline');
+      document.getElementById('nav-history').classList.toggle('active', view === 'history');
+      document.getElementById('viewTitle').innerText = view === 'pipeline' ? 'Payment Pending POP' : 'Payment Vault';
+      render();
     }
 
-    // ============================================================
-    // EDIT MODE
-    // ============================================================
-    function startEdit(idx) {
-      const item = myData[idx];
-      editingId    = item.id;
-      isSubmitting = false;
-      _clearFileCache();                                   // ← always wipe before entering edit mode
+    // NEW: Safe pre-caching file uploader
+    function handleFileUpload(itemId) {
+      const input = document.getElementById(`file-${itemId}`);
+      const proxy = document.getElementById(`proxy-${itemId}`);
+      const MAX_SIZE = 1.3 * 1024 * 1024; // 1.3MB limit
 
-      document.getElementById('pageTitle').innerText = 'Refine Payment Request';
+      delete uploadCache[itemId]; // Clear memory for this item
 
-      const brandCodeMap = { 'LAVA': 'LAV', 'Bianca Holdings': 'BIA', 'HolyBelly': 'HOL', 'Lova': 'LOV' };
-      const bCode = brandCodeMap[item.sheetName];
-      document.getElementById('brand').value = bCode;
+      if (input.files.length) {
+        if (input.files[0].size > MAX_SIZE) {
+          alert("❌ SERVER LIMIT EXCEEDED.\n\nFile must be under 1.3MB. Please compress the file and try again.");
+          input.value = null;
+          proxy.innerText = "Attach Slip";
+          proxy.classList.remove('selected');
+          return;
+        }
 
-      const themes = {
-        'LAV': { bg: '#fff0f0', color: '#991b1b', border: '#fecaca', text: 'LAVA' },
-        'BIA': { bg: '#eef2ff', color: '#3730a3', border: '#c7d2fe', text: 'BIANCA' },
-        'HOL': { bg: '#fffbeb', color: '#92400e', border: '#fde68a', text: 'HOLYBELLY' },
-        'LOV': { bg: '#f3f4f6', color: '#374151', border: '#e5e7eb', text: 'LOVA' }
-      };
-      const theme = themes[bCode];
-
-      document.getElementById('formWrapper').style.backgroundColor = theme.bg;
-      document.getElementById('formWrapper').style.padding         = '25px';
-      document.getElementById('formWrapper').style.borderRadius    = '24px';
-      document.getElementById('formWrapper').style.border          = `2px solid ${theme.border}`;
-
-      const banner = document.getElementById('editBanner');
-      banner.style.color = theme.color;
-      document.getElementById('editBannerText').innerText = `✏️ Modifying ${theme.text} Request (${item.id})`;
-      banner.classList.remove('hidden');
-
-      document.querySelectorAll('.brand-btn').forEach(b => {
-        b.classList.remove('active');
-        b.classList.add('disabled');
-      });
-      document.getElementById('btn-' + bCode).classList.add('active');
-
-      document.getElementById('supplier').value = item.supplier;
-      document.getElementById('amount').value   = item.amount;
-      document.getElementById('docType').value  = item.docType || 'Invoice';
-      if (item.dueDateRaw) document.getElementById('dueDate').value = item.dueDateRaw;
-      document.getElementById('urgent').checked = (item.urgent === 'Urgent');
-      document.getElementById('notes').value    = item.note || '';
-
-      // Reset file picker — no old file data should be in cache
-      document.getElementById('invoiceFile').value = null;
-      document.getElementById('fileNameDisp').innerText = '📎 Current File Saved. Tap to Replace.';
-      document.getElementById('dropZone').classList.remove('active');
-
-      const btn = document.getElementById('submitBtn');
-      btn.innerText = 'Save & Update Vault';
-      btn.disabled  = false;
-
-      showTab('form');
-    }
-
-    // ============================================================
-    // FILE HANDLING — pre-read into memory on selection
-    // ============================================================
-    function handleFile(input) {
-      const MAX_SIZE = 1.3 * 1024 * 1024;
-
-      // Step 1 — wipe any previous cache immediately
-      _clearFileCache();
-      document.getElementById('dropZone').classList.remove('active');
-      document.getElementById('fileNameDisp').innerText = editingId
-        ? '📎 Current File Saved. Tap to Replace.'
-        : 'Tap to Upload Invoice Document (Max 1.3MB)';
-
-      if (!input.files.length) return;
-
-      const file = input.files[0];
-
-      // Step 2 — size guard
-      if (file.size > MAX_SIZE) {
-        alert(
-          '❌ FILE TOO LARGE\n\n' +
-          'Google Apps Script cannot reliably receive files over 1.3 MB.\n' +
-          'Your file is ' + (file.size / 1024 / 1024).toFixed(2) + ' MB.\n\n' +
-          'Please compress or export a smaller version and try again.'
-        );
-        input.value = null;
-        return;
-      }
-
-      // Step 3 — pre-read into memory right now (not at submit time)
-      const reader = new FileReader();
-
-      reader.onload = function () {
-        // Store in module-level variables — safe from garbage collection
-        _cachedBase64   = reader.result.split(',')[1];
-        _cachedFileName = file.name;
-        document.getElementById('fileNameDisp').innerText = '📎 Ready to Upload: ' + file.name;
-        document.getElementById('dropZone').classList.add('active');
-      };
-
-      reader.onerror = function () {
-        _clearFileCache();
-        input.value = null;
-        document.getElementById('fileNameDisp').innerText = editingId
-          ? '📎 Current File Saved. Tap to Replace.'
-          : 'Tap to Upload Invoice Document (Max 1.3MB)';
-        document.getElementById('dropZone').classList.remove('active');
-        alert('❌ Could not read the file. Please try selecting it again.');
-      };
-
-      reader.readAsDataURL(file);
-    }
-
-    // ============================================================
-    // FORM VALIDATION → route to modal or direct submit
-    // ============================================================
-    function handleFormValidationAndSubmit() {
-      if (isSubmitting) return;
-
-      const brand   = document.getElementById('brand').value;
-      const supplier = document.getElementById('supplier').value;
-      const amount  = document.getElementById('amount').value;
-      const docType = document.getElementById('docType').value;
-      const dueDate = document.getElementById('dueDate').value;
-
-      if (!brand || !supplier || !amount || !docType || !dueDate) {
-        alert('Please complete all required fields (Brand, Supplier, Amount, Doc Type, Due Date).');
-        return;
-      }
-
-      // New request must have a file
-      if (!editingId && !_cachedBase64) {
-        alert('Please attach an invoice document before submitting.');
-        return;
-      }
-
-      // Edit + new file selected → show overwrite confirmation modal
-      if (editingId && _cachedBase64) {
-        document.getElementById('deleteModal').classList.remove('hidden');
+        const reader = new FileReader();
+        proxy.innerText = "Reading file...";
+        
+        reader.onload = function() {
+          uploadCache[itemId] = {
+            base64: reader.result.split(',')[1],
+            name: input.files[0].name
+          };
+          proxy.innerText = input.files[0].name;
+          proxy.classList.add('selected');
+        };
+        
+        reader.onerror = function() {
+          input.value = null;
+          proxy.innerText = "Attach Slip";
+          proxy.classList.remove('selected');
+          alert("❌ Could not read the file. Please try again.");
+        };
+        
+        reader.readAsDataURL(input.files[0]);
       } else {
-        // Edit with no replacement file, or brand-new request with file already cached
-        isSubmitting = true;
-        executeBackendCall();
+        proxy.innerText = "Attach Slip";
+        proxy.classList.remove('selected');
       }
     }
 
-    // ============================================================
-    // DELETE / OVERWRITE MODAL
-    // ============================================================
-    function closeDeleteModal() {
-      document.getElementById('deleteModal').classList.add('hidden');
-      document.getElementById('delPin').value     = '';
-      document.getElementById('delConfirm').value = '';
+    function render() {
+      const container = document.getElementById('list');
+      const query = document.getElementById('search').value.toLowerCase();
+      const brandFilter = document.getElementById('filter-brand').value;
+      const fromDate = document.getElementById('filter-from').value;
+      const toDate = document.getElementById('filter-to').value;
 
-      // Wipe the newly selected replacement file so the user
-      // must consciously re-select if they reopen the modal
-      _clearFileCache();
-      document.getElementById('invoiceFile').value = null;
-      document.getElementById('fileNameDisp').innerText = '📎 Current File Saved. Tap to Replace.';
-      document.getElementById('dropZone').classList.remove('active');
+      const items = currentView === 'pipeline' ? cache.pending : cache.history;
+      
+      const filtered = items.filter(i => {
+        const matchesQuery = i.supplier.toLowerCase().includes(query) || i.id.toLowerCase().includes(query);
+        const matchesBrand = brandFilter === "ALL" || i.sheetName === brandFilter;
+        const matchesDate = (!fromDate || i.isoDate >= fromDate) && (!toDate || i.isoDate <= toDate);
+        return matchesQuery && matchesBrand && matchesDate;
+      });
 
-      isSubmitting = false;
+      document.getElementById('stat-pending-count').innerText = cache.pending.length;
+      document.getElementById('stat-vault-count').innerText = cache.history.length;
+      const sum = filtered.reduce((acc, item) => acc + parseFloat(item.amount || 0), 0);
+      document.getElementById('stat-total-amount').innerText = sum.toLocaleString('en-US', {minimumFractionDigits: 2});
+
+      // FIXED: Buttons now tie to exact item ID to prevent filtering bugs
+      container.innerHTML = filtered.map(item => `
+        <div class="data-card">
+          <div style="flex:1; padding-right:40px;">
+            <span class="brand-tag tag-${item.sheetName.split(' ')[0].toLowerCase()}">${item.sheetName}</span>
+            <div class="inv-name">${item.supplier}</div>
+            <div class="inv-meta">
+              ID: <strong>${item.id}</strong> • Requester: <strong>${item.requester}</strong><br>
+              Submission Date: <strong>${item.date}</strong>
+            </div>
+            ${item.note ? `<div class="inv-note">Note: ${item.note}</div>` : ''}
+          </div>
+          <div class="action-container">
+            <div class="inv-amount">${parseFloat(item.amount).toLocaleString('en-US', {minimumFractionDigits: 2})} <span style="font-size:16px; vertical-align:middle; opacity:0.6;">THB</span></div>
+            <div>
+              ${currentView === 'pipeline' ? 
+                `<div class="custom-upload">
+                  <div class="btn-file-proxy" id="proxy-${item.id}">Attach Slip</div>
+                  <input type="file" class="real-file-input" id="file-${item.id}" onchange="handleFileUpload('${item.id}')" accept="image/*,application/pdf">
+                </div>
+                <button class="btn-process" id="btn-${item.id}" onclick="processPayment('${item.id}')">Process POP</button>` :
+                `<a href="${item.popUrl}" target="_blank" class="btn-view-slip">View Proof of Payment</a>`
+              }
+            </div>
+          </div>
+        </div>
+      `).join('');
     }
 
-    function confirmDeleteAndSubmit() {
-      if (document.getElementById('delPin').value !== pin) {
-        return alert('Incorrect PIN. Please try again.');
-      }
-      if (document.getElementById('delConfirm').value !== 'Delete this file') {
-        return alert('Please copy and paste the exact confirmation phrase.');
-      }
-
-      // Hide the modal but keep the cached file data intact for upload
-      document.getElementById('deleteModal').classList.add('hidden');
-      document.getElementById('delPin').value     = '';
-      document.getElementById('delConfirm').value = '';
-
-      isSubmitting = true;
-      executeBackendCall();
-    }
-
-    // ============================================================
-    // EXECUTE BACKEND CALL — uses pre-cached file data
-    // ============================================================
-    function executeBackendCall() {
-      const btn   = document.getElementById('submitBtn');
-      const brand = document.getElementById('brand').value;
-
-      // Guard: if a new request has no cached file, abort cleanly
-      if (!editingId && !_cachedBase64) {
-        isSubmitting = false;
-        alert('❌ File data is missing. Please re-select your invoice document and try again.');
-        btn.disabled  = false;
-        btn.innerText = 'Transmit Payment Request';
-        return;
-      }
-
-      btn.disabled  = true;
-      btn.innerText = 'Transmitting to Vault...';
-
-      // Pass cached values directly — no FileReader needed here
-      sendPayload(brand, _cachedFileName, _cachedBase64, btn);
-    }
-
-    // ============================================================
-    // SEND PAYLOAD — with automatic retry (up to 3 attempts)
-    // ============================================================
-    async function sendPayload(brand, fName, fBase64, btn, attempt = 1) {
+    // NEW: Robust fetch logic with retry backoff and abort controllers
+    async function processPayment(itemId, attempt = 1) {
       const MAX_ATTEMPTS = 3;
+      const btn = document.getElementById(`btn-${itemId}`);
+      const cachedFile = uploadCache[itemId];
+      
+      const targetInvoice = cache.pending.find(i => i.id === itemId);
 
-      const payload = {
-        action:       editingId ? 'editRequest' : 'submitRequest',
-        id:           editingId,
-        brand,
-        requestTitle: document.getElementById('supplier').value,
-        amount:       document.getElementById('amount').value,
-        documentType: document.getElementById('docType').value,
-        dueDate:      document.getElementById('dueDate').value,
-        isUrgent:     document.getElementById('urgent').checked,
-        note:         document.getElementById('notes').value,
-        fileName:     fName,
-        fileBase64:   fBase64,
-        userName:     user.name,
-        email:        user.email,
-        pincode:      pin
-      };
+      if (!targetInvoice) return alert("Error: Invoice record not found in memory.");
+      if (!cachedFile) return alert("Please attach the Proof of Payment slip first.");
 
       if (attempt > 1) {
-        btn.innerText = `Retrying… (Attempt ${attempt} of ${MAX_ATTEMPTS})`;
+        btn.innerText = `Retrying (${attempt}/${MAX_ATTEMPTS})...`;
+      } else {
+        btn.disabled = true; 
+        btn.innerText = "Processing...";
       }
 
+      const payload = { 
+        action: 'submitPOP', 
+        pincode: pin, 
+        invoice: targetInvoice, 
+        fileName: cachedFile.name, 
+        fileBase64: cachedFile.base64 
+      };
+
+      let timeoutId;
       try {
-        // Give Google Apps Script up to 55 seconds before we consider it timed out.
-        // GAS itself has a 60-second hard limit, so 55 s keeps us safely inside that.
         const controller = new AbortController();
-        const timeoutId  = setTimeout(() => controller.abort(), 55000);
+        timeoutId = setTimeout(() => controller.abort(), 55000);
 
-        const res = await fetch(GAS_URL, {
-          method:   'POST',
+        const res = await fetch(GAS_URL, { 
+          method: 'POST', 
           redirect: 'follow',
-          signal:   controller.signal,
-          headers:  { 'Content-Type': 'text/plain;charset=utf-8' },
-          body:     JSON.stringify(payload)
+          signal: controller.signal,
+          body: JSON.stringify(payload) 
         });
-
+        
         clearTimeout(timeoutId);
-
         const textResponse = await res.text();
-
-        let result;
+        
         try {
-          result = JSON.parse(textResponse);
-        } catch (parseErr) {
-          // GAS sometimes returns HTML error pages — surface useful text
-          throw new Error('Non-JSON response from server: ' + textResponse.substring(0, 120));
+          const result = JSON.parse(textResponse);
+          if (result.status === 'success') { 
+            delete uploadCache[itemId]; // Clear from memory once done
+            fetchData(); // Resync dashboard
+          } else { 
+            alert("Server Error: " + result.message); 
+            btn.disabled = false; 
+            btn.innerText = "Process POP"; 
+          }
+        } catch (e) {
+          alert("Data anomaly. Server threw an error:\n\n" + textResponse.substring(0, 100));
+          btn.disabled = false; 
+          btn.innerText = "Process POP";
         }
-
-        if (result.status === 'success') {
-          // ✅ SUCCESS — clear cache, show confirmation
-          _clearFileCache();
-          isSubmitting = false;
-          document.getElementById('formWrapper').classList.add('hidden');
-          document.getElementById('successMsg').classList.remove('hidden');
-          document.getElementById('refIdDisp').innerText = 'REF: ' + result.id;
-        } else {
-          // Server returned a structured error (auth, locked row, etc.)
-          isSubmitting = false;
-          alert('Server Error: ' + result.message);
-          btn.disabled  = false;
-          btn.innerText = editingId ? 'Save & Update Vault' : 'Transmit Payment Request';
+      } catch (e) { 
+        if (timeoutId) clearTimeout(timeoutId);
+        
+        if (attempt < MAX_ATTEMPTS) {
+          const waitSeconds = attempt * 4; 
+          btn.innerText = `Connection issue. Retrying in ${waitSeconds}s...`;
+          await new Promise(resolve => setTimeout(resolve, waitSeconds * 1000));
+          return processPayment(itemId, attempt + 1);
         }
-
-      } catch (err) {
-
-        const isAbort   = err.name === 'AbortError';
-        const isNetwork = err instanceof TypeError; // fetch network failure
-
-        if ((isAbort || isNetwork) && attempt < MAX_ATTEMPTS) {
-          // Network/timeout error — wait and retry automatically
-          const waitSec = attempt * 5; // 5 s, then 10 s
-          btn.innerText = `Connection issue — retrying in ${waitSec}s… (${attempt}/${MAX_ATTEMPTS})`;
-          await new Promise(resolve => setTimeout(resolve, waitSec * 1000));
-          return sendPayload(brand, fName, fBase64, btn, attempt + 1);
-        }
-
-        // All retries exhausted, or non-retriable error
-        console.error('Upload failed after all attempts:', err);
-        isSubmitting = false;
-        alert(
-          `❌ UPLOAD FAILED after ${attempt} attempt${attempt > 1 ? 's' : ''}.\n\n` +
-          'Possible causes:\n' +
-          '• File is too large for your current connection\n' +
-          '• Google Apps Script server is temporarily unavailable\n' +
-          '• Your internet connection dropped mid-upload\n\n' +
-          'Your form data is still intact. Please check your connection and tap the button again.'
-        );
-        btn.disabled  = false;
-        btn.innerText = editingId ? 'Save & Update Vault' : 'Transmit Payment Request';
-        // NOTE: isSubmitting = false means the user can tap again without refreshing
-        // NOTE: _cachedBase64 is still set, so they do NOT need to re-select the file
+        
+        console.error("Fetch Error:", e);
+        alert(`❌ UPLOAD FAILED after ${MAX_ATTEMPTS} attempts.\n\nThe file may be too large for your current connection, or Google's servers are temporarily unavailable. Please try again.`); 
+        btn.disabled = false; 
+        btn.innerText = "Process POP"; 
       }
     }
   </script>
