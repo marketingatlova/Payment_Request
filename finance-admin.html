@@ -125,6 +125,7 @@
     </div>
     <div class="nav-item active" onclick="switchView('pipeline')" id="nav-pipeline">Payment Pending POP</div>
     <div class="nav-item" onclick="switchView('history')" id="nav-history">Payment Vault</div>
+    <div class="nav-item" onclick="switchView('aging')" id="nav-aging">AP Aging & Reports</div>
     
     <div style="margin-top:auto; padding:32px;">
       <button onclick="fetchData()" style="width:100%; padding:12px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#fff; border-radius:10px; cursor:pointer; font-size:11px; margin-bottom:10px;">↻ Sync Data</button>
@@ -140,7 +141,7 @@
 
     <div class="view-content">
       
-      <div class="stats-grid">
+      <div class="stats-grid" id="main-stats">
         <div class="stat-card">
           <div class="stat-label">Active Queue</div>
           <div class="stat-value" id="stat-pending-count">0</div>
@@ -187,7 +188,6 @@
   </main>
 
   <script>
-    // IMPORTANT: Make sure this URL matches your deployed Apps Script web app URL
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbyEUJYIu9_O6E50KzKzdEY4EG2VLo4y0Yj8igGRZVMI_zEapqn5w758gdt_nG5tluEdHA/exec';
     let pin = '';
     let adminName = 'Manager';
@@ -271,7 +271,12 @@
       currentView = view;
       document.getElementById('nav-pipeline').classList.toggle('active', view === 'pipeline');
       document.getElementById('nav-history').classList.toggle('active', view === 'history');
-      document.getElementById('viewTitle').innerText = view === 'pipeline' ? 'Payment Pending POP' : 'Payment Vault';
+      document.getElementById('nav-aging').classList.toggle('active', view === 'aging');
+      
+      if(view === 'pipeline') document.getElementById('viewTitle').innerText = 'Payment Pending POP';
+      else if(view === 'history') document.getElementById('viewTitle').innerText = 'Payment Vault';
+      else document.getElementById('viewTitle').innerText = 'AP Aging & Reports';
+      
       render();
     }
 
@@ -337,14 +342,13 @@
       }
     }
 
-    function render() {
-      const container = document.getElementById('list');
+    function exportToCSV() {
       const query = document.getElementById('search').value.toLowerCase();
       const brandFilter = document.getElementById('filter-brand').value;
       const fromDate = document.getElementById('filter-from').value;
       const toDate = document.getElementById('filter-to').value;
 
-      const items = currentView === 'pipeline' ? cache.pending : cache.history;
+      const items = currentView === 'history' ? cache.history : cache.pending;
       
       const filtered = items.filter(i => {
         const matchesQuery = i.supplier.toLowerCase().includes(query) || i.id.toLowerCase().includes(query);
@@ -353,11 +357,137 @@
         return matchesQuery && matchesBrand && matchesDate;
       });
 
-      document.getElementById('stat-pending-count').innerText = cache.pending.length;
-      document.getElementById('stat-vault-count').innerText = cache.history.length;
-      const sum = filtered.reduce((acc, item) => acc + parseFloat(item.amount || 0), 0);
-      document.getElementById('stat-total-amount').innerText = sum.toLocaleString('en-US', {minimumFractionDigits: 2});
+      if (filtered.length === 0) return alert("No data to export for this filter.");
+      
+      let csv = '\uFEFF'; // UTF-8 BOM to ensure MS Excel formatting works perfectly
+      csv += 'Reference ID,Entity,Supplier,Submission Date,Due Date,Amount (THB),Aging Bucket,Note,Original Invoice URL\n';
+      
+      filtered.forEach(item => {
+        let diffDays = 0;
+        let bucket = "Current";
+        if (item.dueDateRaw) {
+          const due = new Date(item.dueDateRaw);
+          const now = new Date();
+          diffDays = Math.ceil((now - due) / (1000 * 60 * 60 * 24));
+          if (diffDays <= 0) bucket = "Current";
+          else if (diffDays <= 30) bucket = "1-30 Days";
+          else if (diffDays <= 60) bucket = "31-60 Days";
+          else if (diffDays <= 90) bucket = "61-90 Days";
+          else bucket = "90+ Days";
+        }
+        
+        const escape = (str) => `"${(str || '').toString().replace(/"/g, '""')}"`;
+        
+        csv += `${escape(item.id)},${escape(item.sheetName)},${escape(item.supplier)},${escape(item.date)},${escape(item.dueDateRaw ? new Date(item.dueDateRaw).toLocaleDateString('en-GB') : '')},${item.amount},${escape(bucket)},${escape(item.note)},${escape(item.invoiceUrl)}\n`;
+      });
+      
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `LOVA_Finance_Export_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
 
+    function render() {
+      const container = document.getElementById('list');
+      const query = document.getElementById('search').value.toLowerCase();
+      const brandFilter = document.getElementById('filter-brand').value;
+      const fromDate = document.getElementById('filter-from').value;
+      const toDate = document.getElementById('filter-to').value;
+
+      const items = currentView === 'history' ? cache.history : cache.pending;
+      
+      const filtered = items.filter(i => {
+        const matchesQuery = i.supplier.toLowerCase().includes(query) || i.id.toLowerCase().includes(query);
+        const matchesBrand = brandFilter === "ALL" || i.sheetName === brandFilter;
+        const matchesDate = (!fromDate || i.isoDate >= fromDate) && (!toDate || i.isoDate <= toDate);
+        return matchesQuery && matchesBrand && matchesDate;
+      });
+
+      // Show/Hide Main Stats depending on View
+      if(currentView === 'aging') {
+        document.getElementById('main-stats').classList.add('hidden');
+      } else {
+        document.getElementById('main-stats').classList.remove('hidden');
+        document.getElementById('stat-pending-count').innerText = cache.pending.length;
+        document.getElementById('stat-vault-count').innerText = cache.history.length;
+        const sum = filtered.reduce((acc, item) => acc + parseFloat(item.amount || 0), 0);
+        document.getElementById('stat-total-amount').innerText = sum.toLocaleString('en-US', {minimumFractionDigits: 2});
+      }
+
+      // ----------------------------------------------------
+      // AP AGING REPORT VIEW
+      // ----------------------------------------------------
+      if (currentView === 'aging') {
+          let current = 0, d30 = 0, d60 = 0, d90 = 0, d90plus = 0;
+          
+          const rows = filtered.map(item => {
+            let bucket = "Current";
+            let badge = "background:#dcfce7; color:#166534;"; 
+            if (item.dueDateRaw) {
+              const due = new Date(item.dueDateRaw);
+              const now = new Date();
+              const diff = Math.ceil((now - due) / (1000 * 60 * 60 * 24));
+              if (diff <= 0) { bucket = "Current"; current += parseFloat(item.amount || 0); }
+              else if (diff <= 30) { bucket = "1-30 Days"; d30 += parseFloat(item.amount || 0); badge = "background:#fef3c7; color:#b45309;"; }
+              else if (diff <= 60) { bucket = "31-60 Days"; d60 += parseFloat(item.amount || 0); badge = "background:#ffedd5; color:#c2410c;"; }
+              else if (diff <= 90) { bucket = "61-90 Days"; d90 += parseFloat(item.amount || 0); badge = "background:#fee2e2; color:#b91c1c;"; }
+              else { bucket = "90+ Days"; d90plus += parseFloat(item.amount || 0); badge = "background:#fef2f2; color:#991b1b;"; }
+            } else {
+              current += parseFloat(item.amount || 0);
+            }
+            
+            return `
+              <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 16px; font-size: 12px; font-weight:800; color:var(--navy);">${item.id}</td>
+                <td style="padding: 16px; font-size: 13px; font-weight:600;">${item.supplier}</td>
+                <td style="padding: 16px; font-size: 10px;"><span style="padding:4px 8px; border-radius:4px; font-weight:800; text-transform:uppercase; ${badge}">${bucket}</span></td>
+                <td style="padding: 16px; font-size: 13px; font-weight:800; color:var(--green);">${parseFloat(item.amount).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                <td style="padding: 16px; font-size: 12px;">${item.dueDateRaw ? new Date(item.dueDateRaw).toLocaleDateString('en-GB') : 'N/A'}</td>
+                <td style="padding: 16px; text-align:right;">
+                  ${item.invoiceUrl ? `<a href="${item.invoiceUrl}" target="_blank" style="color:var(--navy); font-weight:800; text-decoration:underline; font-size:11px;">View Invoice</a>` : '<span style="font-size:11px; color:#aaa;">No File</span>'}
+                </td>
+              </tr>
+            `;
+          }).join('');
+
+          container.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+              <h3 style="color:var(--navy); font-size:18px; font-weight:800;">Accounts Payable Aging Summary</h3>
+              <button onclick="exportToCSV()" class="btn-process" style="padding:10px 20px; font-size:12px; height:auto; margin:0;">📥 Download Excel / CSV</button>
+            </div>
+            <div class="stats-grid" style="grid-template-columns: repeat(5, 1fr); gap:12px; margin-bottom:24px;">
+              <div class="stat-card" style="padding:16px;"><div class="stat-label">Current</div><div class="stat-value" style="font-size:18px; color:var(--green);">${current.toLocaleString('en-US', {minimumFractionDigits: 2})}</div></div>
+              <div class="stat-card" style="padding:16px;"><div class="stat-label">1-30 Days</div><div class="stat-value" style="font-size:18px; color:#b45309;">${d30.toLocaleString('en-US', {minimumFractionDigits: 2})}</div></div>
+              <div class="stat-card" style="padding:16px;"><div class="stat-label">31-60 Days</div><div class="stat-value" style="font-size:18px; color:#c2410c;">${d60.toLocaleString('en-US', {minimumFractionDigits: 2})}</div></div>
+              <div class="stat-card" style="padding:16px;"><div class="stat-label">61-90 Days</div><div class="stat-value" style="font-size:18px; color:#b91c1c;">${d90.toLocaleString('en-US', {minimumFractionDigits: 2})}</div></div>
+              <div class="stat-card" style="padding:16px;"><div class="stat-label">90+ Days</div><div class="stat-value" style="font-size:18px; color:#991b1b;">${d90plus.toLocaleString('en-US', {minimumFractionDigits: 2})}</div></div>
+            </div>
+            <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; overflow:hidden;">
+              <table style="width:100%; border-collapse:collapse; text-align:left;">
+                <thead style="background:#f8fafc; border-bottom:2px solid var(--border);">
+                  <tr>
+                    <th style="padding: 16px; font-size:11px; font-weight:800; color:var(--text-dim); text-transform:uppercase;">Ref ID</th>
+                    <th style="padding: 16px; font-size:11px; font-weight:800; color:var(--text-dim); text-transform:uppercase;">Supplier</th>
+                    <th style="padding: 16px; font-size:11px; font-weight:800; color:var(--text-dim); text-transform:uppercase;">Aging Status</th>
+                    <th style="padding: 16px; font-size:11px; font-weight:800; color:var(--text-dim); text-transform:uppercase;">Amount (THB)</th>
+                    <th style="padding: 16px; font-size:11px; font-weight:800; color:var(--text-dim); text-transform:uppercase;">Due Date</th>
+                    <th style="padding: 16px; text-align:right;">Original File</th>
+                  </tr>
+                </thead>
+                <tbody>${rows || `<tr><td colspan="6" style="padding:40px; text-align:center; color:var(--text-dim); font-weight:600;">No pending invoices found for this filter.</td></tr>`}</tbody>
+              </table>
+            </div>
+          `;
+          return;
+      }
+
+      // ----------------------------------------------------
+      // PIPELINE & HISTORY VIEW
+      // ----------------------------------------------------
       container.innerHTML = filtered.map(item => `
         <div class="data-card">
           <div style="flex:1; padding-right:40px;">
