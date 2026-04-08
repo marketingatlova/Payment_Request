@@ -83,10 +83,11 @@
     .btn-process:hover { background: var(--navy-light); transform: scale(1.02); }
     .btn-process:disabled { background: #9ca3af; cursor: not-allowed; transform: none; box-shadow: none; }
     
-    .btn-reject { background: #fff5f5; color: var(--accent); padding: 14px 20px; border-radius: 12px; font-weight: 800; border: 1px solid #fed7d7; cursor: pointer; font-size: 12px; transition: 0.2s; vertical-align: middle; height: 48px; margin-left: 8px;}
-    .btn-reject:hover { background: #fee2e2; }
+    .btn-reject-subtle { background: transparent; color: var(--text-dim); border: none; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; padding: 10px; margin-left: 8px; opacity: 0.6; vertical-align: middle;}
+    .btn-reject-subtle:hover { opacity: 1; color: var(--accent); }
 
     .btn-view-slip { background: var(--green-bg); color: var(--green); text-decoration: none; padding: 14px 28px; border-radius: 12px; font-weight: 800; font-size: 14px; display: inline-block; transition: 0.2s; }
+    .badge-rejected { background: #fee2e2; color: #991b1b; padding: 12px 24px; border-radius: 12px; font-size: 13px; font-weight: 800; display: inline-block; }
 
     .hidden { display: none !important; }
   </style>
@@ -193,7 +194,7 @@
     let currentView = 'pipeline';
     let cache = { pending: [], history: [] };
     let uploadCache = {}; 
-    let activeRejectId = null; // Stores the ID of the item currently being rejected
+    let activeRejectId = null;
 
     async function login() {
       const input = document.getElementById('adminPin');
@@ -210,7 +211,6 @@
         const data = await res.json();
         
         if (data.status === 'success') {
-          // Fetch the user's actual profile name dynamically
           const userRes = await fetch(GAS_URL, { 
             method: 'POST', 
             redirect: 'follow',
@@ -379,8 +379,11 @@
                   <input type="file" class="real-file-input" id="file-${item.id}" onchange="handleFileUpload('${item.id}')" accept="image/*,application/pdf">
                 </div>
                 <button class="btn-process" id="btn-${item.id}" onclick="processPayment('${item.id}')">Process POP</button>
-                <button class="btn-reject" title="Return to Staff" onclick="openRejectModal('${item.id}')">✕ Reject</button>` :
-                `<a href="${item.popUrl}" target="_blank" class="btn-view-slip">View Proof of Payment</a>`
+                <button class="btn-reject-subtle" title="Return to Staff" onclick="openRejectModal('${item.id}')">✕ Return</button>` :
+                (item.popUrl === 'REJECTED' ? 
+                  `<div class="badge-rejected">✕ Returned to Staff</div>` :
+                  `<a href="${item.popUrl}" target="_blank" class="btn-view-slip">View Proof of Payment</a>`
+                )
               }
             </div>
           </div>
@@ -402,7 +405,7 @@
 
     async function confirmReject() {
       const feedback = document.getElementById('rejectFeedback').value.trim();
-      if (!feedback) return alert("Please provide a reason for rejection.");
+      if (!feedback) return alert("Please provide a reason for returning the request.");
 
       const targetInvoice = cache.pending.find(i => i.id === activeRejectId);
       if (!targetInvoice) return alert("Error finding invoice.");
@@ -428,7 +431,7 @@
         
         if (result.status === 'success') {
           closeRejectModal();
-          fetchData(); // Refresh UI to show audit log
+          fetchData(); // Refresh UI to push to vault
         } else {
           alert("Error: " + result.message);
         }
@@ -460,7 +463,7 @@
       const payload = { 
         action: 'submitPOP', 
         pincode: pin,
-        managerName: adminName, // Send the manager's name for the audit log
+        managerName: adminName, 
         invoice: targetInvoice, 
         fileName: cachedFile.name, 
         fileBase64: cachedFile.base64 
