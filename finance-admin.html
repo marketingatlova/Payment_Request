@@ -359,8 +359,8 @@
 
       if (filtered.length === 0) return alert("No data to export for this filter.");
       
-      let csv = '\uFEFF'; // UTF-8 BOM to ensure MS Excel formatting works perfectly
-      csv += 'Reference ID,Entity,Supplier,Submission Date,Due Date,Amount (THB),Aging Bucket,Note,Original Invoice URL\n';
+      let csv = '\uFEFF';
+      csv += 'Reference ID,Entity,Supplier,Submission Date,Due Date,Batch Date,Amount (THB),Aging Bucket,Note,Original Invoice URL\n';
       
       filtered.forEach(item => {
         let diffDays = 0;
@@ -378,7 +378,7 @@
         
         const escape = (str) => `"${(str || '').toString().replace(/"/g, '""')}"`;
         
-        csv += `${escape(item.id)},${escape(item.sheetName)},${escape(item.supplier)},${escape(item.date)},${escape(item.dueDateRaw ? new Date(item.dueDateRaw).toLocaleDateString('en-GB') : '')},${item.amount},${escape(bucket)},${escape(item.note)},${escape(item.invoiceUrl)}\n`;
+        csv += `${escape(item.id)},${escape(item.sheetName)},${escape(item.supplier)},${escape(item.date)},${escape(item.dueDateFormatted)},${escape(item.batchDate)},${item.amount},${escape(bucket)},${escape(item.note)},${escape(item.invoiceUrl)}\n`;
       });
       
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -407,7 +407,15 @@
         return matchesQuery && matchesBrand && matchesDate;
       });
 
-      // Show/Hide Main Stats depending on View
+      // SMART SORTING: Overdue and Due Today prioritize to the top of Pending queue
+      if (currentView === 'pipeline') {
+          filtered.sort((a, b) => {
+             const dateA = a.dueDateRaw ? new Date(a.dueDateRaw).getTime() : 9999999999999;
+             const dateB = b.dueDateRaw ? new Date(b.dueDateRaw).getTime() : 9999999999999;
+             return dateA - dateB;
+          });
+      }
+
       if(currentView === 'aging') {
         document.getElementById('main-stats').classList.add('hidden');
       } else {
@@ -446,7 +454,7 @@
                 <td style="padding: 16px; font-size: 13px; font-weight:600;">${item.supplier}</td>
                 <td style="padding: 16px; font-size: 10px;"><span style="padding:4px 8px; border-radius:4px; font-weight:800; text-transform:uppercase; ${badge}">${bucket}</span></td>
                 <td style="padding: 16px; font-size: 13px; font-weight:800; color:var(--green);">${parseFloat(item.amount).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
-                <td style="padding: 16px; font-size: 12px;">${item.dueDateRaw ? new Date(item.dueDateRaw).toLocaleDateString('en-GB') : 'N/A'}</td>
+                <td style="padding: 16px; font-size: 12px;">${item.dueDateFormatted || 'N/A'}</td>
                 <td style="padding: 16px; text-align:right;">
                   ${item.invoiceUrl ? `<a href="${item.invoiceUrl}" target="_blank" style="color:var(--navy); font-weight:800; text-decoration:underline; font-size:11px;">View Invoice</a>` : '<span style="font-size:11px; color:#aaa;">No File</span>'}
                 </td>
@@ -488,14 +496,24 @@
       // ----------------------------------------------------
       // PIPELINE & HISTORY VIEW
       // ----------------------------------------------------
-      container.innerHTML = filtered.map(item => `
+      container.innerHTML = filtered.map(item => {
+        let isOverdue = false;
+        if (item.dueDateRaw) {
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const due = new Date(item.dueDateRaw);
+            if (due < today) isOverdue = true;
+        }
+
+        return `
         <div class="data-card">
           <div style="flex:1; padding-right:40px;">
             <span class="brand-tag tag-${item.sheetName.split(' ')[0].toLowerCase()}">${item.sheetName}</span>
             <div class="inv-name">${item.supplier}</div>
             <div class="inv-meta">
               ID: <strong>${item.id}</strong> • Requester: <strong>${item.requester}</strong><br>
-              Submission Date: <strong>${item.date}</strong>
+              Due Date: <strong style="${isOverdue && currentView === 'pipeline' ? 'color:#c0392b;' : 'color:var(--navy);'}">${item.dueDateFormatted || 'N/A'} ${isOverdue && currentView === 'pipeline' ? '(OVERDUE)' : ''}</strong><br>
+              Batch Date: <strong style="color:var(--accent);">${item.batchDate}</strong>
             </div>
             ${item.note ? `<div class="inv-note">Note: ${item.note}</div>` : ''}
             ${item.auditLog ? `<div style="font-size: 10px; font-style: italic; color: #b45309; background: #fef3c7; padding: 6px 10px; border-radius: 6px; display: inline-block; margin-top: 12px; font-weight: 700;">${item.auditLog}</div>` : ''}
@@ -518,10 +536,9 @@
             </div>
           </div>
         </div>
-      `).join('');
+      `}).join('');
     }
 
-    // --- REJECT / FEEDBACK LOGIC ---
     function openRejectModal(itemId) {
       activeRejectId = itemId;
       document.getElementById('rejectFeedback').value = '';
@@ -561,7 +578,7 @@
         
         if (result.status === 'success') {
           closeRejectModal();
-          fetchData(); // Refresh UI to push to vault
+          fetchData(); 
         } else {
           alert("Error: " + result.message);
         }
@@ -572,7 +589,6 @@
       }
     }
 
-    // --- PROCESS PAYMENT LOGIC ---
     async function processPayment(itemId, attempt = 1) {
       const MAX_ATTEMPTS = 3;
       const btn = document.getElementById(`btn-${itemId}`);
