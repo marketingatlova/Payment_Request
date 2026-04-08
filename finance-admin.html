@@ -14,12 +14,18 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--canvas); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
 
-    /* ==================== LOGIN ==================== */
+    /* ==================== LOGIN & MODALS ==================== */
     .login-overlay { position: fixed; inset: 0; background: var(--navy); z-index: 1000; display: flex; align-items: center; justify-content: center; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(15,19,31,0.85); z-index: 2000; display: flex; align-items: center; justify-content: center; }
     .login-card { background: var(--surface); padding: 48px; border-radius: 20px; text-align: center; width: 100%; max-width: 420px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
-    .login-logo { font-family: 'Playfair Display', serif; font-size: 32px; margin-bottom: 8px; }
+    .modal-card { background: var(--surface); padding: 40px; border-radius: 20px; width: 100%; max-width: 450px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); border: 2px solid var(--accent); text-align: left;}
+    
+    .login-logo { font-family: 'Playfair Display', serif; font-size: 32px; margin-bottom: 8px; text-align:center; }
     .pin-input { width: 100%; height: 60px; text-align: center; font-size: 28px; letter-spacing: 12px; margin: 24px 0; border: 2px solid var(--border); border-radius: 12px; outline: none; transition: 0.2s; }
     .pin-input:focus { border-color: var(--navy); }
+    
+    .feedback-input { width: 100%; height: 100px; padding: 16px; border: 2px solid var(--border); border-radius: 12px; font-family: inherit; font-size: 14px; outline: none; resize: none; margin: 15px 0; transition: 0.2s;}
+    .feedback-input:focus { border-color: var(--accent); }
 
     /* ==================== SIDEBAR ==================== */
     .sidebar { width: 280px; background: var(--navy); color: #fff; display: flex; flex-direction: column; padding: 32px 0; border-right: 1px solid rgba(255,255,255,0.05);}
@@ -63,25 +69,43 @@
     .inv-meta strong { color: var(--navy); font-weight: 700; }
     
     /* ==================== ACTION ZONE ==================== */
-    .action-container { text-align: right; min-width: 340px; }
+    .action-container { text-align: right; min-width: 380px; }
     .inv-amount { font-size: 38px; font-weight: 900; color: var(--green); margin-bottom: 20px; letter-spacing: -1px; }
 
-    .custom-upload { position: relative; display: inline-flex; align-items: center; margin-right: 12px; }
-    .btn-file-proxy { background: #f1f3f4; color: var(--text-dim); padding: 14px 20px; border-radius: 12px; font-weight: 700; font-size: 12px; cursor: pointer; border: 1px solid var(--border); transition: 0.2s; white-space: nowrap; max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
+    .custom-upload { position: relative; display: inline-flex; align-items: center; margin-right: 10px; vertical-align: middle;}
+    .btn-file-proxy { background: #f1f3f4; color: var(--text-dim); padding: 10px 16px; border-radius: 12px; font-weight: 700; font-size: 12px; cursor: pointer; border: 1px solid var(--border); transition: 0.2s; width: 140px; text-align:center; display:flex; flex-direction:column; justify-content:center; height: 48px;}
+    .btn-file-proxy span.trunc { display:block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width:100%; }
     .btn-file-proxy:hover { background: #e8eaed; }
     .btn-file-proxy.selected { background: var(--green-bg); color: var(--green); border-color: var(--green); }
-    .real-file-input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .real-file-input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
 
-    .btn-process { background: var(--navy); color: #fff; padding: 14px 32px; border-radius: 12px; font-weight: 700; border: none; cursor: pointer; font-size: 14px; transition: 0.2s; box-shadow: 0 4px 10px rgba(15,19,31,0.2); }
+    .btn-process { background: var(--navy); color: #fff; padding: 14px 24px; border-radius: 12px; font-weight: 700; border: none; cursor: pointer; font-size: 13px; transition: 0.2s; box-shadow: 0 4px 10px rgba(15,19,31,0.2); vertical-align: middle; height: 48px;}
     .btn-process:hover { background: var(--navy-light); transform: scale(1.02); }
     .btn-process:disabled { background: #9ca3af; cursor: not-allowed; transform: none; box-shadow: none; }
     
+    .btn-reject { background: #fff5f5; color: var(--accent); padding: 14px 20px; border-radius: 12px; font-weight: 800; border: 1px solid #fed7d7; cursor: pointer; font-size: 12px; transition: 0.2s; vertical-align: middle; height: 48px; margin-left: 8px;}
+    .btn-reject:hover { background: #fee2e2; }
+
     .btn-view-slip { background: var(--green-bg); color: var(--green); text-decoration: none; padding: 14px 28px; border-radius: 12px; font-weight: 800; font-size: 14px; display: inline-block; transition: 0.2s; }
 
     .hidden { display: none !important; }
   </style>
 </head>
 <body>
+
+  <div id="rejectModal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <h2 style="color: var(--accent); margin-bottom: 8px; font-size: 22px;">Return Payment Request</h2>
+      <p style="font-size: 13px; color: var(--text-dim); line-height: 1.5;">This will return the request back to the staff member's queue and send them an email notification with your feedback below.</p>
+      
+      <textarea id="rejectFeedback" class="feedback-input" placeholder="Explain what needs to be fixed (e.g., 'Wrong amount', 'Missing original receipt')..."></textarea>
+      
+      <div style="display:flex; gap:12px; margin-top:10px;">
+        <button type="button" class="btn-process" style="flex:1; background: #f1f3f4; color: var(--navy); box-shadow:none;" onclick="closeRejectModal()">Cancel</button>
+        <button type="button" class="btn-process" style="flex:1; background: var(--accent); box-shadow:none;" id="btnConfirmReject" onclick="confirmReject()">Confirm Return</button>
+      </div>
+    </div>
+  </div>
 
   <div class="login-overlay" id="loginScreen">
     <div class="login-card">
@@ -110,7 +134,7 @@
   <main class="main-area">
     <header class="top-header">
       <h2 id="viewTitle" style="font-size: 22px; font-weight:800;">Payment Pending POP</h2>
-      <div style="font-size:12px; font-weight:700; color:var(--text-dim);">Authorized Account: <span style="color:var(--green);">Manager</span></div>
+      <div style="font-size:12px; font-weight:700; color:var(--text-dim);">Authorized Account: <span id="adminNameDisp" style="color:var(--green); font-weight: 800;">Manager</span></div>
     </header>
 
     <div class="view-content">
@@ -165,9 +189,11 @@
     // IMPORTANT: Make sure this URL matches your deployed Apps Script web app URL
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbyEUJYIu9_O6E50KzKzdEY4EG2VLo4y0Yj8igGRZVMI_zEapqn5w758gdt_nG5tluEdHA/exec';
     let pin = '';
+    let adminName = 'Manager';
     let currentView = 'pipeline';
     let cache = { pending: [], history: [] };
-    let uploadCache = {}; // Stores pre-read base64 files securely by item ID
+    let uploadCache = {}; 
+    let activeRejectId = null; // Stores the ID of the item currently being rejected
 
     async function login() {
       const input = document.getElementById('adminPin');
@@ -178,12 +204,24 @@
       try {
         const res = await fetch(GAS_URL, { 
           method: 'POST', 
-          redirect: 'follow', // Fixed stability issue
+          redirect: 'follow', 
           body: JSON.stringify({ action: 'verifyAdminLogin', pincode: input.value }) 
         });
         const data = await res.json();
         
         if (data.status === 'success') {
+          // Fetch the user's actual profile name dynamically
+          const userRes = await fetch(GAS_URL, { 
+            method: 'POST', 
+            redirect: 'follow',
+            body: JSON.stringify({ action: 'verifyLogin', pincode: input.value }) 
+          });
+          const userData = await userRes.json();
+          if(userData.status === 'success') {
+             adminName = userData.name;
+             document.getElementById('adminNameDisp').innerText = adminName;
+          }
+
           pin = input.value;
           document.getElementById('loginScreen').style.display = 'none';
           fetchData();
@@ -199,23 +237,25 @@
 
     function logout() {
       pin = '';
+      adminName = 'Manager';
       document.getElementById('adminPin').value = '';
       document.getElementById('loginScreen').style.display = 'flex';
       document.getElementById('loginError').innerText = '';
       document.getElementById('loginBtn').disabled = false;
       document.getElementById('loginBtn').innerText = 'Authorize Session';
+      document.getElementById('adminNameDisp').innerText = 'Manager';
       uploadCache = {};
     }
 
     async function fetchData() {
       document.getElementById('loading').classList.remove('hidden');
       document.getElementById('list').innerHTML = '';
-      uploadCache = {}; // Clear pending uploads on sync
+      uploadCache = {}; 
       
       try {
         const res = await fetch(GAS_URL, { 
           method: 'POST', 
-          redirect: 'follow', // Fixed stability issue
+          redirect: 'follow', 
           body: JSON.stringify({ action: 'getDashboardData', pincode: pin }) 
         });
         cache = await res.json();
@@ -235,16 +275,20 @@
       render();
     }
 
-    // NEW: Safe pre-caching file uploader
     function handleFileUpload(itemId) {
       const input = document.getElementById(`file-${itemId}`);
       const proxy = document.getElementById(`proxy-${itemId}`);
-      const MAX_SIZE = 1.3 * 1024 * 1024; // 1.3MB limit
+      const MAX_SIZE = 1.3 * 1024 * 1024; 
 
-      delete uploadCache[itemId]; // Clear memory for this item
+      delete uploadCache[itemId]; 
+
+      const existingPreview = document.getElementById(`preview-${itemId}`);
+      if (existingPreview) existingPreview.remove();
 
       if (input.files.length) {
-        if (input.files[0].size > MAX_SIZE) {
+        const file = input.files[0];
+        
+        if (file.size > MAX_SIZE) {
           alert("❌ SERVER LIMIT EXCEEDED.\n\nFile must be under 1.3MB. Please compress the file and try again.");
           input.value = null;
           proxy.innerText = "Attach Slip";
@@ -258,10 +302,25 @@
         reader.onload = function() {
           uploadCache[itemId] = {
             base64: reader.result.split(',')[1],
-            name: input.files[0].name
+            name: file.name
           };
-          proxy.innerText = input.files[0].name;
+          
+          proxy.innerHTML = `<span class="trunc">${file.name}</span><span style="font-size:9px; opacity:0.7; margin-top:2px;">Tap to change</span>`;
           proxy.classList.add('selected');
+          
+          if (file.type.startsWith('image/')) {
+             const imgPreview = document.createElement('img');
+             imgPreview.id = `preview-${itemId}`;
+             imgPreview.src = reader.result;
+             imgPreview.style.cssText = "height: 48px; width: 48px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); margin-right: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);";
+             proxy.parentElement.insertBefore(imgPreview, proxy);
+          } else {
+             const docPreview = document.createElement('div');
+             docPreview.id = `preview-${itemId}`;
+             docPreview.innerHTML = "📄";
+             docPreview.style.cssText = "height: 48px; width: 48px; display:flex; align-items:center; justify-content:center; font-size:24px; background:#f1f3f4; border-radius: 8px; border: 1px solid var(--border); margin-right: 12px;";
+             proxy.parentElement.insertBefore(docPreview, proxy);
+          }
         };
         
         reader.onerror = function() {
@@ -271,7 +330,7 @@
           alert("❌ Could not read the file. Please try again.");
         };
         
-        reader.readAsDataURL(input.files[0]);
+        reader.readAsDataURL(file);
       } else {
         proxy.innerText = "Attach Slip";
         proxy.classList.remove('selected');
@@ -299,7 +358,6 @@
       const sum = filtered.reduce((acc, item) => acc + parseFloat(item.amount || 0), 0);
       document.getElementById('stat-total-amount').innerText = sum.toLocaleString('en-US', {minimumFractionDigits: 2});
 
-      // FIXED: Buttons now tie to exact item ID to prevent filtering bugs
       container.innerHTML = filtered.map(item => `
         <div class="data-card">
           <div style="flex:1; padding-right:40px;">
@@ -310,16 +368,18 @@
               Submission Date: <strong>${item.date}</strong>
             </div>
             ${item.note ? `<div class="inv-note">Note: ${item.note}</div>` : ''}
+            ${item.auditLog ? `<div style="font-size: 10px; font-style: italic; color: #b45309; background: #fef3c7; padding: 6px 10px; border-radius: 6px; display: inline-block; margin-top: 12px; font-weight: 700;">${item.auditLog}</div>` : ''}
           </div>
           <div class="action-container">
             <div class="inv-amount">${parseFloat(item.amount).toLocaleString('en-US', {minimumFractionDigits: 2})} <span style="font-size:16px; vertical-align:middle; opacity:0.6;">THB</span></div>
-            <div>
+            <div style="display:flex; justify-content:flex-end; align-items:center;">
               ${currentView === 'pipeline' ? 
                 `<div class="custom-upload">
                   <div class="btn-file-proxy" id="proxy-${item.id}">Attach Slip</div>
                   <input type="file" class="real-file-input" id="file-${item.id}" onchange="handleFileUpload('${item.id}')" accept="image/*,application/pdf">
                 </div>
-                <button class="btn-process" id="btn-${item.id}" onclick="processPayment('${item.id}')">Process POP</button>` :
+                <button class="btn-process" id="btn-${item.id}" onclick="processPayment('${item.id}')">Process POP</button>
+                <button class="btn-reject" title="Return to Staff" onclick="openRejectModal('${item.id}')">✕ Reject</button>` :
                 `<a href="${item.popUrl}" target="_blank" class="btn-view-slip">View Proof of Payment</a>`
               }
             </div>
@@ -328,7 +388,58 @@
       `).join('');
     }
 
-    // NEW: Robust fetch logic with retry backoff and abort controllers
+    // --- REJECT / FEEDBACK LOGIC ---
+    function openRejectModal(itemId) {
+      activeRejectId = itemId;
+      document.getElementById('rejectFeedback').value = '';
+      document.getElementById('rejectModal').classList.remove('hidden');
+    }
+
+    function closeRejectModal() {
+      activeRejectId = null;
+      document.getElementById('rejectModal').classList.add('hidden');
+    }
+
+    async function confirmReject() {
+      const feedback = document.getElementById('rejectFeedback').value.trim();
+      if (!feedback) return alert("Please provide a reason for rejection.");
+
+      const targetInvoice = cache.pending.find(i => i.id === activeRejectId);
+      if (!targetInvoice) return alert("Error finding invoice.");
+
+      const btn = document.getElementById('btnConfirmReject');
+      btn.disabled = true; btn.innerText = "Returning...";
+
+      const payload = {
+        action: 'rejectPOP',
+        pincode: pin,
+        managerName: adminName,
+        reason: feedback,
+        invoice: targetInvoice
+      };
+
+      try {
+        const res = await fetch(GAS_URL, { 
+          method: 'POST', 
+          redirect: 'follow',
+          body: JSON.stringify(payload) 
+        });
+        const result = await res.json();
+        
+        if (result.status === 'success') {
+          closeRejectModal();
+          fetchData(); // Refresh UI to show audit log
+        } else {
+          alert("Error: " + result.message);
+        }
+      } catch (e) {
+        alert("Connection dropped. Please try again.");
+      } finally {
+        btn.disabled = false; btn.innerText = "Confirm Return";
+      }
+    }
+
+    // --- PROCESS PAYMENT LOGIC ---
     async function processPayment(itemId, attempt = 1) {
       const MAX_ATTEMPTS = 3;
       const btn = document.getElementById(`btn-${itemId}`);
@@ -348,7 +459,8 @@
 
       const payload = { 
         action: 'submitPOP', 
-        pincode: pin, 
+        pincode: pin,
+        managerName: adminName, // Send the manager's name for the audit log
         invoice: targetInvoice, 
         fileName: cachedFile.name, 
         fileBase64: cachedFile.base64 
@@ -372,8 +484,8 @@
         try {
           const result = JSON.parse(textResponse);
           if (result.status === 'success') { 
-            delete uploadCache[itemId]; // Clear from memory once done
-            fetchData(); // Resync dashboard
+            delete uploadCache[itemId]; 
+            fetchData(); 
           } else { 
             alert("Server Error: " + result.message); 
             btn.disabled = false; 
