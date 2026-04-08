@@ -80,8 +80,8 @@
 
   <div id="deleteModal" class="login-overlay hidden" style="z-index: 4000; background: rgba(15,19,31,0.85);">
     <div class="login-card" style="border: 2px solid var(--accent); padding: 40px; max-width: 450px;">
-      <h2 style="color: var(--accent); margin-bottom: 10px; font-size: 24px;">⚠️ Overwrite Evidence</h2>
-      <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 20px; line-height: 1.5;">You are attaching a new document. The original invoice will be permanently removed.</p>
+      <h2 style="color: var(--accent); margin-bottom: 10px; font-size: 24px;">⚠️ Delete Evidence</h2>
+      <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 20px; line-height: 1.5;">You are about to permanently remove the attached invoice file. You cannot upload a new one here.</p>
       
       <div style="background: rgba(15,19,31,0.05); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid rgba(15,19,31,0.1);">
         <p style="font-size: 11px; color: var(--text-dim); margin-bottom: 8px; text-transform: uppercase; font-weight:800;">Tap to copy this exact phrase:</p>
@@ -93,7 +93,7 @@
       
       <div style="display:flex; gap:12px; margin-top:10px;">
         <button type="button" class="btn-submit-main" style="margin:0; background: #e4e1db; color: var(--navy); box-shadow:none;" onclick="closeDeleteModal()">Cancel</button>
-        <button type="button" class="btn-submit-main" style="margin:0; background: var(--accent); box-shadow:none;" onclick="confirmDeleteAndSubmit()">Confirm & Save</button>
+        <button type="button" class="btn-submit-main" style="margin:0; background: var(--accent); box-shadow:none;" onclick="confirmDeleteAction()">Confirm Deletion</button>
       </div>
     </div>
   </div>
@@ -170,10 +170,20 @@
 
           <div class="form-section" style="margin-bottom:0">
             <div class="section-header"><div class="step-num">04</div><div class="section-title">Documentation</div></div>
+            
             <div class="upload-zone" id="dropZone" onclick="document.getElementById('invoiceFile').click()">
               <div id="fileNameDisp" style="font-size:13px; font-weight:700; color:var(--text-dim);">Tap to Upload Invoice Document (Max 1.3MB)</div>
               <input type="file" id="invoiceFile" class="hidden" onchange="handleFile(this)" accept="image/*,application/pdf">
             </div>
+
+            <div id="editFilePanel" class="hidden" style="background: #f8fafc; border: 1px solid var(--border); border-radius: 12px; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-size: 13px; font-weight: 800; color: var(--navy);">📄 Attached Document</div>
+                <div style="font-size: 11px; color: var(--text-dim); margin-top: 4px;" id="editFileStatus">Stored securely in vault.</div>
+              </div>
+              <button type="button" id="btnDeleteFile" onclick="openDeleteModal()" style="background: #fff5f5; color: var(--accent); border: 1px solid #fed7d7; padding: 8px 16px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer; transition: 0.2s;">Delete File</button>
+            </div>
+
           </div>
 
           <div class="email-confirmation"><span style="font-size:16px;">✉️</span><span>Proof of Payment receipt will be sent to: <strong id="userEmailDisp">...</strong></span></div>
@@ -197,12 +207,13 @@
   </main>
 
   <script>
-    // IMPORTANT: Make sure this URL matches your NEW Web App Deployment URL
+    // IMPORTANT: Make sure this matches your deployed Google Apps Script URL
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbyEUJYIu9_O6E50KzKzdEY4EG2VLo4y0Yj8igGRZVMI_zEapqn5w758gdt_nG5tluEdHA/exec';
     
     let user = null, pin = '', myData = [];
     let editingId = null;
     let isSubmitting = false;
+    let isFileDeleted = false; // Tracks if the user wants to delete the file on edit
 
     function init() {
       const d = new Date(); const day = d.getDay();
@@ -218,7 +229,6 @@
       try {
         const res = await fetch(GAS_URL, { 
           method: 'POST', 
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({ action: 'verifyLogin', pincode: input.value }) 
         });
         const data = await res.json();
@@ -249,6 +259,7 @@
     function resetToNew() {
       editingId = null;
       isSubmitting = false; 
+      isFileDeleted = false;
       document.getElementById('pageTitle').innerText = 'New Payment Request';
       
       document.getElementById('formWrapper').style.backgroundColor = "transparent";
@@ -266,7 +277,11 @@
 
       document.querySelectorAll('.brand-btn').forEach(b => { b.classList.remove('active'); b.classList.remove('disabled'); });
       document.getElementById('fileNameDisp').innerText = "Tap to Upload Invoice Document (Max 1.3MB)";
+      
+      // UI Toggle: Show Upload, Hide Edit Panel
       document.getElementById('dropZone').classList.remove('active');
+      document.getElementById('dropZone').classList.remove('hidden');
+      document.getElementById('editFilePanel').classList.add('hidden');
       
       const btn = document.getElementById('submitBtn');
       btn.innerText = "Transmit Payment Request";
@@ -298,7 +313,6 @@
       try {
         const res = await fetch(GAS_URL, { 
           method: 'POST', 
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({ action: 'getDashboardData', pincode: pin }) 
         });
         const data = await res.json();
@@ -339,6 +353,7 @@
       const item = myData[idx];
       editingId = item.id;
       isSubmitting = false; 
+      isFileDeleted = false;
       document.getElementById('pageTitle').innerText = "Refine Payment Request";
       
       const brandCodeMap = { 'LAVA': 'LAV', 'Bianca Holdings': 'BIA', 'HolyBelly': 'HOL', 'Lova': 'LOV' };
@@ -375,9 +390,14 @@
       document.getElementById('urgent').checked = (item.urgent === 'Urgent');
       document.getElementById('notes').value = item.note || '';
 
-      document.getElementById('fileNameDisp').innerText = "📎 Current File Saved. Tap to Replace.";
-      document.getElementById('dropZone').classList.remove('active');
-      document.getElementById('invoiceFile').value = null; 
+      // UI Toggle: Hide Upload, Show Edit Panel
+      document.getElementById('dropZone').classList.add('hidden');
+      document.getElementById('editFilePanel').classList.remove('hidden');
+      
+      // Reset Edit Panel to Default State
+      document.getElementById('btnDeleteFile').classList.remove('hidden');
+      document.getElementById('editFileStatus').innerText = "Stored securely in vault.";
+      document.getElementById('editFileStatus').style.color = "var(--text-dim)";
       
       const btn = document.getElementById('submitBtn');
       btn.innerText = "Save & Update Vault";
@@ -386,9 +406,12 @@
       showTab('form');
     }
 
-    // THE UPDATED MEMORY GATE: Reduced to 1.3MB to account for 33% Base64 inflation
     function handleFile(input) { 
       const MAX_SIZE = 1.3 * 1024 * 1024; 
+      
+      window._cachedBase64 = null;
+      window._cachedFileName = null;
+      
       if (input.files.length) { 
         if(input.files[0].size > MAX_SIZE) {
           alert("❌ GOOGLE SERVER LIMIT EXCEEDED.\n\nTo ensure reliable processing, files must be under 1.3MB. Your file is " + (input.files[0].size / 1024 / 1024).toFixed(1) + "MB.\n\nPlease compress this document before uploading.");
@@ -397,8 +420,23 @@
           document.getElementById('fileNameDisp').innerText = "Tap to Upload Invoice Document (Max 1.3MB)";
           return;
         }
-        document.getElementById('fileNameDisp').innerText = "📎 Ready to Upload: " + input.files[0].name; 
-        document.getElementById('dropZone').classList.add('active'); 
+        
+        const reader = new FileReader();
+        reader.onload = function() {
+          window._cachedBase64 = reader.result.split(',')[1];
+          window._cachedFileName = input.files[0].name;
+          document.getElementById('fileNameDisp').innerText = "📎 Ready to Upload: " + input.files[0].name; 
+          document.getElementById('dropZone').classList.add('active'); 
+        };
+        reader.onerror = function() {
+          window._cachedBase64 = null;
+          window._cachedFileName = null;
+          input.value = null;
+          document.getElementById('fileNameDisp').innerText = "Tap to Upload Invoice Document (Max 1.3MB)";
+          document.getElementById('dropZone').classList.remove('active');
+          alert("❌ Could not read file. Please try again.");
+        };
+        reader.readAsDataURL(input.files[0]);
       } 
     }
 
@@ -416,86 +454,107 @@
         return;
       }
 
+      // Block submission only if it's a NEW request and there is no file.
+      // Edits no longer require file checks here.
       if (!editingId && document.getElementById('invoiceFile').files.length === 0) {
         alert("Please attach an invoice document.");
         return;
       }
 
-      if (editingId && document.getElementById('invoiceFile').files.length > 0) {
-        document.getElementById('deleteModal').classList.remove('hidden');
-      } else { 
-        isSubmitting = true;
-        executeBackendCall(); 
-      }
+      isSubmitting = true;
+      executeBackendCall(); 
+    }
+
+    function openDeleteModal() {
+      document.getElementById('deleteModal').classList.remove('hidden');
     }
 
     function closeDeleteModal() {
-      isSubmitting = false; 
       document.getElementById('deleteModal').classList.add('hidden');
       document.getElementById('delPin').value = '';
       document.getElementById('delConfirm').value = '';
     }
 
-    function confirmDeleteAndSubmit() {
+    function confirmDeleteAction() {
       if (document.getElementById('delPin').value !== pin) {
-        isSubmitting = false; 
         return alert("Incorrect PIN");
       }
       if (document.getElementById('delConfirm').value !== "Delete this file") {
-        isSubmitting = false; 
         return alert("Please copy and paste the exact confirmation phrase.");
       }
+      
+      isFileDeleted = true;
       closeDeleteModal();
-      isSubmitting = true; 
-      executeBackendCall();
+      
+      // Update the UI to reflect marked deletion
+      document.getElementById('btnDeleteFile').classList.add('hidden');
+      document.getElementById('editFileStatus').innerText = "❌ File marked for deletion (applied upon saving).";
+      document.getElementById('editFileStatus').style.color = "var(--accent)";
     }
 
     function executeBackendCall() {
       const btn = document.getElementById('submitBtn'); 
-      const fileInput = document.getElementById('invoiceFile');
-      const file = fileInput.files.length > 0 ? fileInput.files[0] : null;
       const brand = document.getElementById('brand').value;
       
       btn.disabled = true; 
       btn.innerText = "Transmitting to Vault...";
-      
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = async function() { await sendPayload(brand, file.name, reader.result.split(',')[1], btn); };
-        reader.onerror = function() {
-          isSubmitting = false;
-          btn.disabled = false;
-          btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request";
-          alert("Browser could not read the file. Please try again.");
-        };
-        reader.readAsDataURL(file);
-      } else { 
-        sendPayload(brand, null, null, btn); 
+
+      // If we are editing, we bypass file caching entirely since edits just send info/deletion flag
+      if (editingId) {
+         sendPayload(brand, null, null, btn);
+         return;
       }
+
+      const fBase64 = window._cachedBase64 || null;
+      const fName = window._cachedFileName || null;
+
+      if (!editingId && (!fBase64 || !fName)) {
+        isSubmitting = false;
+        btn.disabled = false;
+        btn.innerText = "Transmit Payment Request";
+        alert("❌ File data was lost. Please re-select your invoice document and try again.");
+        return;
+      }
+
+      sendPayload(brand, fName, fBase64, btn);
     }
 
-    async function sendPayload(brand, fName, fBase64, btn) {
+    async function sendPayload(brand, fName, fBase64, btn, attempt = 1) {
+      const MAX_ATTEMPTS = 3;
+      
       const payload = { 
         action: editingId ? 'editRequest' : 'submitRequest', id: editingId, brand, 
         requestTitle: document.getElementById('supplier').value, amount: document.getElementById('amount').value, 
         documentType: document.getElementById('docType').value, dueDate: document.getElementById('dueDate').value, 
         isUrgent: document.getElementById('urgent').checked, note: document.getElementById('notes').value, 
-        fileName: fName, fileBase64: fBase64, userName: user.name, email: user.email, pincode: pin 
+        fileName: fName, fileBase64: fBase64, userName: user.name, email: user.email, pincode: pin,
+        deleteFile: isFileDeleted // Added flag to tell backend to trash the file
       };
       
+      if (attempt > 1) {
+        btn.innerText = `Retrying... (Attempt ${attempt}/${MAX_ATTEMPTS})`;
+      }
+      
+      let timeoutId;
       try {
+        const controller = new AbortController();
+        timeoutId = setTimeout(() => controller.abort(), 55000);
+        
         const res = await fetch(GAS_URL, { 
           method: 'POST', 
           redirect: 'follow',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          signal: controller.signal,
           body: JSON.stringify(payload) 
         });
         
+        clearTimeout(timeoutId);
         const textResponse = await res.text(); 
         
         try {
           const result = JSON.parse(textResponse);
           if (result.status === 'success') { 
+            window._cachedBase64 = null;
+            window._cachedFileName = null;
             isSubmitting = false; 
             document.getElementById('formWrapper').classList.add('hidden'); 
             document.getElementById('successMsg').classList.remove('hidden'); 
@@ -510,10 +569,21 @@
           alert("Data anomaly. The server threw a text error. \n\nError: " + textResponse.substring(0, 100));
           btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request";
         }
+
       } catch (e) { 
+        if (timeoutId) clearTimeout(timeoutId);
+        
+        // Only trigger retries if it's a NEW upload. Edits are small JSON payloads and won't fail due to connection drops.
+        if (!editingId && attempt < MAX_ATTEMPTS) {
+          const waitSeconds = attempt * 4; 
+          btn.innerText = `Connection issue. Retrying in ${waitSeconds}s...`;
+          await new Promise(resolve => setTimeout(resolve, waitSeconds * 1000));
+          return sendPayload(brand, fName, fBase64, btn, attempt + 1);
+        }
+        
         console.error("Fetch Error:", e);
         isSubmitting = false;
-        alert("CRITICAL ERROR: Connection dropped. Please verify the file is not too large and that your connection is stable."); 
+        alert(`❌ CONNECTION FAILED.\n\nPlease check your network connection and try again.`); 
         btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request"; 
       }
     }
