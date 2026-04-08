@@ -207,6 +207,7 @@
     let pin = '';
     let adminName = 'Manager';
     let currentView = 'pipeline';
+    let vaultSubView = 'pending'; // State for the Vault Tabs
     let cache = { pending: [], history: [] };
     let uploadCache = {}; 
     let activeRejectId = null;
@@ -371,7 +372,7 @@
         const file = input.files[0];
         
         if (file.size > MAX_SIZE) {
-          alert("❌ SERVER LIMIT EXCEEDED.\n\nFile must be under 1.3MB.");
+          alert("❌ SERVER LIMIT EXCEEDED.\n\nFile must be under 1.3MB. Please compress the file and try again.");
           input.value = null; proxy.innerText = "Attach Slip"; proxy.classList.remove('selected'); return;
         }
 
@@ -395,7 +396,7 @@
              proxy.parentElement.insertBefore(docPreview, proxy);
           }
         };
-        reader.onerror = function() { input.value = null; proxy.innerText = "Attach Slip"; proxy.classList.remove('selected'); alert("❌ Could not read the file."); };
+        reader.onerror = function() { input.value = null; proxy.innerText = "Attach Slip"; proxy.classList.remove('selected'); alert("❌ Could not read the file. Please try again."); };
         reader.readAsDataURL(file);
       } else {
         proxy.innerText = "Attach Slip"; proxy.classList.remove('selected');
@@ -543,10 +544,38 @@
           return;
       }
 
-      // ----------------------------------------------------
-      // PIPELINE & HISTORY VIEW
-      // ----------------------------------------------------
-      container.innerHTML = filtered.map(item => {
+      let htmlStr = '';
+
+      // --- SUB-TABS FOR HISTORY VIEW (AWAITING TAX VS COMPLETED) ---
+      if (currentView === 'history') {
+        const pendingTaxes = filtered.filter(i => i.taxStatus === 'Pending' && i.popUrl !== 'REJECTED');
+        const completedTaxes = filtered.filter(i => i.taxStatus !== 'Pending' || i.popUrl === 'REJECTED');
+        const listToRender = vaultSubView === 'pending' ? pendingTaxes : completedTaxes;
+
+        htmlStr += `
+          <div style="display:flex; gap:12px; margin-bottom: 24px;">
+            <button onclick="vaultSubView='pending'; render()" style="flex:1; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 800; cursor: pointer; border: 1px solid ${vaultSubView === 'pending' ? '#c2410c' : 'var(--border)'}; background: ${vaultSubView === 'pending' ? '#fff7ed' : '#f8fafc'}; color: ${vaultSubView === 'pending' ? '#c2410c' : 'var(--text-dim)'}; box-shadow: ${vaultSubView === 'pending' ? '0 4px 12px rgba(194,65,12,0.1)' : 'none'}; transition:0.2s;">⚠️ Awaiting Tax Invoices (${pendingTaxes.length})</button>
+            <button onclick="vaultSubView='completed'; render()" style="flex:1; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 800; cursor: pointer; border: 1px solid ${vaultSubView === 'completed' ? 'var(--green)' : 'var(--border)'}; background: ${vaultSubView === 'completed' ? 'var(--green-bg)' : '#f8fafc'}; color: ${vaultSubView === 'completed' ? 'var(--green)' : 'var(--text-dim)'}; box-shadow: ${vaultSubView === 'completed' ? '0 4px 12px rgba(22,101,52,0.1)' : 'none'}; transition:0.2s;">✓ Completed Records (${completedTaxes.length})</button>
+          </div>
+        `;
+
+        if (listToRender.length === 0) {
+            htmlStr += `<div style="text-align:center; padding: 60px; color: var(--text-dim); font-weight: 700;">No records found in this category.</div>`;
+        } else {
+            htmlStr += listToRender.map(item => generateCardHTML(item)).join('');
+        }
+      } else {
+         if (filtered.length === 0) {
+            htmlStr += `<div style="text-align:center; padding: 60px; color: var(--text-dim); font-weight: 700;">Queue is empty.</div>`;
+         } else {
+            htmlStr += filtered.map(item => generateCardHTML(item)).join('');
+         }
+      }
+
+      container.innerHTML = htmlStr;
+    }
+
+    function generateCardHTML(item) {
         let isOverdue = false;
         if (item.dueDateRaw) {
             const today = new Date(); today.setHours(0,0,0,0);
@@ -557,7 +586,6 @@
         let taxWarningBadge = '';
         let taxActions = '';
         
-        // Render Tax UI for Vault History only
         if (currentView === 'history' && item.taxStatus === 'Pending' && item.popUrl !== 'REJECTED') {
            taxWarningBadge = `<span style="font-size: 10px; font-weight: 800; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; background: #ffedd5; color: #c2410c; margin-left: 10px; vertical-align: middle;">⚠️ Awaiting Tax Invoice</span>`;
            taxActions = `
@@ -602,8 +630,7 @@
               }
             </div>
           </div>
-        </div>
-      `}).join('');
+        </div>`;
     }
 
     function openRejectModal(itemId) {
