@@ -24,7 +24,8 @@
     .sidebar-batch { margin: 20px 20px 0; padding: 18px; background: rgba(255,255,255,0.03); border-radius: 14px; border: 1px solid rgba(255,255,255,0.05); }
     .batch-label { font-size: 9px; font-weight: 800; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
     .batch-date { font-size: 13px; font-weight: 700; color: #60a5fa; }
-    .nav-logout { margin-top: auto; padding: 20px 30px; font-size: 11px; color: rgba(255,255,255,0.2); cursor: pointer; border-top: 1px solid rgba(255,255,255,0.05); }
+    .nav-logout { padding: 15px 30px; font-size: 11px; color: rgba(255,255,255,0.2); cursor: pointer; border-top: 1px solid rgba(255,255,255,0.05); transition: 0.2s; }
+    .nav-logout:hover { color: #ff7675; }
 
     .main-area { flex: 1; display: flex; flex-direction: column; height: 100vh; }
     .top-header { background: var(--surface); padding: 18px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
@@ -117,7 +118,11 @@
     <div class="nav-item active" id="navForm" onclick="resetToNew()">New Payment Request</div>
     <div class="nav-item" id="navHistory" onclick="showTab('history')">My Activity Log</div>
     <div class="sidebar-batch"><div class="batch-label">Next Payment Batch</div><div class="batch-date" id="payFriday">Loading...</div></div>
-    <div class="nav-logout" onclick="location.reload()">Logout Portal</div>
+    
+    <div style="margin-top:auto; padding: 20px 30px 0;">
+      <button onclick="fetchHistory()" style="width:100%; padding:10px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#fff; border-radius:10px; cursor:pointer; font-size:11px; font-weight:700; margin-bottom:10px; transition:0.2s;">↻ Sync Data</button>
+      <div class="nav-logout" style="margin-top:0;" onclick="location.reload()">Logout Portal</div>
+    </div>
   </aside>
 
   <main class="main-area">
@@ -166,8 +171,18 @@
           <div class="form-section">
             <div class="section-header"><div class="step-num">03</div><div class="section-title">Schedule & Priority</div></div>
             <div class="grid-pair">
-              <div class="input-group"><div class="label">Due Date</div><input type="date" id="dueDate" class="input"></div>
-              <div class="input-group"><div class="label">Urgency</div><label class="urgent-row" for="urgent"><span style="font-size:11px; font-weight:800; color:var(--accent);">FLAG URGENT</span><input type="checkbox" id="urgent" class="checkbox"></label></div>
+              <div class="input-group">
+                <div class="label">Due Date</div>
+                <input type="date" id="dueDate" class="input" onchange="updatePredictedBatch()">
+                <div id="predictedBatchDisp" style="font-size: 10px; color: var(--text-dim); font-style: italic; margin-top: 4px;"></div>
+              </div>
+              <div class="input-group">
+                <div class="label">Urgency</div>
+                <label class="urgent-row" for="urgent">
+                  <span style="font-size:11px; font-weight:800; color:var(--accent);">FLAG URGENT</span>
+                  <input type="checkbox" id="urgent" class="checkbox" onchange="updatePredictedBatch()">
+                </label>
+              </div>
             </div>
             <div class="input-group" style="margin:0"><div class="label">Payment Note</div><input type="text" id="notes" class="input" placeholder="What is this paying for?"></div>
           </div>
@@ -213,6 +228,66 @@
   <script>
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbyEUJYIu9_O6E50KzKzdEY4EG2VLo4y0Yj8igGRZVMI_zEapqn5w758gdt_nG5tluEdHA/exec';
     
+    const HOLIDAYS_2026 = {
+      '2026-01-01': "New Year's Day", '2026-01-02': "Special Holiday", '2026-03-03': "Makha Bucha",
+      '2026-04-06': "Chakri Day", '2026-04-13': "Songkran", '2026-04-14': "Songkran", '2026-04-15': "Songkran",
+      '2026-05-01': "Labor Day", '2026-05-04': "Coronation Day", '2026-06-01': "Visakha Bucha",
+      '2026-06-03': "Queen's Birthday", '2026-07-28': "King's Birthday", '2026-07-29': "Asarnha Bucha",
+      '2026-08-12': "Queen Mother's Birthday", '2026-10-13': "King Bhumibol Memorial",
+      '2026-10-23': "King Chulalongkorn Memorial", '2026-12-07': "King Bhumibol Birthday Sub",
+      '2026-12-10': "Constitution Day", '2026-12-31': "New Year's Eve"
+    };
+
+    function resolveHoliday(d) {
+      let y = d.getFullYear(); let m = String(d.getMonth() + 1).padStart(2, '0'); let dayStr = String(d.getDate()).padStart(2, '0');
+      let dateStr = `${y}-${m}-${dayStr}`;
+      if (HOLIDAYS_2026[dateStr]) {
+          let day = d.getDay();
+          if (day === 5) d.setDate(d.getDate() + 4); 
+          else if (day === 2) d.setDate(d.getDate() + 3); 
+          else d.setDate(d.getDate() + 1); 
+          return resolveHoliday(d);
+      }
+      return d;
+    }
+
+    function calculateEarliestBatch(subDate) {
+      let d = new Date(subDate); let day = d.getDay(); let targetDate = new Date(d);
+      if (day === 2 || day === 3 || day === 4) { targetDate.setDate(d.getDate() + (5 - day)); } 
+      else { let add = day === 5 ? 4 : (day === 6 ? 3 : (day === 0 ? 2 : 1)); targetDate.setDate(d.getDate() + add); }
+      return resolveHoliday(targetDate);
+    }
+
+    function updatePredictedBatch() {
+      const dueVal = document.getElementById('dueDate').value;
+      const isUrgent = document.getElementById('urgent').checked;
+      const disp = document.getElementById('predictedBatchDisp');
+      
+      if (isUrgent) {
+        disp.innerHTML = '<span style="color:var(--accent);">Predicted Batch: URGENT (Immediate)</span>';
+        return;
+      }
+      if (!dueVal) { disp.innerHTML = ''; return; }
+
+      let earliest = calculateEarliestBatch(new Date());
+      let due = new Date(dueVal); due.setHours(0,0,0,0);
+      
+      let jit = new Date(due); let dueDay = jit.getDay();
+      if (dueDay === 1) jit.setDate(jit.getDate() - 3);
+      else if (dueDay === 3) jit.setDate(jit.getDate() - 1);
+      else if (dueDay === 4) jit.setDate(jit.getDate() - 2);
+      else if (dueDay === 6) jit.setDate(jit.getDate() - 1);
+      else if (dueDay === 0) jit.setDate(jit.getDate() - 2);
+      
+      jit = resolveHoliday(jit);
+
+      let earliestMid = new Date(earliest); earliestMid.setHours(0,0,0,0);
+      let jitMid = new Date(jit); jitMid.setHours(0,0,0,0);
+
+      let finalDate = jitMid.getTime() < earliestMid.getTime() ? earliest : jit;
+      disp.innerHTML = `Predicted Batch: <strong>${finalDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</strong>`;
+    }
+
     let user = null, pin = '', myData = [];
     let editingId = null;
     let isSubmitting = false;
@@ -270,6 +345,7 @@
       document.getElementById('amount').value = '';
       document.getElementById('dueDate').value = '';
       document.getElementById('notes').value = '';
+      document.getElementById('predictedBatchDisp').innerHTML = '';
       document.getElementById('urgent').checked = false;
       document.getElementById('invoiceFile').value = null;
 
@@ -297,15 +373,13 @@
       const d = new Date(origDateRaw);
       if (isNaN(d.getTime())) return true;
       
-      let day = d.getDay();
-      let targetDate = new Date(d);
+      let day = d.getDay(); let targetDate = new Date(d);
       if (day === 2 || day === 3 || day === 4) targetDate.setDate(d.getDate() + (5 - day));
-      else {
-         let add = day === 5 ? 4 : (day === 6 ? 3 : (day === 0 ? 2 : 1));
-         targetDate.setDate(d.getDate() + add);
-      }
-      const cutoff = new Date(targetDate);
-      cutoff.setDate(targetDate.getDate() - 1);
+      else { let add = day === 5 ? 4 : (day === 6 ? 3 : (day === 0 ? 2 : 1)); targetDate.setDate(d.getDate() + add); }
+      
+      const limitDate = resolveHoliday(targetDate);
+      const cutoff = new Date(limitDate);
+      cutoff.setDate(limitDate.getDate() - 1);
       cutoff.setHours(23, 59, 59, 999);
       return new Date() <= cutoff;
     }
@@ -406,6 +480,8 @@
       
       document.getElementById('urgent').checked = (item.urgent === 'Urgent');
       document.getElementById('notes').value = item.note || '';
+      
+      updatePredictedBatch(); // Instantly calculate the batch on edit open
 
       document.getElementById('dropZone').classList.add('hidden');
       document.getElementById('editFilePanel').classList.remove('hidden');
