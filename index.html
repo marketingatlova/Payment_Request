@@ -116,7 +116,7 @@
     <div class="sidebar-brand"><h1 style="font-family:'Playfair Display'; font-size:28px; letter-spacing:1px;">LOVA</h1></div>
     <div class="nav-item active" id="navForm" onclick="resetToNew()">New Payment Request</div>
     <div class="nav-item" id="navHistory" onclick="showTab('history')">My Activity Log</div>
-    <div class="sidebar-batch"><div class="batch-label">Next Payment Batch</div><div class="batch-date" id="payFriday">...</div></div>
+    <div class="sidebar-batch"><div class="batch-label">Next Payment Batch</div><div class="batch-date" id="payFriday">Loading...</div></div>
     <div class="nav-logout" onclick="location.reload()">Logout Portal</div>
   </aside>
 
@@ -213,43 +213,10 @@
   <script>
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbyEUJYIu9_O6E50KzKzdEY4EG2VLo4y0Yj8igGRZVMI_zEapqn5w758gdt_nG5tluEdHA/exec';
     
-    // NEW: 2026 Holiday Dictionary to sync the Staff Sidebar Batch Date
-    const HOLIDAYS_2026 = {
-      '2026-01-01': "New Year's Day", '2026-01-02': "Special Holiday", '2026-03-03': "Makha Bucha",
-      '2026-04-06': "Chakri Day", '2026-04-13': "Songkran", '2026-04-14': "Songkran", '2026-04-15': "Songkran",
-      '2026-05-01': "Labor Day", '2026-05-04': "Coronation Day", '2026-06-01': "Visakha Bucha",
-      '2026-06-03': "Queen's Birthday", '2026-07-28': "King's Birthday", '2026-07-29': "Asarnha Bucha",
-      '2026-08-12': "Queen Mother's Birthday", '2026-10-13': "King Bhumibol Memorial",
-      '2026-10-23': "King Chulalongkorn Memorial", '2026-12-07': "King Bhumibol Birthday Sub",
-      '2026-12-10': "Constitution Day", '2026-12-31': "New Year's Eve"
-    };
-
     let user = null, pin = '', myData = [];
     let editingId = null;
     let isSubmitting = false;
     let isFileDeleted = false; 
-
-    function init() {
-      const d = new Date(); 
-      let daysUntilFriday = (5 - d.getDay() + 7) % 7;
-      if (daysUntilFriday === 0) daysUntilFriday = 7;
-      
-      const target = new Date(d);
-      target.setDate(d.getDate() + daysUntilFriday);
-      
-      const y = target.getFullYear();
-      const m = String(target.getMonth() + 1).padStart(2, '0');
-      const day = String(target.getDate()).padStart(2, '0');
-      const dateStr = `${y}-${m}-${day}`;
-      
-      if (HOLIDAYS_2026[dateStr]) {
-        target.setDate(target.getDate() + 4);
-        document.getElementById('payFriday').innerHTML = target.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + `<br><span style="font-size:8px; color:#ff7675; line-height:1;">Shifted (PH: ${HOLIDAYS_2026[dateStr]})</span>`;
-      } else {
-        document.getElementById('payFriday').innerText = target.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-      }
-    }
-    init();
 
     async function login() {
       const input = document.getElementById('staffPin'); const btn = document.getElementById('loginBtn');
@@ -266,6 +233,7 @@
           user = data; pin = input.value; 
           document.getElementById('userNameBadge').innerText = data.name; 
           document.getElementById('userEmailDisp').innerText = data.email;
+          document.getElementById('payFriday').innerHTML = data.nextBatchStr;
           document.getElementById('loginScreen').style.display = 'none'; 
         }
         else { document.getElementById('loginError').innerText = data.message; btn.disabled = false; btn.innerText = 'Authorize Session'; }
@@ -328,11 +296,16 @@
       if (!origDateRaw) return true;
       const d = new Date(origDateRaw);
       if (isNaN(d.getTime())) return true;
-      const day = d.getDay();
-      const diff = d.getDate() + (day <= 5 ? (5 - day) : (5 - day + 7));
-      const targetFriday = new Date(d.setDate(diff));
-      const cutoff = new Date(targetFriday);
-      cutoff.setDate(targetFriday.getDate() - 1);
+      
+      let day = d.getDay();
+      let targetDate = new Date(d);
+      if (day === 2 || day === 3 || day === 4) targetDate.setDate(d.getDate() + (5 - day));
+      else {
+         let add = day === 5 ? 4 : (day === 6 ? 3 : (day === 0 ? 2 : 1));
+         targetDate.setDate(d.getDate() + add);
+      }
+      const cutoff = new Date(targetDate);
+      cutoff.setDate(targetDate.getDate() - 1);
       cutoff.setHours(23, 59, 59, 999);
       return new Date() <= cutoff;
     }
@@ -349,6 +322,8 @@
         
         if (data.status !== 'success') throw new Error('Auth Denied');
         
+        if (data.nextBatchStr) document.getElementById('payFriday').innerHTML = data.nextBatchStr;
+
         document.getElementById('histLoading').classList.add('hidden');
         myData = [...data.pending, ...data.history].filter(i => i.requester.toLowerCase().trim() === user.name.toLowerCase().trim());
         
@@ -369,7 +344,7 @@
                 <span class="hist-brand-tag">${item.sheetName}</span>
                 <div style="font-size: 18px; font-weight: 800; color: var(--navy);">${item.supplier}</div>
                 <div style="font-size: 12px; color: var(--text-dim); margin-top:4px;">ID: <strong>${item.id}</strong> • Submitted: <strong>${item.date}</strong></div>
-                <div style="font-size: 12px; color: var(--text-dim); margin-top:2px;">Batch Date: <strong style="color:var(--accent);">${item.batchDate}</strong></div>
+                <div style="font-size: 12px; color: var(--text-dim); margin-top:2px;">Expected Batch Date: <strong style="color:var(--accent);">${item.batchDate}</strong></div>
                 ${item.auditLog && !isRejected ? `<div class="audit-tag">${item.auditLog}</div>` : ''}
               </div>
               <div style="text-align:right;">
