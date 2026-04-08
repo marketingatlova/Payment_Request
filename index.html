@@ -67,7 +67,12 @@
 
     /* HISTORY */
     #tabHistory { width: 100%; max-width: 850px; margin: 0 auto; overflow-y: auto; padding-bottom: 50px; }
-    .history-card { background: #fff; border-radius: 16px; padding: 24px; border: 1px solid var(--border); margin-bottom: 16px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
+    .history-card { background: #fff; border-radius: 16px; padding: 24px; border: 1px solid var(--border); margin-bottom: 16px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); transition: 0.2s;}
+    
+    /* REJECTED VISUALS */
+    .history-card.rejected { background: #f9fafb; border: 1px dashed #d1d5db; opacity: 0.85; }
+    .reject-warning { margin-top: 16px; padding: 12px 16px; background: #fef2f2; color: #991b1b; border-radius: 8px; font-size: 13px; font-weight: 700; border-left: 4px solid #ef4444; }
+
     .hist-brand-tag { font-size: 9px; font-weight: 800; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; background: #f1f3f4; color: var(--navy); margin-bottom: 8px; display: inline-block; letter-spacing: 0.5px; }
     .btn-edit { background: #f8fafc; border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 800; color: var(--navy); cursor: pointer; transition: 0.2s; margin-left: 10px;}
     .btn-edit:hover { background: var(--border); }
@@ -213,7 +218,7 @@
     let user = null, pin = '', myData = [];
     let editingId = null;
     let isSubmitting = false;
-    let isFileDeleted = false; // Tracks if the user wants to delete the file on edit
+    let isFileDeleted = false; 
 
     function init() {
       const d = new Date(); const day = d.getDay();
@@ -229,6 +234,7 @@
       try {
         const res = await fetch(GAS_URL, { 
           method: 'POST', 
+          redirect: 'follow',
           body: JSON.stringify({ action: 'verifyLogin', pincode: input.value }) 
         });
         const data = await res.json();
@@ -278,7 +284,6 @@
       document.querySelectorAll('.brand-btn').forEach(b => { b.classList.remove('active'); b.classList.remove('disabled'); });
       document.getElementById('fileNameDisp').innerText = "Tap to Upload Invoice Document (Max 1.3MB)";
       
-      // UI Toggle: Show Upload, Hide Edit Panel
       document.getElementById('dropZone').classList.remove('active');
       document.getElementById('dropZone').classList.remove('hidden');
       document.getElementById('editFilePanel').classList.add('hidden');
@@ -313,6 +318,7 @@
       try {
         const res = await fetch(GAS_URL, { 
           method: 'POST', 
+          redirect: 'follow',
           body: JSON.stringify({ action: 'getDashboardData', pincode: pin }) 
         });
         const data = await res.json();
@@ -324,26 +330,38 @@
         
         if (myData.length === 0) return list.innerHTML = '<center style="padding:40px; color:#aaa; font-weight:600;">No history found.</center>';
         
-        list.innerHTML = myData.map((item, idx) => `
-          <div class="history-card">
+        list.innerHTML = myData.map((item, idx) => {
+          // Detect if the item was rejected by Finance
+          const isRejected = item.popUrl === 'REJECTED';
+          let rejectReason = '';
+          if (isRejected && item.auditLog) {
+             const splitLog = item.auditLog.split('- Reason: ');
+             rejectReason = splitLog.length > 1 ? splitLog[1] : 'Please check with Finance.';
+          }
+
+          return `
+          <div class="history-card ${isRejected ? 'rejected' : ''}">
             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
               <div>
                 <span class="hist-brand-tag">${item.sheetName}</span>
                 <div style="font-size: 18px; font-weight: 800; color: var(--navy);">${item.supplier}</div>
                 <div style="font-size: 12px; color: var(--text-dim); margin-top:4px;">ID: <strong>${item.id}</strong> • Submitted: <strong>${item.date}</strong></div>
-                ${item.auditLog ? `<div class="audit-tag">⚠️ ${item.auditLog}</div>` : ''}
+                ${item.auditLog && !isRejected ? `<div class="audit-tag">${item.auditLog}</div>` : ''}
               </div>
               <div style="text-align:right;">
-                <div style="font-size: 20px; font-weight: 800; color: var(--green);">${parseFloat(item.amount).toLocaleString('en-US', {minimumFractionDigits: 2})} <span style="font-size:12px; opacity:0.6;">THB</span></div>
+                <div style="font-size: 20px; font-weight: 800; color: ${isRejected ? 'var(--text-dim)' : 'var(--green)'};">${parseFloat(item.amount).toLocaleString('en-US', {minimumFractionDigits: 2})} <span style="font-size:12px; opacity:0.6;">THB</span></div>
                 <div style="margin-top: 8px; display:flex; align-items:center; justify-content:flex-end;">
-                  <span style="font-size: 9px; font-weight: 800; padding: 4px 8px; border-radius: 20px; text-transform: uppercase; background: ${item.popUrl ? 'var(--green-bg)' : '#f3f4f6'}; color: ${item.popUrl ? 'var(--green)' : '#6b7280'};">${item.popUrl ? 'Paid' : 'In Queue'}</span>
+                  <span style="font-size: 9px; font-weight: 800; padding: 4px 8px; border-radius: 20px; text-transform: uppercase; background: ${isRejected ? '#fee2e2' : (item.popUrl ? 'var(--green-bg)' : '#f3f4f6')}; color: ${isRejected ? '#991b1b' : (item.popUrl ? 'var(--green)' : '#6b7280')};">${isRejected ? 'Returned' : (item.popUrl ? 'Paid' : 'In Queue')}</span>
                   ${(!item.popUrl && canEdit(item.origDateRaw)) ? `<button type="button" class="btn-edit" onclick="startEdit(${idx})">✏️ Edit</button>` : ''}
                 </div>
               </div>
             </div>
             ${item.note ? `<div style="background: var(--canvas); padding: 12px; border-radius: 8px; font-size: 13px; color: var(--text-dim); border-left: 3px solid var(--border); font-style: italic;">Note: ${item.note}</div>` : ''}
-            ${item.popUrl ? `<div style="padding-top: 16px; border-top: 1px solid var(--border);"><a href="${item.popUrl}" target="_blank" style="font-size: 12px; font-weight: 800; color: var(--green); text-decoration: none;">📄 View Official Proof of Payment</a></div>` : ''}
-          </div>`).join('');
+            
+            ${isRejected ? `<div class="reject-warning">⚠️ Returned: ${rejectReason}<br><span style="font-size: 11px; font-weight: 500; margin-top: 4px; display: block; color: #5a5750;">This request is closed. Please submit a new payment request with the corrected information.</span></div>` : ''}
+            ${item.popUrl && !isRejected ? `<div style="padding-top: 16px; border-top: 1px solid var(--border);"><a href="${item.popUrl}" target="_blank" style="font-size: 12px; font-weight: 800; color: var(--green); text-decoration: none;">📄 View Official Proof of Payment</a></div>` : ''}
+          </div>`
+        }).join('');
       } catch (e) { document.getElementById('histLoading').classList.add('hidden'); list.innerHTML = '<center style="padding:30px; color:#c0392b; font-weight:800;">Error syncing history.</center>'; }
     }
 
@@ -390,11 +408,9 @@
       document.getElementById('urgent').checked = (item.urgent === 'Urgent');
       document.getElementById('notes').value = item.note || '';
 
-      // UI Toggle: Hide Upload, Show Edit Panel
       document.getElementById('dropZone').classList.add('hidden');
       document.getElementById('editFilePanel').classList.remove('hidden');
       
-      // Reset Edit Panel to Default State
       document.getElementById('btnDeleteFile').classList.remove('hidden');
       document.getElementById('editFileStatus').innerText = "Stored securely in vault.";
       document.getElementById('editFileStatus').style.color = "var(--text-dim)";
@@ -454,8 +470,6 @@
         return;
       }
 
-      // Block submission only if it's a NEW request and there is no file.
-      // Edits no longer require file checks here.
       if (!editingId && document.getElementById('invoiceFile').files.length === 0) {
         alert("Please attach an invoice document.");
         return;
@@ -486,7 +500,6 @@
       isFileDeleted = true;
       closeDeleteModal();
       
-      // Update the UI to reflect marked deletion
       document.getElementById('btnDeleteFile').classList.add('hidden');
       document.getElementById('editFileStatus').innerText = "❌ File marked for deletion (applied upon saving).";
       document.getElementById('editFileStatus').style.color = "var(--accent)";
@@ -499,7 +512,6 @@
       btn.disabled = true; 
       btn.innerText = "Transmitting to Vault...";
 
-      // If we are editing, we bypass file caching entirely since edits just send info/deletion flag
       if (editingId) {
          sendPayload(brand, null, null, btn);
          return;
@@ -528,7 +540,7 @@
         documentType: document.getElementById('docType').value, dueDate: document.getElementById('dueDate').value, 
         isUrgent: document.getElementById('urgent').checked, note: document.getElementById('notes').value, 
         fileName: fName, fileBase64: fBase64, userName: user.name, email: user.email, pincode: pin,
-        deleteFile: isFileDeleted // Added flag to tell backend to trash the file
+        deleteFile: isFileDeleted 
       };
       
       if (attempt > 1) {
@@ -573,7 +585,6 @@
       } catch (e) { 
         if (timeoutId) clearTimeout(timeoutId);
         
-        // Only trigger retries if it's a NEW upload. Edits are small JSON payloads and won't fail due to connection drops.
         if (!editingId && attempt < MAX_ATTEMPTS) {
           const waitSeconds = attempt * 4; 
           btn.innerText = `Connection issue. Retrying in ${waitSeconds}s...`;
