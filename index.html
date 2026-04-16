@@ -17,7 +17,7 @@
     .pin-input { width: 100%; height: 55px; text-align: center; font-size: 26px; letter-spacing: 12px; margin: 25px 0; border: 2px solid var(--border); border-radius: 14px; outline: none; transition: 0.3s; }
     .pin-input:focus { border-color: var(--navy); box-shadow: 0 0 0 4px rgba(15,19,31,0.05); }
 
-    .sidebar { width: 260px; background: var(--navy); color: #fff; display: flex; flex-direction: column; padding: 35px 0; }
+    .sidebar { width: 260px; background: var(--navy); color: #fff; display: flex; flex-direction: column; padding: 35px 0; flex-shrink: 0; }
     .sidebar-brand { padding: 0 30px 35px; }
     .nav-item { padding: 14px 30px; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.4); cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px; }
     .nav-item.active { color: #fff; background: rgba(255,255,255,0.08); border-right: 4px solid var(--accent); }
@@ -27,17 +27,20 @@
     .nav-logout { padding: 20px 30px; font-size: 11px; color: rgba(255,255,255,0.4); cursor: pointer; transition: 0.2s; }
     .nav-logout:hover { color: #fff; background: rgba(255,255,255,0.05); }
 
-    .main-area { flex: 1; display: flex; flex-direction: column; height: 100vh; }
-    .top-header { background: var(--surface); padding: 18px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
-    .view-content { flex: 1; padding: 20px 40px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; }
+    .main-area { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    .top-header { background: var(--surface); padding: 18px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); flex-shrink: 0; }
     
-    #formWrapper { width: 100%; max-width: 850px; margin: 0 auto; display: flex; flex-direction: column; height: 100%; transition: 0.3s; }
+    /* UX FIX: Unlocked scrolling for the main content area */
+    .view-content { flex: 1; padding: 20px 40px; display: flex; flex-direction: column; overflow-y: auto; }
+    
+    /* UX FIX: Removed hardcoded 100% height so the form naturally expands */
+    #formWrapper { width: 100%; max-width: 850px; margin: 0 auto; display: flex; flex-direction: column; transition: 0.3s; padding-bottom: 40px; }
     
     #editBanner { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 15px; }
     .btn-cancel-edit { background: var(--surface); border: 1px solid var(--border); padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: 800; color: var(--text-dim); transition: 0.2s; }
     .btn-cancel-edit:hover { background: #f1f3f4; color: var(--navy); }
 
-    .form-section { background: var(--surface); border-radius: 18px; border: 1px solid var(--border); padding: 22px 28px; margin-bottom: 12px; flex-shrink: 1; }
+    .form-section { background: var(--surface); border-radius: 18px; border: 1px solid var(--border); padding: 22px 28px; margin-bottom: 12px; flex-shrink: 0; }
     .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; border-bottom: 1px solid #f8fafc; padding-bottom: 10px; }
     .step-num { width: 22px; height: 22px; background: var(--navy); color: #fff; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; }
     .section-title { font-size: 12px; font-weight: 800; color: var(--navy); text-transform: uppercase; letter-spacing: 1.5px; }
@@ -53,22 +56,21 @@
     .brand-btn.active { background: var(--navy); color: #fff; border-color: var(--navy); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
     .brand-btn.disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
 
-    /* UI FIX: Removed margin-top: auto; to perfectly align with Due Date input */
     .urgent-row { display: flex; align-items: center; justify-content: space-between; background: #fff5f5; padding: 0 20px; border-radius: 10px; border: 1px solid #fed7d7; cursor: pointer; height: 48px; }
     .checkbox { width: 22px; height: 22px; accent-color: var(--accent); cursor: pointer; }
 
     .upload-zone { border: 2px dashed var(--border); border-radius: 14px; padding: 25px; text-align: center; background: #fafafa; cursor: pointer; transition: 0.3s; }
     .upload-zone.active { border-color: var(--green); background: var(--green-bg); }
 
-    .email-confirmation { background: #f8fafc; border: 1px solid var(--border); border-radius: 12px; padding: 12px 20px; margin-top: 5px; display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--text-dim); }
+    .email-confirmation { background: #f8fafc; border: 1px solid var(--border); border-radius: 12px; padding: 12px 20px; margin-top: 5px; display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--text-dim); flex-shrink: 0; }
     .email-confirmation strong { color: var(--navy); font-weight: 800; }
 
-    .btn-submit-main { background: var(--navy); color: #fff; padding: 20px; border-radius: 16px; font-weight: 800; font-size: 17px; border: none; cursor: pointer; width: 100%; transition: 0.3s; box-shadow: 0 10px 20px rgba(15,19,31,0.15); margin-top: 15px; margin-bottom: 20px;}
+    .btn-submit-main { background: var(--navy); color: #fff; padding: 20px; border-radius: 16px; font-weight: 800; font-size: 17px; border: none; cursor: pointer; width: 100%; transition: 0.3s; box-shadow: 0 10px 20px rgba(15,19,31,0.15); margin-top: 15px; margin-bottom: 20px; flex-shrink: 0; }
     .btn-submit-main:hover { transform: translateY(-3px); background: var(--navy-light); }
     .btn-submit-main:disabled { background: #9ca3af; cursor: not-allowed; box-shadow: none; transform: none; }
 
     /* HISTORY */
-    #tabHistory { width: 100%; max-width: 850px; margin: 0 auto; overflow-y: auto; padding-bottom: 50px; }
+    #tabHistory { width: 100%; max-width: 850px; margin: 0 auto; padding-bottom: 50px; }
     .history-card { background: #fff; border-radius: 16px; padding: 24px; border: 1px solid var(--border); margin-bottom: 16px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
     .hist-brand-tag { font-size: 9px; font-weight: 800; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; background: #f1f3f4; color: var(--navy); margin-bottom: 8px; display: inline-block; letter-spacing: 0.5px; }
     .btn-edit { background: #f8fafc; border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 800; color: var(--navy); cursor: pointer; transition: 0.2s; margin-left: 10px;}
@@ -143,7 +145,7 @@
           <button type="button" class="btn-cancel-edit" onclick="cancelEdit()">← Cancel Edit & Go Back</button>
         </div>
 
-        <div id="paymentContainer" style="display:flex; flex-direction:column; height:100%;">
+        <div id="paymentContainer" style="display:flex; flex-direction:column;">
           
           <div class="form-section">
             <div class="section-header"><div class="step-num">01</div><div class="section-title">Entity Selection</div></div>
@@ -166,7 +168,6 @@
               <div class="input-group"><div class="label">Amount (THB)</div><input type="number" step="0.01" id="amount" class="input" placeholder="0.00"></div>
               <div class="input-group">
                 <div class="label">Doc Type</div>
-                
                 <select id="docType" class="input" style="height:48px;">
                   <option value="Invoice">Invoice</option>
                   <option value="Receipt">Receipt</option>
@@ -176,7 +177,6 @@
                   <option value="Reimburse">Reimburse</option>
                   <option value="National ID Card">National ID Card</option>
                 </select>
-                
               </div>
             </div>
           </div>
@@ -184,13 +184,11 @@
           <div class="form-section">
             <div class="section-header"><div class="step-num">03</div><div class="section-title">Schedule & Priority</div></div>
             <div class="grid-pair">
-              
               <div class="input-group">
                 <div class="label">Due Date</div>
                 <input type="date" id="dueDate" class="input" onchange="updateBatchHint()">
                 <div style="font-size: 10.5px; color: var(--text-dim); font-weight: 700; margin-top: 4px;">Expected Batch: <span id="expectedBatchText" style="color: var(--accent);">Select a date</span></div>
               </div>
-
               <div class="input-group"><div class="label">Urgency</div><label class="urgent-row" for="urgent"><span style="font-size:11px; font-weight:800; color:var(--accent);">FLAG URGENT</span><input type="checkbox" id="urgent" class="checkbox"></label></div>
             </div>
             <div class="input-group" style="margin:0"><div class="label">Payment Note</div><input type="text" id="notes" class="input" placeholder="What is this paying for?"></div>
@@ -240,7 +238,6 @@
     }
     init();
 
-    // DYNAMIC BATCH CALCULATOR
     function updateBatchHint() {
       const val = document.getElementById('dueDate').value;
       if(!val) {
@@ -300,7 +297,6 @@
       document.getElementById('formWrapper').style.border = "none";
       document.getElementById('editBanner').classList.add('hidden');
 
-      // Clear fields explicitly
       document.getElementById('brand').value = '';
       document.getElementById('supplier').value = '';
       document.getElementById('amount').value = '';
@@ -310,7 +306,7 @@
       document.getElementById('urgent').checked = false;
       document.getElementById('invoiceFile').value = null;
 
-      updateBatchHint(); // Reset hint text
+      updateBatchHint();
 
       document.querySelectorAll('.brand-btn').forEach(b => { b.classList.remove('active'); b.classList.remove('disabled'); });
       document.getElementById('fileNameDisp').innerText = "Tap to Upload Invoice Document (Max 1.8MB)";
@@ -438,7 +434,7 @@
     }
 
     function handleFile(input) { 
-      const MAX_SIZE = 1.8 * 1024 * 1024; // 1.8MB strict limit
+      const MAX_SIZE = 1.8 * 1024 * 1024; 
       if (input.files.length) { 
         if(input.files[0].size > MAX_SIZE) {
           alert("❌ GOOGLE SERVER LIMIT EXCEEDED.\n\nGoogle Apps Script cannot process files larger than 1.8MB. Your file is " + (input.files[0].size / 1024 / 1024).toFixed(1) + "MB.\n\nPlease compress this PDF to under 1.8MB to continue.");
