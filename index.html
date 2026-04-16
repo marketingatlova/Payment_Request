@@ -24,7 +24,8 @@
     .sidebar-batch { margin: 20px 20px 0; padding: 18px; background: rgba(255,255,255,0.03); border-radius: 14px; border: 1px solid rgba(255,255,255,0.05); }
     .batch-label { font-size: 9px; font-weight: 800; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
     .batch-date { font-size: 13px; font-weight: 700; color: #60a5fa; }
-    .nav-logout { margin-top: auto; padding: 20px 30px; font-size: 11px; color: rgba(255,255,255,0.2); cursor: pointer; border-top: 1px solid rgba(255,255,255,0.05); }
+    .nav-logout { padding: 20px 30px; font-size: 11px; color: rgba(255,255,255,0.4); cursor: pointer; transition: 0.2s; }
+    .nav-logout:hover { color: #fff; background: rgba(255,255,255,0.05); }
 
     .main-area { flex: 1; display: flex; flex-direction: column; height: 100vh; }
     .top-header { background: var(--surface); padding: 18px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
@@ -110,10 +111,21 @@
 
   <aside class="sidebar">
     <div class="sidebar-brand"><h1 style="font-family:'Playfair Display'; font-size:28px; letter-spacing:1px;">LOVA</h1></div>
-    <div class="nav-item active" id="navForm" onclick="resetToNew()">New Payment Request</div>
-    <div class="nav-item" id="navHistory" onclick="showTab('history')">My Activity Log</div>
-    <div class="sidebar-batch"><div class="batch-label">Next Payment Batch</div><div class="batch-date" id="payFriday">...</div></div>
-    <div class="nav-logout" onclick="location.reload()">Logout Portal</div>
+    
+    <div style="flex: 1;">
+      <div class="nav-item active" id="navForm" onclick="resetToNew()">New Payment Request</div>
+      <div class="nav-item" id="navHistory" onclick="showTab('history')">My Activity Log</div>
+      
+      <div class="sidebar-batch">
+        <div class="batch-label">Next Payment Batch</div>
+        <div class="batch-date" id="payFriday">...</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="nav-logout" style="border-top: 1px solid rgba(255,255,255,0.05);" onclick="showTab('history')">🔄 Sync Data</div>
+      <div class="nav-logout" style="margin-top: 0; border-top: none;" onclick="location.reload()">🚪 Logout Portal</div>
+    </div>
   </aside>
 
   <main class="main-area">
@@ -162,7 +174,7 @@
                   <option value="Reimburse">Reimburse</option>
                   <option value="National ID Card">National ID Card</option>
                 </select>
-
+                
               </div>
             </div>
           </div>
@@ -211,9 +223,14 @@
     let isSubmitting = false;
 
     function init() {
-      const d = new Date(); const day = d.getDay();
-      const diff = d.getDate() + (day <= 5 ? (5 - day) : (5 - day + 7));
-      document.getElementById('payFriday').innerText = new Date(d.setDate(diff)).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      const d = new Date(); 
+      const day = d.getDay();
+      let diff = 5 - day;
+      if (diff < 0) diff += 7; 
+      d.setDate(d.getDate() + diff);
+      
+      const options = { day: '2-digit', month: 'short', year: 'numeric' };
+      document.getElementById('payFriday').innerText = d.toLocaleDateString('en-GB', options);
     }
     init();
 
