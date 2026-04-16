@@ -24,8 +24,7 @@
     .sidebar-batch { margin: 20px 20px 0; padding: 18px; background: rgba(255,255,255,0.03); border-radius: 14px; border: 1px solid rgba(255,255,255,0.05); }
     .batch-label { font-size: 9px; font-weight: 800; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
     .batch-date { font-size: 13px; font-weight: 700; color: #60a5fa; }
-    .nav-logout { padding: 20px 30px; font-size: 11px; color: rgba(255,255,255,0.4); cursor: pointer; transition: 0.2s; }
-    .nav-logout:hover { color: #fff; background: rgba(255,255,255,0.05); }
+    .nav-logout { margin-top: auto; padding: 20px 30px; font-size: 11px; color: rgba(255,255,255,0.2); cursor: pointer; border-top: 1px solid rgba(255,255,255,0.05); }
 
     .main-area { flex: 1; display: flex; flex-direction: column; height: 100vh; }
     .top-header { background: var(--surface); padding: 18px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
@@ -111,21 +110,10 @@
 
   <aside class="sidebar">
     <div class="sidebar-brand"><h1 style="font-family:'Playfair Display'; font-size:28px; letter-spacing:1px;">LOVA</h1></div>
-    
-    <div style="flex: 1;">
-      <div class="nav-item active" id="navForm" onclick="resetToNew()">New Payment Request</div>
-      <div class="nav-item" id="navHistory" onclick="showTab('history')">My Activity Log</div>
-      
-      <div class="sidebar-batch">
-        <div class="batch-label">Next Payment Batch</div>
-        <div class="batch-date" id="payFriday">...</div>
-      </div>
-    </div>
-
-    <div>
-      <div class="nav-logout" style="border-top: 1px solid rgba(255,255,255,0.05);" onclick="showTab('history')">🔄 Sync Data</div>
-      <div class="nav-logout" style="margin-top: 0; border-top: none;" onclick="location.reload()">🚪 Logout Portal</div>
-    </div>
+    <div class="nav-item active" id="navForm" onclick="resetToNew()">New Payment Request</div>
+    <div class="nav-item" id="navHistory" onclick="showTab('history')">My Activity Log</div>
+    <div class="sidebar-batch"><div class="batch-label">Next Payment Batch</div><div class="batch-date" id="payFriday">...</div></div>
+    <div class="nav-logout" onclick="location.reload()">Logout Portal</div>
   </aside>
 
   <main class="main-area">
@@ -143,6 +131,7 @@
         </div>
 
         <div id="paymentContainer" style="display:flex; flex-direction:column; height:100%;">
+          
           <div class="form-section">
             <div class="section-header"><div class="step-num">01</div><div class="section-title">Entity Selection</div></div>
             <div class="brand-grid">
@@ -182,7 +171,13 @@
           <div class="form-section">
             <div class="section-header"><div class="step-num">03</div><div class="section-title">Schedule & Priority</div></div>
             <div class="grid-pair">
-              <div class="input-group"><div class="label">Due Date</div><input type="date" id="dueDate" class="input"></div>
+              
+              <div class="input-group">
+                <div class="label">Due Date</div>
+                <input type="date" id="dueDate" class="input" onchange="updateBatchHint()">
+                <div style="font-size: 10.5px; color: var(--text-dim); font-weight: 700; margin-top: 4px;">Expected Batch: <span id="expectedBatchText" style="color: var(--accent);">Select a date</span></div>
+              </div>
+
               <div class="input-group"><div class="label">Urgency</div><label class="urgent-row" for="urgent"><span style="font-size:11px; font-weight:800; color:var(--accent);">FLAG URGENT</span><input type="checkbox" id="urgent" class="checkbox"></label></div>
             </div>
             <div class="input-group" style="margin:0"><div class="label">Payment Note</div><input type="text" id="notes" class="input" placeholder="What is this paying for?"></div>
@@ -223,16 +218,28 @@
     let isSubmitting = false;
 
     function init() {
-      const d = new Date(); 
-      const day = d.getDay();
+      const d = new Date(); const day = d.getDay();
       let diff = 5 - day;
       if (diff < 0) diff += 7; 
       d.setDate(d.getDate() + diff);
-      
-      const options = { day: '2-digit', month: 'short', year: 'numeric' };
-      document.getElementById('payFriday').innerText = d.toLocaleDateString('en-GB', options);
+      document.getElementById('payFriday').innerText = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
     }
     init();
+
+    // DYNAMIC BATCH CALCULATOR
+    function updateBatchHint() {
+      const val = document.getElementById('dueDate').value;
+      if(!val) {
+         document.getElementById('expectedBatchText').innerText = "Select a date";
+         return;
+      }
+      const d = new Date(val);
+      let day = d.getDay();
+      let diff = 5 - day;
+      if (diff < 0) diff += 7; 
+      d.setDate(d.getDate() + diff);
+      document.getElementById('expectedBatchText').innerText = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
 
     async function login() {
       const input = document.getElementById('staffPin'); const btn = document.getElementById('loginBtn');
@@ -279,13 +286,17 @@
       document.getElementById('formWrapper').style.border = "none";
       document.getElementById('editBanner').classList.add('hidden');
 
+      // Clear fields explicitly
       document.getElementById('brand').value = '';
       document.getElementById('supplier').value = '';
       document.getElementById('amount').value = '';
+      document.getElementById('docType').value = 'Invoice';
       document.getElementById('dueDate').value = '';
       document.getElementById('notes').value = '';
       document.getElementById('urgent').checked = false;
       document.getElementById('invoiceFile').value = null;
+
+      updateBatchHint(); // Reset hint text
 
       document.querySelectorAll('.brand-btn').forEach(b => { b.classList.remove('active'); b.classList.remove('disabled'); });
       document.getElementById('fileNameDisp').innerText = "Tap to Upload Invoice Document (Max 1.8MB)";
@@ -393,7 +404,10 @@
       document.getElementById('amount').value = item.amount;
       document.getElementById('docType').value = item.docType || 'Invoice';
       
-      if (item.dueDateRaw) { document.getElementById('dueDate').value = item.dueDateRaw; }
+      if (item.dueDateRaw) { 
+        document.getElementById('dueDate').value = item.dueDateRaw; 
+        updateBatchHint(); 
+      }
       
       document.getElementById('urgent').checked = (item.urgent === 'Urgent');
       document.getElementById('notes').value = item.note || '';
@@ -410,7 +424,7 @@
     }
 
     function handleFile(input) { 
-      const MAX_SIZE = 1.8 * 1024 * 1024; // Strict 1.8MB limit to prevent Google server crash
+      const MAX_SIZE = 1.8 * 1024 * 1024; // 1.8MB strict limit
       if (input.files.length) { 
         if(input.files[0].size > MAX_SIZE) {
           alert("❌ GOOGLE SERVER LIMIT EXCEEDED.\n\nGoogle Apps Script cannot process files larger than 1.8MB. Your file is " + (input.files[0].size / 1024 / 1024).toFixed(1) + "MB.\n\nPlease compress this PDF to under 1.8MB to continue.");
