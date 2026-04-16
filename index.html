@@ -24,13 +24,13 @@
     .sidebar-batch { margin: 20px 20px 0; padding: 18px; background: rgba(255,255,255,0.03); border-radius: 14px; border: 1px solid rgba(255,255,255,0.05); }
     .batch-label { font-size: 9px; font-weight: 800; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
     .batch-date { font-size: 13px; font-weight: 700; color: #60a5fa; }
-    .nav-logout { padding: 15px 30px; font-size: 11px; color: rgba(255,255,255,0.2); cursor: pointer; border-top: 1px solid rgba(255,255,255,0.05); transition: 0.2s; }
-    .nav-logout:hover { color: #ff7675; }
+    .nav-logout { margin-top: auto; padding: 20px 30px; font-size: 11px; color: rgba(255,255,255,0.2); cursor: pointer; border-top: 1px solid rgba(255,255,255,0.05); }
 
     .main-area { flex: 1; display: flex; flex-direction: column; height: 100vh; }
     .top-header { background: var(--surface); padding: 18px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
-    .view-content { flex: 1; padding: 20px 40px; display: flex; flex-direction: column; justify-content: space-between; overflow-y: auto; }
-    #formWrapper { width: 100%; max-width: 850px; margin: 0 auto; display: flex; flex-direction: column; min-height: 100%; transition: 0.3s; }
+    .view-content { flex: 1; padding: 20px 40px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; }
+    
+    #formWrapper { width: 100%; max-width: 850px; margin: 0 auto; display: flex; flex-direction: column; height: 100%; transition: 0.3s; }
     
     #editBanner { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 15px; }
     .btn-cancel-edit { background: var(--surface); border: 1px solid var(--border); padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: 800; color: var(--text-dim); transition: 0.2s; }
@@ -52,7 +52,7 @@
     .brand-btn.active { background: var(--navy); color: #fff; border-color: var(--navy); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
     .brand-btn.disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
 
-    .urgent-row { display: flex; align-items: center; justify-content: space-between; background: #fff5f5; padding: 0 20px; border-radius: 10px; border: 1px solid #fed7d7; cursor: pointer; height: 48px; }
+    .urgent-row { display: flex; align-items: center; justify-content: space-between; background: #fff5f5; padding: 0 20px; border-radius: 10px; border: 1px solid #fed7d7; cursor: pointer; height: 48px; margin-top: auto; }
     .checkbox { width: 22px; height: 22px; accent-color: var(--accent); cursor: pointer; }
 
     .upload-zone { border: 2px dashed var(--border); border-radius: 14px; padding: 25px; text-align: center; background: #fafafa; cursor: pointer; transition: 0.3s; }
@@ -65,20 +65,9 @@
     .btn-submit-main:hover { transform: translateY(-3px); background: var(--navy-light); }
     .btn-submit-main:disabled { background: #9ca3af; cursor: not-allowed; box-shadow: none; transform: none; }
 
-    /* NEW FILTER BAR STYLES */
-    .filter-bar { background: var(--surface); padding: 20px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 24px; display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;}
-    .filter-group { display: flex; flex-direction: column; gap: 6px; }
-    .filter-label { font-size: 10px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
-    .filter-input { background: #f8fafc; border: 1px solid var(--border); padding: 10px 14px; border-radius: 10px; font-size: 12px; font-weight: 600; font-family: inherit; outline: none; height: 42px;}
-    .search-input { min-width: 220px; }
-
     /* HISTORY */
     #tabHistory { width: 100%; max-width: 850px; margin: 0 auto; overflow-y: auto; padding-bottom: 50px; }
-    .history-card { background: #fff; border-radius: 16px; padding: 24px; border: 1px solid var(--border); margin-bottom: 16px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); transition: 0.2s;}
-    
-    .history-card.rejected { background: #f9fafb; border: 1px dashed #d1d5db; opacity: 0.85; }
-    .reject-warning { margin-top: 16px; padding: 12px 16px; background: #fef2f2; color: #991b1b; border-radius: 8px; font-size: 13px; font-weight: 700; border-left: 4px solid #ef4444; }
-
+    .history-card { background: #fff; border-radius: 16px; padding: 24px; border: 1px solid var(--border); margin-bottom: 16px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
     .hist-brand-tag { font-size: 9px; font-weight: 800; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; background: #f1f3f4; color: var(--navy); margin-bottom: 8px; display: inline-block; letter-spacing: 0.5px; }
     .btn-edit { background: #f8fafc; border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 800; color: var(--navy); cursor: pointer; transition: 0.2s; margin-left: 10px;}
     .btn-edit:hover { background: var(--border); }
@@ -89,20 +78,10 @@
 </head>
 <body>
 
-  <div id="taxModal" class="login-overlay hidden" style="z-index: 5000; background: rgba(15,19,31,0.85);">
-    <div class="login-card" style="border: 2px solid #f97316; padding: 40px; max-width: 450px;">
-      <h2 style="color: #c2410c; margin-bottom: 10px; font-size: 24px;">⚠️ Action Required</h2>
-      <p style="font-size: 14px; color: var(--navy); margin-bottom: 15px; font-weight: 800;">You have <span id="taxCountDisp">...</span> pending Tax Invoice(s).</p>
-      <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 20px; line-height: 1.5;">Finance has processed your payments, but the original physical Tax Invoices are still missing. Please hand over the physical documents with their Reference IDs to the Finance team immediately.</p>
-      
-      <button type="button" class="btn-submit-main" style="margin:0; background: var(--navy); box-shadow:none;" onclick="document.getElementById('taxModal').classList.add('hidden');">I understand</button>
-    </div>
-  </div>
-
   <div id="deleteModal" class="login-overlay hidden" style="z-index: 4000; background: rgba(15,19,31,0.85);">
     <div class="login-card" style="border: 2px solid var(--accent); padding: 40px; max-width: 450px;">
-      <h2 style="color: var(--accent); margin-bottom: 10px; font-size: 24px;">⚠️ Delete Evidence</h2>
-      <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 20px; line-height: 1.5;">You are about to permanently remove the attached invoice file. You cannot upload a new one here.</p>
+      <h2 style="color: var(--accent); margin-bottom: 10px; font-size: 24px;">⚠️ Overwrite Evidence</h2>
+      <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 20px; line-height: 1.5;">You are attaching a new document. The original invoice will be permanently removed.</p>
       
       <div style="background: rgba(15,19,31,0.05); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid rgba(15,19,31,0.1);">
         <p style="font-size: 11px; color: var(--text-dim); margin-bottom: 8px; text-transform: uppercase; font-weight:800;">Tap to copy this exact phrase:</p>
@@ -114,7 +93,7 @@
       
       <div style="display:flex; gap:12px; margin-top:10px;">
         <button type="button" class="btn-submit-main" style="margin:0; background: #e4e1db; color: var(--navy); box-shadow:none;" onclick="closeDeleteModal()">Cancel</button>
-        <button type="button" class="btn-submit-main" style="margin:0; background: var(--accent); box-shadow:none;" onclick="confirmDeleteAction()">Confirm Deletion</button>
+        <button type="button" class="btn-submit-main" style="margin:0; background: var(--accent); box-shadow:none;" onclick="confirmDeleteAndSubmit()">Confirm & Save</button>
       </div>
     </div>
   </div>
@@ -133,12 +112,8 @@
     <div class="sidebar-brand"><h1 style="font-family:'Playfair Display'; font-size:28px; letter-spacing:1px;">LOVA</h1></div>
     <div class="nav-item active" id="navForm" onclick="resetToNew()">New Payment Request</div>
     <div class="nav-item" id="navHistory" onclick="showTab('history')">My Activity Log</div>
-    <div class="sidebar-batch"><div class="batch-label">Next Payment Batch</div><div class="batch-date" id="payFriday">Loading...</div></div>
-    
-    <div style="margin-top:auto; padding: 20px 30px 0;">
-      <button onclick="fetchHistory()" style="width:100%; padding:10px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#fff; border-radius:10px; cursor:pointer; font-size:11px; font-weight:700; margin-bottom:10px; transition:0.2s;">↻ Sync Data</button>
-      <div class="nav-logout" style="margin-top:0;" onclick="location.reload()">Logout Portal</div>
-    </div>
+    <div class="sidebar-batch"><div class="batch-label">Next Payment Batch</div><div class="batch-date" id="payFriday">...</div></div>
+    <div class="nav-logout" onclick="location.reload()">Logout Portal</div>
   </aside>
 
   <main class="main-area">
@@ -177,9 +152,17 @@
               <div class="input-group"><div class="label">Amount (THB)</div><input type="number" step="0.01" id="amount" class="input" placeholder="0.00"></div>
               <div class="input-group">
                 <div class="label">Doc Type</div>
+                
                 <select id="docType" class="input" style="height:48px;">
-                  <option value="Invoice">Invoice</option><option value="Receipt">Receipt</option><option value="Quotation">Quotation</option><option value="Clear Advance">Clear Advance</option>
+                  <option value="Invoice">Invoice</option>
+                  <option value="Receipt">Receipt</option>
+                  <option value="Quotation">Quotation</option>
+                  <option value="Advance">Advance</option>
+                  <option value="Clear Advance">Clear Advance</option>
+                  <option value="Reimburse">Reimburse</option>
+                  <option value="National ID Card">National ID Card</option>
                 </select>
+
               </div>
             </div>
           </div>
@@ -187,38 +170,18 @@
           <div class="form-section">
             <div class="section-header"><div class="step-num">03</div><div class="section-title">Schedule & Priority</div></div>
             <div class="grid-pair">
-              <div class="input-group">
-                <div class="label">Due Date</div>
-                <input type="date" id="dueDate" class="input" onchange="updatePredictedBatch()">
-                <div id="predictedBatchDisp" style="font-size: 10px; color: var(--text-dim); font-style: italic; margin-top: 4px;"></div>
-              </div>
-              <div class="input-group">
-                <div class="label">Urgency</div>
-                <label class="urgent-row" for="urgent">
-                  <span style="font-size:11px; font-weight:800; color:var(--accent);">FLAG URGENT</span>
-                  <input type="checkbox" id="urgent" class="checkbox" onchange="updatePredictedBatch()">
-                </label>
-              </div>
+              <div class="input-group"><div class="label">Due Date</div><input type="date" id="dueDate" class="input"></div>
+              <div class="input-group"><div class="label">Urgency</div><label class="urgent-row" for="urgent"><span style="font-size:11px; font-weight:800; color:var(--accent);">FLAG URGENT</span><input type="checkbox" id="urgent" class="checkbox"></label></div>
             </div>
             <div class="input-group" style="margin:0"><div class="label">Payment Note</div><input type="text" id="notes" class="input" placeholder="What is this paying for?"></div>
           </div>
 
           <div class="form-section" style="margin-bottom:0">
             <div class="section-header"><div class="step-num">04</div><div class="section-title">Documentation</div></div>
-            
             <div class="upload-zone" id="dropZone" onclick="document.getElementById('invoiceFile').click()">
-              <div id="fileNameDisp" style="font-size:13px; font-weight:700; color:var(--text-dim);">Tap to Upload Invoice Document (Max 1.3MB)</div>
+              <div id="fileNameDisp" style="font-size:13px; font-weight:700; color:var(--text-dim);">Tap to Upload Invoice Document (Max 1.8MB)</div>
               <input type="file" id="invoiceFile" class="hidden" onchange="handleFile(this)" accept="image/*,application/pdf">
             </div>
-
-            <div id="editFilePanel" class="hidden" style="background: #f8fafc; border: 1px solid var(--border); border-radius: 12px; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
-              <div>
-                <div style="font-size: 13px; font-weight: 800; color: var(--navy);">📄 Attached Document</div>
-                <div style="font-size: 11px; color: var(--text-dim); margin-top: 4px;" id="editFileStatus">Stored securely in vault.</div>
-              </div>
-              <button type="button" id="btnDeleteFile" onclick="openDeleteModal()" style="background: #fff5f5; color: var(--accent); border: 1px solid #fed7d7; padding: 8px 16px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer; transition: 0.2s;">Delete File</button>
-            </div>
-
           </div>
 
           <div class="email-confirmation"><span style="font-size:16px;">✉️</span><span>Proof of Payment receipt will be sent to: <strong id="userEmailDisp">...</strong></span></div>
@@ -228,42 +191,6 @@
       </div>
 
       <div id="tabHistory" class="hidden" style="overflow-y:auto; padding-bottom:50px;">
-        
-        <div class="filter-bar">
-          <div class="filter-group" style="flex: 1;">
-            <div class="filter-label">Search Activity</div>
-            <input type="text" id="histSearch" class="filter-input search-input" placeholder="Supplier or Reference ID..." oninput="renderHistory()">
-          </div>
-          <div class="filter-group">
-            <div class="filter-label">Status</div>
-            <select id="histStatus" class="filter-input" onchange="renderHistory()">
-              <option value="ALL">All Statuses</option>
-              <option value="QUEUE">In Queue</option>
-              <option value="PAID">Paid & Complete</option>
-              <option value="RETURNED">Returned (Needs Fix)</option>
-              <option value="TAX">Missing Tax Invoice</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <div class="filter-label">Brand</div>
-            <select id="histBrand" class="filter-input" onchange="renderHistory()">
-              <option value="ALL">All Brands</option>
-              <option value="LAVA">LAVA</option>
-              <option value="Bianca Holdings">BIANCA</option>
-              <option value="HolyBelly">HOLYBELLY</option>
-              <option value="Lova">LOVA</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <div class="filter-label">From Date</div>
-            <input type="date" id="histFrom" class="filter-input" onchange="renderHistory()">
-          </div>
-          <div class="filter-group">
-            <div class="filter-label">To Date</div>
-            <input type="date" id="histTo" class="filter-input" onchange="renderHistory()">
-          </div>
-        </div>
-
         <div id="histLoading" style="text-align:center; padding:40px; color:#aaa; font-size:13px;">Syncing activity log...</div>
         <div id="histList"></div>
       </div>
@@ -279,71 +206,16 @@
 
   <script>
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbyEUJYIu9_O6E50KzKzdEY4EG2VLo4y0Yj8igGRZVMI_zEapqn5w758gdt_nG5tluEdHA/exec';
-    
-    const HOLIDAYS_2026 = {
-      '2026-01-01': "New Year's Day", '2026-01-02': "Special Holiday", '2026-03-03': "Makha Bucha",
-      '2026-04-06': "Chakri Day", '2026-04-13': "Songkran", '2026-04-14': "Songkran", '2026-04-15': "Songkran",
-      '2026-05-01': "Labor Day", '2026-05-04': "Coronation Day", '2026-06-01': "Visakha Bucha",
-      '2026-06-03': "Queen's Birthday", '2026-07-28': "King's Birthday", '2026-07-29': "Asarnha Bucha",
-      '2026-08-12': "Queen Mother's Birthday", '2026-10-13': "King Bhumibol Memorial",
-      '2026-10-23': "King Chulalongkorn Memorial", '2026-12-07': "King Bhumibol Birthday Sub",
-      '2026-12-10': "Constitution Day", '2026-12-31': "New Year's Eve"
-    };
-
-    function resolveHoliday(d) {
-      let y = d.getFullYear(); let m = String(d.getMonth() + 1).padStart(2, '0'); let dayStr = String(d.getDate()).padStart(2, '0');
-      let dateStr = `${y}-${m}-${dayStr}`;
-      if (HOLIDAYS_2026[dateStr]) {
-          let day = d.getDay();
-          if (day === 5) d.setDate(d.getDate() + 4); 
-          else if (day === 2) d.setDate(d.getDate() + 3); 
-          else d.setDate(d.getDate() + 1); 
-          return resolveHoliday(d);
-      }
-      return d;
-    }
-
-    function calculateEarliestBatch(subDate) {
-      let d = new Date(subDate); let day = d.getDay(); let targetDate = new Date(d);
-      if (day === 2 || day === 3 || day === 4) { targetDate.setDate(d.getDate() + (5 - day)); } 
-      else { let add = day === 5 ? 4 : (day === 6 ? 3 : (day === 0 ? 2 : 1)); targetDate.setDate(d.getDate() + add); }
-      return resolveHoliday(targetDate);
-    }
-
-    function updatePredictedBatch() {
-      const dueVal = document.getElementById('dueDate').value;
-      const isUrgent = document.getElementById('urgent').checked;
-      const disp = document.getElementById('predictedBatchDisp');
-      
-      if (isUrgent) {
-        disp.innerHTML = '<span style="color:var(--accent);">Predicted Batch: URGENT (Immediate)</span>';
-        return;
-      }
-      if (!dueVal) { disp.innerHTML = ''; return; }
-
-      let earliest = calculateEarliestBatch(new Date());
-      let due = new Date(dueVal); due.setHours(0,0,0,0);
-      
-      let jit = new Date(due); let dueDay = jit.getDay();
-      if (dueDay === 1) jit.setDate(jit.getDate() - 3);
-      else if (dueDay === 3) jit.setDate(jit.getDate() - 1);
-      else if (dueDay === 4) jit.setDate(jit.getDate() - 2);
-      else if (dueDay === 6) jit.setDate(jit.getDate() - 1);
-      else if (dueDay === 0) jit.setDate(jit.getDate() - 2);
-      
-      jit = resolveHoliday(jit);
-
-      let earliestMid = new Date(earliest); earliestMid.setHours(0,0,0,0);
-      let jitMid = new Date(jit); jitMid.setHours(0,0,0,0);
-
-      let finalDate = jitMid.getTime() < earliestMid.getTime() ? earliest : jit;
-      disp.innerHTML = `Predicted Batch: <strong>${finalDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</strong>`;
-    }
-
     let user = null, pin = '', myData = [];
     let editingId = null;
     let isSubmitting = false;
-    let isFileDeleted = false; 
+
+    function init() {
+      const d = new Date(); const day = d.getDay();
+      const diff = d.getDate() + (day <= 5 ? (5 - day) : (5 - day + 7));
+      document.getElementById('payFriday').innerText = new Date(d.setDate(diff)).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+    init();
 
     async function login() {
       const input = document.getElementById('staffPin'); const btn = document.getElementById('loginBtn');
@@ -352,7 +224,7 @@
       try {
         const res = await fetch(GAS_URL, { 
           method: 'POST', 
-          redirect: 'follow',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({ action: 'verifyLogin', pincode: input.value }) 
         });
         const data = await res.json();
@@ -360,9 +232,7 @@
           user = data; pin = input.value; 
           document.getElementById('userNameBadge').innerText = data.name; 
           document.getElementById('userEmailDisp').innerText = data.email;
-          document.getElementById('payFriday').innerHTML = data.nextBatchStr;
           document.getElementById('loginScreen').style.display = 'none'; 
-          fetchHistory(); // Fetch data immediately to check for pending taxes
         }
         else { document.getElementById('loginError').innerText = data.message; btn.disabled = false; btn.innerText = 'Authorize Session'; }
       } catch (e) { btn.disabled = false; }
@@ -385,7 +255,6 @@
     function resetToNew() {
       editingId = null;
       isSubmitting = false; 
-      isFileDeleted = false;
       document.getElementById('pageTitle').innerText = 'New Payment Request';
       
       document.getElementById('formWrapper').style.backgroundColor = "transparent";
@@ -398,16 +267,12 @@
       document.getElementById('amount').value = '';
       document.getElementById('dueDate').value = '';
       document.getElementById('notes').value = '';
-      document.getElementById('predictedBatchDisp').innerHTML = '';
       document.getElementById('urgent').checked = false;
       document.getElementById('invoiceFile').value = null;
 
       document.querySelectorAll('.brand-btn').forEach(b => { b.classList.remove('active'); b.classList.remove('disabled'); });
-      document.getElementById('fileNameDisp').innerText = "Tap to Upload Invoice Document (Max 1.3MB)";
-      
+      document.getElementById('fileNameDisp').innerText = "Tap to Upload Invoice Document (Max 1.8MB)";
       document.getElementById('dropZone').classList.remove('active');
-      document.getElementById('dropZone').classList.remove('hidden');
-      document.getElementById('editFilePanel').classList.add('hidden');
       
       const btn = document.getElementById('submitBtn');
       btn.innerText = "Transmit Payment Request";
@@ -425,121 +290,53 @@
       if (!origDateRaw) return true;
       const d = new Date(origDateRaw);
       if (isNaN(d.getTime())) return true;
-      
-      let day = d.getDay(); let targetDate = new Date(d);
-      if (day === 2 || day === 3 || day === 4) targetDate.setDate(d.getDate() + (5 - day));
-      else { let add = day === 5 ? 4 : (day === 6 ? 3 : (day === 0 ? 2 : 1)); targetDate.setDate(d.getDate() + add); }
-      
-      const limitDate = resolveHoliday(targetDate);
-      const cutoff = new Date(limitDate);
-      cutoff.setDate(limitDate.getDate() - 1);
+      const day = d.getDay();
+      const diff = d.getDate() + (day <= 5 ? (5 - day) : (5 - day + 7));
+      const targetFriday = new Date(d.setDate(diff));
+      const cutoff = new Date(targetFriday);
+      cutoff.setDate(targetFriday.getDate() - 1);
       cutoff.setHours(23, 59, 59, 999);
       return new Date() <= cutoff;
     }
 
     async function fetchHistory() {
-      document.getElementById('histList').innerHTML = ''; 
-      document.getElementById('histLoading').classList.remove('hidden');
+      const list = document.getElementById('histList'); list.innerHTML = ''; document.getElementById('histLoading').classList.remove('hidden');
       try {
         const res = await fetch(GAS_URL, { 
           method: 'POST', 
-          redirect: 'follow',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({ action: 'getDashboardData', pincode: pin }) 
         });
         const data = await res.json();
         
         if (data.status !== 'success') throw new Error('Auth Denied');
         
-        if (data.nextBatchStr) document.getElementById('payFriday').innerHTML = data.nextBatchStr;
-
+        document.getElementById('histLoading').classList.add('hidden');
         myData = [...data.pending, ...data.history].filter(i => i.requester.toLowerCase().trim() === user.name.toLowerCase().trim());
         
-        // CHECK FOR PENDING TAX INVOICES & TRIGGER POPUP
-        const pendingTaxes = myData.filter(i => i.taxStatus === 'Pending' && i.popUrl && i.popUrl !== 'REJECTED');
-        if (pendingTaxes.length > 0) {
-           document.getElementById('taxCountDisp').innerText = pendingTaxes.length;
-           document.getElementById('taxModal').classList.remove('hidden');
-        }
-
-        renderHistory();
-
-      } catch (e) { 
-        document.getElementById('histLoading').classList.add('hidden'); 
-        document.getElementById('histList').innerHTML = '<center style="padding:30px; color:#c0392b; font-weight:800;">Error syncing history.</center>'; 
-      }
-    }
-
-    function renderHistory() {
-      document.getElementById('histLoading').classList.add('hidden');
-      const list = document.getElementById('histList');
-      const search = document.getElementById('histSearch').value.toLowerCase();
-      const status = document.getElementById('histStatus').value;
-      const brand = document.getElementById('histBrand').value;
-      const from = document.getElementById('histFrom').value;
-      const to = document.getElementById('histTo').value;
-
-      const filtered = myData.filter(item => {
-        const isRejected = item.popUrl === 'REJECTED';
-        const isMissingTax = item.taxStatus === 'Pending' && item.popUrl && !isRejected;
-        const isPaid = item.popUrl && !isRejected && item.taxStatus !== 'Pending';
-        const inQueue = !item.popUrl && !isRejected;
-
-        const matchesSearch = item.supplier.toLowerCase().includes(search) || item.id.toLowerCase().includes(search);
-        const matchesBrand = brand === 'ALL' || item.sheetName === brand;
-        const matchesDate = (!from || item.isoDate >= from) && (!to || item.isoDate <= to);
+        if (myData.length === 0) return list.innerHTML = '<center style="padding:40px; color:#aaa; font-weight:600;">No history found.</center>';
         
-        let matchesStatus = true;
-        if (status === 'QUEUE') matchesStatus = inQueue;
-        else if (status === 'PAID') matchesStatus = isPaid;
-        else if (status === 'RETURNED') matchesStatus = isRejected;
-        else if (status === 'TAX') matchesStatus = isMissingTax;
-
-        return matchesSearch && matchesBrand && matchesDate && matchesStatus;
-      });
-
-      if (filtered.length === 0) {
-        list.innerHTML = '<center style="padding:40px; color:#aaa; font-weight:600;">No matching records found.</center>';
-        return;
-      }
-
-      list.innerHTML = filtered.map((item) => {
-        const origIdx = myData.indexOf(item); // Keep the correct index for editing
-        const isRejected = item.popUrl === 'REJECTED';
-        let rejectReason = '';
-        if (isRejected && item.auditLog) {
-           const splitLog = item.auditLog.split('- Reason: ');
-           rejectReason = splitLog.length > 1 ? splitLog[1] : 'Please check with Finance.';
-        }
-
-        let taxWarning = '';
-        if (item.taxStatus === 'Pending' && item.popUrl && !isRejected) {
-           taxWarning = `<span style="font-size: 9px; font-weight: 800; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; background: #ffedd5; color: #c2410c; margin-left: 8px; vertical-align: middle;">⚠️ Missing Tax Invoice</span>`;
-        }
-
-        return `
-        <div class="history-card ${isRejected ? 'rejected' : ''}">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-            <div>
-              <span class="hist-brand-tag">${item.sheetName}</span>
-              <div style="font-size: 18px; font-weight: 800; color: var(--navy);">${item.supplier} ${taxWarning}</div>
-              <div style="font-size: 12px; color: var(--text-dim); margin-top:4px;">ID: <strong>${item.id}</strong> • Submitted: <strong>${item.date}</strong></div>
-              <div style="font-size: 12px; color: var(--text-dim); margin-top:2px;">Expected Batch Date: <strong style="color:var(--accent);">${item.batchDate}</strong></div>
-              ${item.auditLog && !isRejected ? `<div class="audit-tag">${item.auditLog}</div>` : ''}
-            </div>
-            <div style="text-align:right;">
-              <div style="font-size: 20px; font-weight: 800; color: ${isRejected ? 'var(--text-dim)' : 'var(--green)'};">${parseFloat(item.amount).toLocaleString('en-US', {minimumFractionDigits: 2})} <span style="font-size:12px; opacity:0.6;">THB</span></div>
-              <div style="margin-top: 8px; display:flex; align-items:center; justify-content:flex-end;">
-                <span style="font-size: 9px; font-weight: 800; padding: 4px 8px; border-radius: 20px; text-transform: uppercase; background: ${isRejected ? '#fee2e2' : (item.popUrl ? 'var(--green-bg)' : '#f3f4f6')}; color: ${isRejected ? '#991b1b' : (item.popUrl ? 'var(--green)' : '#6b7280')};">${isRejected ? 'Returned' : (item.popUrl ? 'Paid' : 'In Queue')}</span>
-                ${(!item.popUrl && canEdit(item.origDateRaw)) ? `<button type="button" class="btn-edit" onclick="startEdit(${origIdx})">✏️ Edit</button>` : ''}
+        list.innerHTML = myData.map((item, idx) => `
+          <div class="history-card">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div>
+                <span class="hist-brand-tag">${item.sheetName}</span>
+                <div style="font-size: 18px; font-weight: 800; color: var(--navy);">${item.supplier}</div>
+                <div style="font-size: 12px; color: var(--text-dim); margin-top:4px;">ID: <strong>${item.id}</strong> • Submitted: <strong>${item.date}</strong></div>
+                ${item.auditLog ? `<div class="audit-tag">⚠️ ${item.auditLog}</div>` : ''}
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size: 20px; font-weight: 800; color: var(--green);">${parseFloat(item.amount).toLocaleString('en-US', {minimumFractionDigits: 2})} <span style="font-size:12px; opacity:0.6;">THB</span></div>
+                <div style="margin-top: 8px; display:flex; align-items:center; justify-content:flex-end;">
+                  <span style="font-size: 9px; font-weight: 800; padding: 4px 8px; border-radius: 20px; text-transform: uppercase; background: ${item.popUrl ? 'var(--green-bg)' : '#f3f4f6'}; color: ${item.popUrl ? 'var(--green)' : '#6b7280'};">${item.popUrl ? 'Paid' : 'In Queue'}</span>
+                  ${(!item.popUrl && canEdit(item.origDateRaw)) ? `<button type="button" class="btn-edit" onclick="startEdit(${idx})">✏️ Edit</button>` : ''}
+                </div>
               </div>
             </div>
-          </div>
-          ${item.note ? `<div style="background: var(--canvas); padding: 12px; border-radius: 8px; font-size: 13px; color: var(--text-dim); border-left: 3px solid var(--border); font-style: italic;">Note: ${item.note}</div>` : ''}
-          
-          ${isRejected ? `<div class="reject-warning">⚠️ Returned: ${rejectReason}<br><span style="font-size: 11px; font-weight: 500; margin-top: 4px; display: block; color: #5a5750;">This request is closed. Please submit a new payment request with the corrected information.</span></div>` : ''}
-          ${item.popUrl && !isRejected ? `<div style="padding-top: 16px; border-top: 1px solid var(--border);"><a href="${item.popUrl}" target="_blank" style="font-size: 12px; font-weight: 800; color: var(--green); text-decoration: none;">📄 View Official Proof of Payment</a></div>` : ''}
-        </div>`
-      }).join('');
+            ${item.note ? `<div style="background: var(--canvas); padding: 12px; border-radius: 8px; font-size: 13px; color: var(--text-dim); border-left: 3px solid var(--border); font-style: italic;">Note: ${item.note}</div>` : ''}
+            ${item.popUrl ? `<div style="padding-top: 16px; border-top: 1px solid var(--border);"><a href="${item.popUrl}" target="_blank" style="font-size: 12px; font-weight: 800; color: var(--green); text-decoration: none;">📄 View Official Proof of Payment</a></div>` : ''}
+          </div>`).join('');
+      } catch (e) { document.getElementById('histLoading').classList.add('hidden'); list.innerHTML = '<center style="padding:30px; color:#c0392b; font-weight:800;">Error syncing history.</center>'; }
     }
 
     function setBrand(code, el) { if(editingId) return; document.querySelectorAll('.brand-btn').forEach(b => b.classList.remove('active')); el.classList.add('active'); document.getElementById('brand').value = code; }
@@ -548,7 +345,6 @@
       const item = myData[idx];
       editingId = item.id;
       isSubmitting = false; 
-      isFileDeleted = false;
       document.getElementById('pageTitle').innerText = "Refine Payment Request";
       
       const brandCodeMap = { 'LAVA': 'LAV', 'Bianca Holdings': 'BIA', 'HolyBelly': 'HOL', 'Lova': 'LOV' };
@@ -584,15 +380,10 @@
       
       document.getElementById('urgent').checked = (item.urgent === 'Urgent');
       document.getElementById('notes').value = item.note || '';
-      
-      updatePredictedBatch(); 
 
-      document.getElementById('dropZone').classList.add('hidden');
-      document.getElementById('editFilePanel').classList.remove('hidden');
-      
-      document.getElementById('btnDeleteFile').classList.remove('hidden');
-      document.getElementById('editFileStatus').innerText = "Stored securely in vault.";
-      document.getElementById('editFileStatus').style.color = "var(--text-dim)";
+      document.getElementById('fileNameDisp').innerText = "📎 Current File Saved. Tap to Replace.";
+      document.getElementById('dropZone').classList.remove('active');
+      document.getElementById('invoiceFile').value = null; 
       
       const btn = document.getElementById('submitBtn');
       btn.innerText = "Save & Update Vault";
@@ -602,36 +393,17 @@
     }
 
     function handleFile(input) { 
-      const MAX_SIZE = 1.3 * 1024 * 1024; 
-      
-      window._cachedBase64 = null;
-      window._cachedFileName = null;
-      
+      const MAX_SIZE = 1.8 * 1024 * 1024; // Strict 1.8MB limit to prevent Google server crash
       if (input.files.length) { 
         if(input.files[0].size > MAX_SIZE) {
-          alert("❌ GOOGLE SERVER LIMIT EXCEEDED.\n\nTo ensure reliable processing, files must be under 1.3MB. Your file is " + (input.files[0].size / 1024 / 1024).toFixed(1) + "MB.\n\nPlease compress this document before uploading.");
+          alert("❌ GOOGLE SERVER LIMIT EXCEEDED.\n\nGoogle Apps Script cannot process files larger than 1.8MB. Your file is " + (input.files[0].size / 1024 / 1024).toFixed(1) + "MB.\n\nPlease compress this PDF to under 1.8MB to continue.");
           input.value = null;
           document.getElementById('dropZone').classList.remove('active');
-          document.getElementById('fileNameDisp').innerText = "Tap to Upload Invoice Document (Max 1.3MB)";
+          document.getElementById('fileNameDisp').innerText = "Tap to Upload Invoice Document (Max 1.8MB)";
           return;
         }
-        
-        const reader = new FileReader();
-        reader.onload = function() {
-          window._cachedBase64 = reader.result.split(',')[1];
-          window._cachedFileName = input.files[0].name;
-          document.getElementById('fileNameDisp').innerText = "📎 Ready to Upload: " + input.files[0].name; 
-          document.getElementById('dropZone').classList.add('active'); 
-        };
-        reader.onerror = function() {
-          window._cachedBase64 = null;
-          window._cachedFileName = null;
-          input.value = null;
-          document.getElementById('fileNameDisp').innerText = "Tap to Upload Invoice Document (Max 1.3MB)";
-          document.getElementById('dropZone').classList.remove('active');
-          alert("❌ Could not read file. Please try again.");
-        };
-        reader.readAsDataURL(input.files[0]);
+        document.getElementById('fileNameDisp').innerText = "📎 Ready to Upload: " + input.files[0].name; 
+        document.getElementById('dropZone').classList.add('active'); 
       } 
     }
 
@@ -654,98 +426,80 @@
         return;
       }
 
-      isSubmitting = true;
-      executeBackendCall(); 
-    }
-
-    function openDeleteModal() {
-      document.getElementById('deleteModal').classList.remove('hidden');
+      if (editingId && document.getElementById('invoiceFile').files.length > 0) {
+        document.getElementById('deleteModal').classList.remove('hidden');
+      } else { 
+        isSubmitting = true;
+        executeBackendCall(); 
+      }
     }
 
     function closeDeleteModal() {
+      isSubmitting = false; 
       document.getElementById('deleteModal').classList.add('hidden');
       document.getElementById('delPin').value = '';
       document.getElementById('delConfirm').value = '';
     }
 
-    function confirmDeleteAction() {
+    function confirmDeleteAndSubmit() {
       if (document.getElementById('delPin').value !== pin) {
+        isSubmitting = false; 
         return alert("Incorrect PIN");
       }
       if (document.getElementById('delConfirm').value !== "Delete this file") {
+        isSubmitting = false; 
         return alert("Please copy and paste the exact confirmation phrase.");
       }
-      
-      isFileDeleted = true;
       closeDeleteModal();
-      
-      document.getElementById('btnDeleteFile').classList.add('hidden');
-      document.getElementById('editFileStatus').innerText = "❌ File marked for deletion (applied upon saving).";
-      document.getElementById('editFileStatus').style.color = "var(--accent)";
+      isSubmitting = true; 
+      executeBackendCall();
     }
 
     function executeBackendCall() {
       const btn = document.getElementById('submitBtn'); 
+      const fileInput = document.getElementById('invoiceFile');
+      const file = fileInput.files.length > 0 ? fileInput.files[0] : null;
       const brand = document.getElementById('brand').value;
       
       btn.disabled = true; 
       btn.innerText = "Transmitting to Vault...";
-
-      if (editingId) {
-         sendPayload(brand, null, null, btn);
-         return;
+      
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = async function() { await sendPayload(brand, file.name, reader.result.split(',')[1], btn); };
+        reader.onerror = function() {
+          isSubmitting = false;
+          btn.disabled = false;
+          btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request";
+          alert("Browser could not read the file. Please try again.");
+        };
+        reader.readAsDataURL(file);
+      } else { 
+        sendPayload(brand, null, null, btn); 
       }
-
-      const fBase64 = window._cachedBase64 || null;
-      const fName = window._cachedFileName || null;
-
-      if (!editingId && (!fBase64 || !fName)) {
-        isSubmitting = false;
-        btn.disabled = false;
-        btn.innerText = "Transmit Payment Request";
-        alert("❌ File data was lost. Please re-select your invoice document and try again.");
-        return;
-      }
-
-      sendPayload(brand, fName, fBase64, btn);
     }
 
-    async function sendPayload(brand, fName, fBase64, btn, attempt = 1) {
-      const MAX_ATTEMPTS = 3;
-      
+    async function sendPayload(brand, fName, fBase64, btn) {
       const payload = { 
         action: editingId ? 'editRequest' : 'submitRequest', id: editingId, brand, 
         requestTitle: document.getElementById('supplier').value, amount: document.getElementById('amount').value, 
         documentType: document.getElementById('docType').value, dueDate: document.getElementById('dueDate').value, 
         isUrgent: document.getElementById('urgent').checked, note: document.getElementById('notes').value, 
-        fileName: fName, fileBase64: fBase64, userName: user.name, email: user.email, pincode: pin,
-        deleteFile: isFileDeleted 
+        fileName: fName, fileBase64: fBase64, userName: user.name, email: user.email, pincode: pin 
       };
       
-      if (attempt > 1) {
-        btn.innerText = `Retrying... (Attempt ${attempt}/${MAX_ATTEMPTS})`;
-      }
-      
-      let timeoutId;
       try {
-        const controller = new AbortController();
-        timeoutId = setTimeout(() => controller.abort(), 55000);
-        
         const res = await fetch(GAS_URL, { 
           method: 'POST', 
-          redirect: 'follow',
-          signal: controller.signal,
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify(payload) 
         });
         
-        clearTimeout(timeoutId);
         const textResponse = await res.text(); 
         
         try {
           const result = JSON.parse(textResponse);
           if (result.status === 'success') { 
-            window._cachedBase64 = null;
-            window._cachedFileName = null;
             isSubmitting = false; 
             document.getElementById('formWrapper').classList.add('hidden'); 
             document.getElementById('successMsg').classList.remove('hidden'); 
@@ -760,20 +514,9 @@
           alert("Data anomaly. The server threw a text error. \n\nError: " + textResponse.substring(0, 100));
           btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request";
         }
-
       } catch (e) { 
-        if (timeoutId) clearTimeout(timeoutId);
-        
-        if (!editingId && attempt < MAX_ATTEMPTS) {
-          const waitSeconds = attempt * 4; 
-          btn.innerText = `Connection issue. Retrying in ${waitSeconds}s...`;
-          await new Promise(resolve => setTimeout(resolve, waitSeconds * 1000));
-          return sendPayload(brand, fName, fBase64, btn, attempt + 1);
-        }
-        
-        console.error("Fetch Error:", e);
         isSubmitting = false;
-        alert(`❌ CONNECTION FAILED.\n\nPlease check your network connection and try again.`); 
+        alert("CRITICAL ERROR: Connection dropped. Please verify the file is not too large and that your connection is stable."); 
         btn.disabled = false; btn.innerText = editingId ? "Save & Update Vault" : "Transmit Payment Request"; 
       }
     }
